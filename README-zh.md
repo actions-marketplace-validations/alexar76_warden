@@ -1,33 +1,5 @@
 # WARDEN by AIMarket — MCP tool firewall
 
-<!-- final-ranking-witness -->
-**[10月26日最终排序反馈对照](docs/flow-guard-final-witness-2026-10-26.zh.md).** 在全部五个此前被拦截的上下文中，旧反馈修复了6/40次续答，明确比较所选项与最优项的新反馈修复了40/40次。每个名义组的有效对照均保持20/20。本系列到此结束，结果针对已知失败案例，并非新的留出测试。此结果更新了此前仅离线验证的排序反馈限制；缺失合格项反馈的模型修复效果仍未测量。
-<!-- /final-ranking-witness -->
-
-<!-- mcp-name: io.github.alexar76/warden -->
-
-<!-- aicom-readme-badges -->
-<p align="center">
-  <a href="https://github.com/alexar76/warden/actions/workflows/ci.yml"><img src="https://github.com/alexar76/warden/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://glama.ai/mcp/servers/alexar76/warden"><img src="https://glama.ai/mcp/servers/alexar76/warden/badges/score.svg" alt="warden MCP server" /></a>
-  <a href="https://warden.modelmarket.dev/"><img src="https://img.shields.io/npm/v/@aimarket/warden?color=cb3837&label=npm" alt="npm 版本" /></a>
-  <img src="docs/badges/deps.svg" alt="零运行时依赖" />
-  <img src="docs/badges/node.svg" alt="Node >= 20" />
-  <a href="LICENSE"><img src="docs/badges/license.svg" alt="许可证：MIT" /></a>
-</p>
-<!-- /aicom-readme-badges -->
-
-<p align="center">
-  <a href="https://warden.modelmarket.dev/">
-    <img src="docs/screenshots/readme/hero-3d.png" alt="WARDEN — 3D 门链：tools/list 经 static-scan、threat-feed、origin、pinning 到可记录的裁定" width="100%" />
-  </a>
-</p>
-
-
-> 🌐 [English](README.md) · [Русский](README-ru.md) · [Español](README-es.md) · [Français](README-fr.md) · **中文** · [术语表](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
-
-> [WARDEN 质量检查周期：MOMUS → AI-Factory → SKOPOS → 共享节点智能体 → 部署](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.zh.md).
-
 <!-- warden-try -->
 **检查你机器上的所有 MCP 服务器。** 无需账号、无需 API 密钥、不调用模型。唯一的网络流量是发往你配置中的服务器。
 
@@ -50,12 +22,30 @@ Details: warden-mcp scan --json, or --markdown FILE. To review a changed server:
 与另外四款开源扫描器在同一批服务器上对比，每款都在无网络的 gVisor 容器中运行：在 MCPTox（AAAI 2026 基准）的留出一半上（WARDEN 的规则只依据另一半编写），按该次对比时的规则（v12），WARDEN 阻止了 218 个投毒工具中的 171 个，自 ruleset v16 起阻止 210 个；其余扫描器阻止 8 到 41 个。在 986 台公开服务器上 WARDEN 阻止 3 台，在 14,933 个 npm 和 PyPI 包上阻止 369 个；mcp-shield 分别阻止 343 台和 5,354 个。[方法与全部数字](docs/scanner-comparison.zh.md) · [scan 指南](docs/scan.zh.md)。
 <!-- /warden-try -->
 
-**流守卫（2026-10-23 本地源码）。** 读取凭据和外部文本后，传出／MCP 调用及普通项目写入均需审核，即使片段极短或编码未知。操作员检查过的精确公开请求可每会话自动执行一次，但不能豁免已识别泄露或不完整扫描。测试中两种配置均自动放行 0/16 攻击；正常请求默认确认 12/12，精确规则下 0/12。这是明确的可用性取舍，不是万能解码器。同一旧案例集仍为 0/23 完整通过。生产和 npm 未更改。[策略、测试与边界](docs/flow-guard.zh.md)。
+<!-- star-line -->
+源码、问题和版本：[github.com/alexar76/warden](https://github.com/alexar76/warden)。如果 WARDEN 对你有用，在那里点一颗星能帮助更多人找到它。
+<!-- /star-line -->
 
+<!-- mcp-name: io.github.alexar76/warden -->
 
-Ruleset v16（0.20.0，2026-10-22，仅 WARDEN）：MCPTox 留出的一半 218 中 210 个（v15：194，v12–v14：171），45 台干净服务器中 0 台；在实地语料和 1,000 个 HISTOR 包样本上拦截的与 v15 完全相同。上面与其他扫描器的对比来自 2026-10-16，使用 v12。[门链中的 v15 和 v16](docs/gates.zh.md)。
+<!-- aicom-readme-badges -->
+<p align="center">
+  <a href="https://github.com/alexar76/warden/actions/workflows/ci.yml"><img src="https://github.com/alexar76/warden/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://glama.ai/mcp/servers/alexar76/warden"><img src="https://glama.ai/mcp/servers/alexar76/warden/badges/score.svg" alt="warden MCP server" /></a>
+  <a href="https://warden.modelmarket.dev/"><img src="https://img.shields.io/npm/v/@aimarket/warden?color=cb3837&label=npm" alt="npm 版本" /></a>
+  <img src="docs/badges/deps.svg" alt="零运行时依赖" />
+  <img src="docs/badges/node.svg" alt="Node >= 20" />
+  <a href="LICENSE"><img src="docs/badges/license.svg" alt="许可证：MIT" /></a>
+</p>
+<!-- /aicom-readme-badges -->
 
-> [0.7.0 安全更新与迁移](docs/security-hardening.zh.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
+<p align="center">
+  <a href="https://warden.modelmarket.dev/">
+    <img src="docs/screenshots/readme/hero-3d.png" alt="WARDEN — 3D 门链：tools/list 经 static-scan、threat-feed、origin、pinning 到可记录的裁定" width="100%" />
+  </a>
+</p>
+
+> 🌐 [English](README.md) · [Русский](README-ru.md) · [Español](README-es.md) · [Français](README-fr.md) · **中文** · [术语表](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
 
 **一个 MCP 服务器。针对已广告工具定义的安全防火墙。附带库。**
 
@@ -329,6 +319,20 @@ GET <你的 feed url>
 - **`canonicalize` / `parseJsonStrict`**——严格的 RFC 8785（JCS）实现，同时以 `@aimarket/warden/jcs` 导出，
   便于把另一份实现逐字节对照验证。超出 `MAX_SAFE_JSON_INTEGER` 只接受整数、遇到孤立代理项直接拒绝（而不是转
   义），且每次拒绝都带原因码。
+
+## 近期结果与变更
+
+<!-- final-ranking-witness -->
+**[10月26日最终排序反馈对照](docs/flow-guard-final-witness-2026-10-26.zh.md).** 在全部五个此前被拦截的上下文中，旧反馈修复了6/40次续答，明确比较所选项与最优项的新反馈修复了40/40次。每个名义组的有效对照均保持20/20。本系列到此结束，结果针对已知失败案例，并非新的留出测试。此结果更新了此前仅离线验证的排序反馈限制；缺失合格项反馈的模型修复效果仍未测量。
+<!-- /final-ranking-witness -->
+
+> [WARDEN 质量检查周期：MOMUS → AI-Factory → SKOPOS → 共享节点智能体 → 部署](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.zh.md).
+
+**流守卫（2026-10-23 本地源码）。** 读取凭据和外部文本后，传出／MCP 调用及普通项目写入均需审核，即使片段极短或编码未知。操作员检查过的精确公开请求可每会话自动执行一次，但不能豁免已识别泄露或不完整扫描。测试中两种配置均自动放行 0/16 攻击；正常请求默认确认 12/12，精确规则下 0/12。这是明确的可用性取舍，不是万能解码器。同一旧案例集仍为 0/23 完整通过。生产和 npm 未更改。[策略、测试与边界](docs/flow-guard.zh.md)。
+
+Ruleset v16（0.20.0，2026-10-22，仅 WARDEN）：MCPTox 留出的一半 218 中 210 个（v15：194，v12–v14：171），45 台干净服务器中 0 台；在实地语料和 1,000 个 HISTOR 包样本上拦截的与 v15 完全相同。上面与其他扫描器的对比来自 2026-10-16，使用 v12。[门链中的 v15 和 v16](docs/gates.zh.md)。
+
+> [0.7.0 安全更新与迁移](docs/security-hardening.zh.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
 
 ## ERC-8004 身份
 

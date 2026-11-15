@@ -1,33 +1,5 @@
 # WARDEN by AIMarket — MCP tool firewall
 
-<!-- final-ranking-witness -->
-**[Comparación final de mensajes de clasificación, 26 de octubre](docs/flow-guard-final-witness-2026-10-26.es.md).** En los cinco contextos previamente retenidos, el mensaje anterior corrigió 6/40 continuaciones y la comparación explícita entre la opción elegida y la mejor corrigió 40/40. Los controles válidos se conservaron 20/20 por grupo nominal. La serie termina sobre fallos conocidos, no sobre un nuevo conjunto reservado. Este resultado actualiza la limitación anterior de evaluación solo sin conexión para la clasificación; la eficacia del mensaje de conjunto incompleto sigue sin medirse.
-<!-- /final-ranking-witness -->
-
-<!-- mcp-name: io.github.alexar76/warden -->
-
-<!-- aicom-readme-badges -->
-<p align="center">
-  <a href="https://github.com/alexar76/warden/actions/workflows/ci.yml"><img src="https://github.com/alexar76/warden/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://glama.ai/mcp/servers/alexar76/warden"><img src="https://glama.ai/mcp/servers/alexar76/warden/badges/score.svg" alt="warden MCP server" /></a>
-  <a href="https://warden.modelmarket.dev/"><img src="https://img.shields.io/npm/v/@aimarket/warden?color=cb3837&label=npm" alt="npm version" /></a>
-  <img src="docs/badges/deps.svg" alt="Cero dependencias de ejecución" />
-  <img src="docs/badges/node.svg" alt="Node >= 20" />
-  <a href="LICENSE"><img src="docs/badges/license.svg" alt="Licencia: MIT" /></a>
-</p>
-<!-- /aicom-readme-badges -->
-
-<p align="center">
-  <a href="https://warden.modelmarket.dev/">
-    <img src="docs/screenshots/readme/hero-3d.png" alt="WARDEN — cadena 3D de puertas: tools/list por static-scan, threat-feed, origin y pinning hasta un veredicto registrado" width="100%" />
-  </a>
-</p>
-
-
-> 🌐 [English](README.md) · [Русский](README-ru.md) · **Español** · [Français](README-fr.md) · [中文](README-zh.md) · [Glosario](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
-
-> [Ciclo de control de calidad de WARDEN: MOMUS → AI-Factory → SKOPOS → agente de nodo compartido → despliegue](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.es.md).
-
 <!-- warden-try -->
 **Revisa todos los servidores MCP de tu máquina.** Sin cuenta, sin clave de API, sin modelo. El único tráfico de red va a los servidores de tu configuración.
 
@@ -50,12 +22,30 @@ Details: warden-mcp scan --json, or --markdown FILE. To review a changed server:
 Frente a otros cuatro escáneres de código abierto sobre los mismos servidores, cada uno en un contenedor gVisor sin red: en la mitad reservada de MCPTox (un benchmark de AAAI 2026; las reglas de WARDEN se escribieron con la otra mitad) WARDEN bloqueó 171 de 218 herramientas envenenadas con las reglas de esa comparación (v12) y bloquea 210 desde el ruleset v16, los demás entre 8 y 41. En 986 servidores públicos WARDEN bloquea 3 y en 14 933 paquetes de npm y PyPI, 369; mcp-shield bloquea 343 y 5354. [Método y todas las cifras](docs/scanner-comparison.es.md) · [guía de scan](docs/scan.es.md).
 <!-- /warden-try -->
 
-**Guardia de flujo (código local, 2026-10-23).** Tras credenciales y texto externo, llamadas salientes/MCP y escrituras normales del proyecto requieren revisión, incluso con partes diminutas o codificación desconocida. Solicitudes públicas exactas revisadas por el operador pueden ejecutarse una vez por sesión; no eximen fugas detectadas ni análisis incompletos. Prueba: 0/16 ataques automáticos en ambos perfiles; revisión inocua 12/12 por defecto, 0/12 con reglas exactas. Compromiso explícito de uso, no decodificación universal. El mismo conjunto sigue en 0/23 entregados por completo. Producción/npm no cambian. [Política, pruebas y límites](docs/flow-guard.es.md).
+<!-- star-line -->
+Código, incidencias y versiones: [github.com/alexar76/warden](https://github.com/alexar76/warden). Si WARDEN te ha sido útil, una estrella allí ayuda a que otras personas lo encuentren.
+<!-- /star-line -->
 
+<!-- mcp-name: io.github.alexar76/warden -->
 
-Ruleset v16 (0.20.0, 2026-10-22, solo WARDEN): mitad reservada de MCPTox 210 de 218 (v15: 194, v12–v14: 171), 0 de 45 servidores limpios; en el corpus de campo y en una muestra de 1000 paquetes de HISTOR bloquea exactamente lo mismo que v15. La comparación con otros escáneres de arriba es del 2026-10-16, con v12. [v15 y v16 en la cadena de puertas](docs/gates.es.md).
+<!-- aicom-readme-badges -->
+<p align="center">
+  <a href="https://github.com/alexar76/warden/actions/workflows/ci.yml"><img src="https://github.com/alexar76/warden/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://glama.ai/mcp/servers/alexar76/warden"><img src="https://glama.ai/mcp/servers/alexar76/warden/badges/score.svg" alt="warden MCP server" /></a>
+  <a href="https://warden.modelmarket.dev/"><img src="https://img.shields.io/npm/v/@aimarket/warden?color=cb3837&label=npm" alt="npm version" /></a>
+  <img src="docs/badges/deps.svg" alt="Cero dependencias de ejecución" />
+  <img src="docs/badges/node.svg" alt="Node >= 20" />
+  <a href="LICENSE"><img src="docs/badges/license.svg" alt="Licencia: MIT" /></a>
+</p>
+<!-- /aicom-readme-badges -->
 
-> [Seguridad y migración de 0.7.0](docs/security-hardening.es.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
+<p align="center">
+  <a href="https://warden.modelmarket.dev/">
+    <img src="docs/screenshots/readme/hero-3d.png" alt="WARDEN — cadena 3D de puertas: tools/list por static-scan, threat-feed, origin y pinning hasta un veredicto registrado" width="100%" />
+  </a>
+</p>
+
+> 🌐 [English](README.md) · [Русский](README-ru.md) · **Español** · [Français](README-fr.md) · [中文](README-zh.md) · [Glosario](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
 
 **Un servidor MCP. Cortafuegos de las definiciones de herramienta anunciadas. Biblioteca incluida.**
 
@@ -344,6 +334,20 @@ degradar a ninguna protección:
   también como `@aimarket/warden/jcs` para poder comparar otra implementación byte a byte. Solo
   enteros más allá de `MAX_SAFE_JSON_INTEGER`, rechazo (no escapado) de surrogados solitarios y un
   código de motivo en cada rechazo.
+
+## Resultados y cambios recientes
+
+<!-- final-ranking-witness -->
+**[Comparación final de mensajes de clasificación, 26 de octubre](docs/flow-guard-final-witness-2026-10-26.es.md).** En los cinco contextos previamente retenidos, el mensaje anterior corrigió 6/40 continuaciones y la comparación explícita entre la opción elegida y la mejor corrigió 40/40. Los controles válidos se conservaron 20/20 por grupo nominal. La serie termina sobre fallos conocidos, no sobre un nuevo conjunto reservado. Este resultado actualiza la limitación anterior de evaluación solo sin conexión para la clasificación; la eficacia del mensaje de conjunto incompleto sigue sin medirse.
+<!-- /final-ranking-witness -->
+
+> [Ciclo de control de calidad de WARDEN: MOMUS → AI-Factory → SKOPOS → agente de nodo compartido → despliegue](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.es.md).
+
+**Guardia de flujo (código local, 2026-10-23).** Tras credenciales y texto externo, llamadas salientes/MCP y escrituras normales del proyecto requieren revisión, incluso con partes diminutas o codificación desconocida. Solicitudes públicas exactas revisadas por el operador pueden ejecutarse una vez por sesión; no eximen fugas detectadas ni análisis incompletos. Prueba: 0/16 ataques automáticos en ambos perfiles; revisión inocua 12/12 por defecto, 0/12 con reglas exactas. Compromiso explícito de uso, no decodificación universal. El mismo conjunto sigue en 0/23 entregados por completo. Producción/npm no cambian. [Política, pruebas y límites](docs/flow-guard.es.md).
+
+Ruleset v16 (0.20.0, 2026-10-22, solo WARDEN): mitad reservada de MCPTox 210 de 218 (v15: 194, v12–v14: 171), 0 de 45 servidores limpios; en el corpus de campo y en una muestra de 1000 paquetes de HISTOR bloquea exactamente lo mismo que v15. La comparación con otros escáneres de arriba es del 2026-10-16, con v12. [v15 y v16 en la cadena de puertas](docs/gates.es.md).
+
+> [Seguridad y migración de 0.7.0](docs/security-hardening.es.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
 
 ## Identidad ERC-8004
 

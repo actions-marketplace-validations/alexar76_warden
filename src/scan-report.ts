@@ -268,6 +268,7 @@ export function toMarkdown(report: ScanReport, cwd: string): string {
     out.push(`[Follow changes to these servers](${report.historWatch}) (HISTOR feed)`);
   }
   out.push('');
-  out.push(`<sub>@aimarket/warden ${displaySafe(report.version, 20)} · ${mdCode(report.ruleset.digest, 60)} · tool descriptions are shown as code; they are untrusted text from the servers.</sub>`);
+  // The report lands in PR comments and step summaries of other repositories; the link is how a reader finds the source.
+  out.push(`<sub>[@aimarket/warden](https://github.com/alexar76/warden) ${displaySafe(report.version, 20)} ·${mdCode(report.ruleset.digest, 60)} · tool descriptions are shown as code; they are untrusted text from the servers.</sub>`);
   return out.join('\n') + '\n';
 }

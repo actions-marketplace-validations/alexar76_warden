@@ -1,33 +1,5 @@
 # WARDEN by AIMarket — MCP tool firewall
 
-<!-- final-ranking-witness -->
-**[Финальное сравнение обратной связи, 26 октября](docs/flow-guard-final-witness-2026-10-26.ru.md).** Во всех пяти ранее удержанных контекстах старое сообщение исправило 6/40 продолжений, явное сравнение выбранного и лучшего — 40/40. Правильные контроли сохранились 20/20 в каждой условной группе. Серия завершена на известных ошибках; это не новый holdout. Прежнее утверждение о проверке только офлайн уточнено этим результатом для ранжирования; эффективность сообщений о неполном наборе моделью пока не измерена.
-<!-- /final-ranking-witness -->
-
-<!-- mcp-name: io.github.alexar76/warden -->
-
-<!-- aicom-readme-badges -->
-<p align="center">
-  <a href="https://github.com/alexar76/warden/actions/workflows/ci.yml"><img src="https://github.com/alexar76/warden/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://glama.ai/mcp/servers/alexar76/warden"><img src="https://glama.ai/mcp/servers/alexar76/warden/badges/score.svg" alt="warden MCP server" /></a>
-  <a href="https://warden.modelmarket.dev/"><img src="https://img.shields.io/npm/v/@aimarket/warden?color=cb3837&label=npm" alt="npm version" /></a>
-  <img src="docs/badges/deps.svg" alt="Zero runtime dependencies" />
-  <img src="docs/badges/node.svg" alt="Node >= 20" />
-  <a href="LICENSE"><img src="docs/badges/license.svg" alt="License: MIT" /></a>
-</p>
-<!-- /aicom-readme-badges -->
-
-<p align="center">
-  <a href="https://warden.modelmarket.dev/">
-    <img src="docs/screenshots/readme/hero-3d.png" alt="WARDEN — 3D-цепочка гейтов: tools/list через static-scan, threat-feed, origin и pinning к записанному вердикту" width="100%" />
-  </a>
-</p>
-
-
-> 🌐 [English](README.md) · **Русский** · [Español](README-es.md) · [Français](README-fr.md) · [中文](README-zh.md) · [Глоссарий](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
-
-> [Цикл контроля качества WARDEN: MOMUS → AI-Factory → SKOPOS → общий нод-агент → деплой](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.ru.md).
-
 <!-- warden-try -->
 **Проверьте все MCP-серверы на своей машине.** Без аккаунта, без API-ключа, без модели. Сетевой трафик идёт только к серверам из вашего конфига.
 
@@ -50,12 +22,30 @@ Details: warden-mcp scan --json, or --markdown FILE. To review a changed server:
 Рядом с четырьмя другими открытыми сканерами на одних и тех же серверах, каждый в контейнере gVisor без сети: на отложенной половине MCPTox (бенчмарк AAAI 2026; правила WARDEN писались по другой половине) WARDEN блокировал 171 отравленный инструмент из 218 с правилами того сравнения (v12), а начиная с ruleset v16 блокирует 210; остальные — от 8 до 41. На 986 публичных серверах WARDEN блокирует 3, на 14 933 пакетах npm и PyPI — 369; mcp-shield — 343 и 5 354. [Методика и все цифры](docs/scanner-comparison.ru.md) · [руководство по scan](docs/scan.ru.md).
 <!-- /warden-try -->
 
-**Страж потоков (локальный код, 2026-10-23).** После учётных данных и внешнего текста исходящие/MCP-вызовы и обычные записи в проект требуют проверки независимо от длины фрагмента и неизвестной кодировки. Точные публичные запросы, проверенные оператором, могут исполняться один раз за сессию; найденные утечки и неполная проверка этим не освобождаются. В тестовом сценарии автоматически прошло 0/16 атак в обоих режимах; подтверждение для безвредных вызовов — 12/12 по умолчанию, 0/12 с точными правилами. Это явный компромисс удобства, а не универсальный декодер. Прежний набор — 0/23 прошедших целиком. Прод и npm не обновлены. [Политика, тесты и пределы](docs/flow-guard.ru.md).
+<!-- star-line -->
+Код, задачи и выпуски: [github.com/alexar76/warden](https://github.com/alexar76/warden). Если WARDEN вам пригодился, звезда там помогает другим его найти.
+<!-- /star-line -->
 
+<!-- mcp-name: io.github.alexar76/warden -->
 
-Ruleset v16 (0.20.0, 2026-10-22, только WARDEN): отложенная половина MCPTox — 210 из 218 (v15: 194, v12–v14: 171), 0 из 45 чистых серверов; на полевом корпусе и выборке из 1 000 пакетов HISTOR блокирует ровно то же, что v15. Сравнение с другими сканерами выше — от 2026-10-16, с v12. [v15 и v16 в цепочке гейтов](docs/gates.ru.md).
+<!-- aicom-readme-badges -->
+<p align="center">
+  <a href="https://github.com/alexar76/warden/actions/workflows/ci.yml"><img src="https://github.com/alexar76/warden/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://glama.ai/mcp/servers/alexar76/warden"><img src="https://glama.ai/mcp/servers/alexar76/warden/badges/score.svg" alt="warden MCP server" /></a>
+  <a href="https://warden.modelmarket.dev/"><img src="https://img.shields.io/npm/v/@aimarket/warden?color=cb3837&label=npm" alt="npm version" /></a>
+  <img src="docs/badges/deps.svg" alt="Zero runtime dependencies" />
+  <img src="docs/badges/node.svg" alt="Node >= 20" />
+  <a href="LICENSE"><img src="docs/badges/license.svg" alt="License: MIT" /></a>
+</p>
+<!-- /aicom-readme-badges -->
 
-> [Изменения безопасности 0.7.0 и миграция](docs/security-hardening.ru.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
+<p align="center">
+  <a href="https://warden.modelmarket.dev/">
+    <img src="docs/screenshots/readme/hero-3d.png" alt="WARDEN — 3D-цепочка гейтов: tools/list через static-scan, threat-feed, origin и pinning к записанному вердикту" width="100%" />
+  </a>
+</p>
+
+> 🌐 [English](README.md) · **Русский** · [Español](README-es.md) · [Français](README-fr.md) · [中文](README-zh.md) · [Глоссарий](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
 
 **Один MCP-сервер. Файрвол для объявленных определений инструментов. Библиотека в комплекте.**
 
@@ -345,6 +335,20 @@ GET <ваш feed url>
   `@aimarket/warden/jcs`, чтобы другую реализацию можно было сверить с ней побайтово. Только целые
   за пределами `MAX_SAFE_JSON_INTEGER`, отказ (а не экранирование) на одиночных суррогатах и код
   причины на каждом отказе.
+
+## Последние результаты и изменения
+
+<!-- final-ranking-witness -->
+**[Финальное сравнение обратной связи, 26 октября](docs/flow-guard-final-witness-2026-10-26.ru.md).** Во всех пяти ранее удержанных контекстах старое сообщение исправило 6/40 продолжений, явное сравнение выбранного и лучшего — 40/40. Правильные контроли сохранились 20/20 в каждой условной группе. Серия завершена на известных ошибках; это не новый holdout. Прежнее утверждение о проверке только офлайн уточнено этим результатом для ранжирования; эффективность сообщений о неполном наборе моделью пока не измерена.
+<!-- /final-ranking-witness -->
+
+> [Цикл контроля качества WARDEN: MOMUS → AI-Factory → SKOPOS → общий нод-агент → деплой](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.ru.md).
+
+**Страж потоков (локальный код, 2026-10-23).** После учётных данных и внешнего текста исходящие/MCP-вызовы и обычные записи в проект требуют проверки независимо от длины фрагмента и неизвестной кодировки. Точные публичные запросы, проверенные оператором, могут исполняться один раз за сессию; найденные утечки и неполная проверка этим не освобождаются. В тестовом сценарии автоматически прошло 0/16 атак в обоих режимах; подтверждение для безвредных вызовов — 12/12 по умолчанию, 0/12 с точными правилами. Это явный компромисс удобства, а не универсальный декодер. Прежний набор — 0/23 прошедших целиком. Прод и npm не обновлены. [Политика, тесты и пределы](docs/flow-guard.ru.md).
+
+Ruleset v16 (0.20.0, 2026-10-22, только WARDEN): отложенная половина MCPTox — 210 из 218 (v15: 194, v12–v14: 171), 0 из 45 чистых серверов; на полевом корпусе и выборке из 1 000 пакетов HISTOR блокирует ровно то же, что v15. Сравнение с другими сканерами выше — от 2026-10-16, с v12. [v15 и v16 в цепочке гейтов](docs/gates.ru.md).
+
+> [Изменения безопасности 0.7.0 и миграция](docs/security-hardening.ru.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
 
 ## Идентичность ERC-8004
 

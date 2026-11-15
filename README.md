@@ -28,6 +28,10 @@ That is the real output of 0.27.0 on [`examples/scan-demo/`](examples/scan-demo/
 Against four other open-source scanners on the same servers, each in a gVisor container with no network: on the held-out half of MCPTox (an AAAI 2026 benchmark; WARDEN's rules were written from the other half) WARDEN blocked 171 of 218 poisoned tools with the rules of that comparison (v12) and blocks 210 since ruleset v16, the others 8 to 41. On 986 public servers it blocks 3 and on 14,933 npm and PyPI packages 369; mcp-shield blocks 343 and 5,354. [Method and every number](docs/scanner-comparison.md) · [scan guide](docs/scan.md) · **[for teams: one policy, a lock per repository, weekly checks](docs/teams.md)**.
 <!-- /warden-try -->
 
+<!-- star-line -->
+Source, issues and releases: [github.com/alexar76/warden](https://github.com/alexar76/warden). If WARDEN was useful to you, a star there helps other people find it.
+<!-- /star-line -->
+
 <!-- mcp-name: io.github.alexar76/warden -->
 
 <!-- aicom-readme-badges -->
@@ -50,21 +54,7 @@ Against four other open-source scanners on the same servers, each in a gVisor co
   </a>
 </p>
 
-
 > 🌐 **English** · [Русский](README-ru.md) · [Español](README-es.md) · [Français](README-fr.md) · [中文](README-zh.md) · [Glossary](https://github.com/alexar76/aicom/blob/main/docs/localization-glossary.md)
-
-> [WARDEN quality cycle: MOMUS → AI-Factory → SKOPOS → shared node agent → deployment](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.md).
-
-<!-- final-ranking-witness -->
-**[Final ranking-feedback comparison, 26 October](docs/flow-guard-final-witness-2026-10-26.md).** On all five previously withheld contexts, old feedback repaired 6/40 continuations and explicit selected-versus-best feedback repaired 40/40. Valid controls stayed valid 20/20 per nominal arm. This completes the series on selected known failures, not a new holdout. The earlier offline-only statement is superseded for ranking feedback on this cohort; missing-set feedback efficacy remains unmeasured.
-<!-- /final-ranking-witness -->
-
-**Flow guard (local source, 2026-10-23).** After credentials and outside text, outbound/MCP calls and ordinary project writes require review, regardless of short fragments or unknown encodings. Exact operator-reviewed public requests can run once per session; known leaks and incomplete scans stay blocked from this exemption. Fixture: 0/16 attacks automatically allowed in both modes; 12/12 benign calls reviewed by default, 0/12 with exact public rules. This is an explicit usability tradeoff, not universal decoding. The unchanged 23-case replay remains 0/23 fully delivered. Production/npm are unchanged. [Policy, tests and limits](docs/flow-guard.md).
-
-
-Ruleset v16 (0.20.0, 2026-10-22, WARDEN only): MCPTox held-out half 210 of 218 (v15: 194, v12–v14: 171), 0 of 45 clean servers; on the field corpus and a 1,000-package HISTOR sample it blocks exactly what v15 blocked. Ruleset v17 (0.23.0, 2026-11-01) adds a case from outside MCPTox, a tool that adds a BCC to another server's `send_email`, and changes no verdict on any of these sets. The comparison with other scanners above is from 2026-10-16 with v12. [v15 and v16 in the gate chain](docs/gates.md).
-
-> [0.7.0 security changes and migration](docs/security-hardening.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
 
 **One MCP server. Security firewall for advertised tool definitions. Library included.**
 
@@ -362,6 +352,20 @@ no protection:
   `@aimarket/warden/jcs` so another implementation can be byte-checked against it. Integers only
   beyond `MAX_SAFE_JSON_INTEGER`, refusal (not escaping) on lone surrogates, and a reason code on
   every refusal.
+
+## Recent results and changes
+
+> [WARDEN quality cycle: MOMUS → AI-Factory → SKOPOS → shared node agent → deployment](https://github.com/alexar76/momus/blob/main/docs/quality-cycle.md).
+
+<!-- final-ranking-witness -->
+**[Final ranking-feedback comparison, 26 October](docs/flow-guard-final-witness-2026-10-26.md).** On all five previously withheld contexts, old feedback repaired 6/40 continuations and explicit selected-versus-best feedback repaired 40/40. Valid controls stayed valid 20/20 per nominal arm. This completes the series on selected known failures, not a new holdout. The earlier offline-only statement is superseded for ranking feedback on this cohort; missing-set feedback efficacy remains unmeasured.
+<!-- /final-ranking-witness -->
+
+**Flow guard (local source, 2026-10-23).** After credentials and outside text, outbound/MCP calls and ordinary project writes require review, regardless of short fragments or unknown encodings. Exact operator-reviewed public requests can run once per session; known leaks and incomplete scans stay blocked from this exemption. Fixture: 0/16 attacks automatically allowed in both modes; 12/12 benign calls reviewed by default, 0/12 with exact public rules. This is an explicit usability tradeoff, not universal decoding. The unchanged 23-case replay remains 0/23 fully delivered. Production/npm are unchanged. [Policy, tests and limits](docs/flow-guard.md).
+
+Ruleset v16 (0.20.0, 2026-10-22, WARDEN only): MCPTox held-out half 210 of 218 (v15: 194, v12–v14: 171), 0 of 45 clean servers; on the field corpus and a 1,000-package HISTOR sample it blocks exactly what v15 blocked. Ruleset v17 (0.23.0, 2026-11-01) adds a case from outside MCPTox, a tool that adds a BCC to another server's `send_email`, and changes no verdict on any of these sets. The comparison with other scanners above is from 2026-10-16 with v12. [v15 and v16 in the gate chain](docs/gates.md).
+
+> [0.7.0 security changes and migration](docs/security-hardening.md): `vetLaunch`, durable pins, anti-rollback, ruleset v6, runtime revalidation.
 
 ## ERC-8004 identity
 

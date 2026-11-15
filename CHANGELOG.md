@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- The Markdown scan report (`--markdown FILE`, the GitHub step summary and PR comment) links its footer
+  `@aimarket/warden` to the source repository, so a reader of a report in another project can find WARDEN.
+- README in five languages: the try-it block comes first, then one line with the source repository; the dated
+  result notes (final ranking feedback, flow guard, ruleset v16, 0.7.0 migration) moved to "Recent results and
+  changes" near the end.
+
 ## 0.27.0 — 2026-11-14 (MCP interceptor, tool-set digests, ruleset 20)
 
 A minor release: it adds a subcommand (`warden-mcp interceptor`) and new modules. 0.26.1 was cut from a tree without
