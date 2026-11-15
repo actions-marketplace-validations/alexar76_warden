@@ -1,0 +1,30 @@
+{
+  "name": "@aimarket/warden",
+  "version": "0.27.0",
+  "tarball": "aimarket-warden-0.27.0.tgz",
+  "sha256": "525622b730b3262d595aa2f3ad9ec059306a875fcf178b2ad1cd9cb15457829e",
+  "npmShasum": "66b5764aa95d945922308c750cd2664e571f41f6",
+  "integrity": "sha512-sUt+zLlk0rlpFUMRAkH3mmBH9iHdassQ/rR+i32hPYjWQn7BysKBjGodMRuqK8za1czAmWmPwNomBPGAB5AWzg==",
+  "size": 1136640,
+  "unpackedSize": 3820531,
+  "entryCount": 416,
+  "buildDigest": "403842d70620a8dd805ae4b4386613dc4b5804608b801ef75d674248a16c9772",
+  "ruleset": {
+    "version": "20",
+    "digest": "sha256-s6KT1C2YyL3XbyqasSyExSh+0U8lsUjtypaSYo5bckA="
+  },
+  "sourceBase": "c0dc1e29d",
+  "preparedAt": "2026-11-15",
+  "published": true,
+  "publishedAt": "2026-11-15T07:21:12Z",
+  "publishedCheck": "published.log",
+  "momusRun": "20261115T062632",
+  "supersedes": {
+    "buildDigest": "40483094096f6f09e2430e22ad23868201ca29ad7ee6604b083b705aae3fb79c",
+    "candidateImage": "sha256:0a2f06e449251fa584d8bd1ea8285267e79fc199a912404c304e10366a697dae",
+    "why": "warden#14 follow-up: verb-object veto and the clause in findings"
+  },
+  "momusBuildDigest": "403842d70620a8dd805ae4b4386613dc4b5804608b801ef75d674248a16c9772",
+  "candidateImage": "sha256:8dcade5371f42e4c16b5bcf5b04a083e15505b7b4a6aca8b53b454bbf1a83dee",
+  "historLiveSince": "2026-11-15T06:34Z"
+}

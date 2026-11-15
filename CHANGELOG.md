@@ -1,11 +1,30 @@
 # Changelog
 
-## 0.26.1 — 2026-11-12
+## 0.27.0 — 2026-11-14 (MCP interceptor, tool-set digests, ruleset 20)
 
-- Recognize Ubuntu’s packaged uutils aliases for read-only shell commands. A command shadowed by a project executable or symlink remains untrusted.
+A minor release: it adds a subcommand (`warden-mcp interceptor`) and new modules. 0.26.1 was cut from a tree without
+them, so everything below reaches npm for the first time here. Upgrading changes one default: ruleset 20 no longer
+blocks a bare "mnemonic" that names an EVM opcode (see the first item).
 
-## Unreleased
+- **Static scan ruleset 20: "mnemonic" as an EVM opcode name** ([#14](https://github.com/alexar76/warden/issues/14)).
+  `TOOL_DEF_SECRET_REQUEST` blocked an opcode lookup that returns "hex, mnemonic and description": in EVM the
+  mnemonic is the name of an instruction (`PUSH1`, `SSTORE`). The new guard `evmOpcodeMnemonic` clears a bare
+  "mnemonic" when its clause names opcodes, instructions, bytecode, a disassembler or the EVM, and nothing in the
+  clause asks for the secret:
+  - no possessive right before it ("your mnemonic", "the user's wallet mnemonic");
+  - no wallet word in the clause (wallet, recovery, seed, BIP39, 12/24 words, secret, private, keystore);
+  - no request whose object is the mnemonic: a request verb followed by the word within three tokens ("enter the
+    mnemonic", "supply a mnemonic", "ask the user for the mnemonic"), or the word followed by a requirement ("the
+    mnemonic is required", "must be provided"). A request verb aimed at the tool's input does not count, so "Paste
+    your bytecode and get the mnemonic of each opcode" clears (the reporter's follow-up on #14).
 
+  "Seed phrase" is not affected. The report's cases are regression tests, together with fifteen requests that carry
+  an EVM word and still block. Ruleset digest `sha256-s6KT1C2YyL3XbyqasSyExSh+0U8lsUjtypaSYo5bckA=`.
+- **A static-scan finding names the clause that fired** (#14). The message now ends with `in "<clause>"`, the
+  sentence around the match (up to 240 characters). Before, a blocked tool simply disappeared and its author had to
+  guess which sentence to rewrite. Codes, severities and verdicts are unchanged.
+- Tests: the copy of the `mcp-tool-set-digest/1` vectors is synced with the specification (73 vectors; the three
+  added on 2026-11-13 order the codes when several apply).
 - **`warden-mcp interceptor`: WARDEN as an MCP Interceptor Server (experimental).** Two validators on the response to
   `tools/list`, for a client, server or gateway that speaks the interceptor extension the MCP Interceptors Working
   Group is specifying (SEP-2624): `warden.tool-definition-integrity` compares the tool set with the approved one and
@@ -28,6 +47,10 @@
   139 and 50 calls and never started the job). Acceptance check 1 names the flags Multica 0.8.2 actually passes
   (`--permission-mode bypassPermissions`; `--strict-mcp-config` only with the agent's own MCP config, which Claude Code
   refuses next to `managed-mcp.json`) and asks to deny every tool by name (`Skill`, `Workflow`, `SendMessage`, …).
+
+## 0.26.1 — 2026-11-12
+
+- Recognize Ubuntu’s packaged uutils aliases for read-only shell commands. A command shadowed by a project executable or symlink remains untrusted.
 
 ## 0.26.0 — 2026-11-11 (field regressions, long task operations, no product in the core)
 

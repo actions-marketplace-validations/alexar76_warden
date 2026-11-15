@@ -1,0 +1,11 @@
+
+ RUN  v5.0.5 /Users/alex/Desktop/ai_tests/aicompany/aicom/.claude/worktrees/workspace-ecosystem-analysis-ffc02b/warden
+
+warning: on branch 'main', pushing ref 'codex/warden-wrap'
+warning: on branch 'main', pushing ref 'codex/warden-wrap'
+
+ Test Files  73 passed (73)
+      Tests  1788 passed (1788)
+   Start at  07:47:04
+   Duration  33.23s (tests 97%, import 2%)
+

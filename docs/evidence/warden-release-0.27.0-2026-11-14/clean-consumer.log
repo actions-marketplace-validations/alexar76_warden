@@ -1,0 +1,13 @@
+tarball buildDigest 403842d70620a8dd805ae4b4386613dc4b5804608b801ef75d674248a16c9772
+install=0
+exports: main true | codex.codexPre function | opencode.createWardenPlugin function
+ruleset 20 sha256-s6KT1C2YyL3XbyqasSyExSh+0U8lsUjtypaSYo5bckA=
+warden#14 A: [] 
+warden#14 B: [] 
+warden#14 C: [] 
+warden#14 D: ["TOOL_DEF_SECRET_REQUEST/high"] | "mnemonic" in "Provide your mnemonic to derive the address".
+warden#14 followup_paste_bytecode: [] 
+warden#14 verb_object_enter: ["TOOL_DEF_SECRET_REQUEST/high"] | "mnemonic" in "To deploy the bytecode, enter the mnemonic of the deployer".
+warden#14 wallet_evm: ["TOOL_DEF_SECRET_REQUEST/high"] | "mnemonic" in "Provide your wallet mnemonic to sign the EVM transaction".
+Usage: warden-mcp [command] [options]
+Usage: warden-mcp interceptor [--lock PATH]

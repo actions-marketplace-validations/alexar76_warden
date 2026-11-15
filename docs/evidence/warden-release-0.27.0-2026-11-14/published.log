@@ -1,0 +1,31 @@
+# WARDEN 0.27.0 publication check, 2026-11-15T10:20:55Z (server clock)
+
+$ npm view @aimarket/warden@0.27.0 version dist.shasum dist.integrity dist-tags.latest
+version = '0.27.0'
+dist.shasum = '66b5764aa95d945922308c750cd2664e571f41f6'
+dist.integrity = 'sha512-sUt+zLlk0rlpFUMRAkH3mmBH9iHdassQ/rR+i32hPYjWQn7BysKBjGodMRuqK8za1czAmWmPwNomBPGAB5AWzg=='
+dist-tags.latest = '0.27.0'
+
+$ npm view @aimarket/warden time (0.27.0)
+  "0.27.0": "2026-11-15T07:21:12.245Z"
+
+$ npm pack @aimarket/warden@0.27.0 (registry copy) | shasum -a 256 / shasum
+525622b730b3262d595aa2f3ad9ec059306a875fcf178b2ad1cd9cb15457829e  aimarket-warden-0.27.0.tgz (registry)
+66b5764aa95d945922308c750cd2664e571f41f6  aimarket-warden-0.27.0.tgz (registry)
+525622b730b3262d595aa2f3ad9ec059306a875fcf178b2ad1cd9cb15457829e  aimarket-warden-0.27.0.tgz (this folder)
+registry tarball = this folder's tarball, byte for byte
+
+$ npx -y @aimarket/warden@0.27.0 scan   (empty folder, the command from the warden#14 reply)
+WARDEN scan 0.27.0 · ruleset 20 sha256-s6KT1C2YyL3X… · block at high
+  read ~/.claude.json (claude-code, 0 servers)
+  read ~/Library/Application Support/Claude/claude_desktop_config.json (claude-desktop, 0 servers)
+
+
+0 servers: 0 allowed, 0 blocked, 0 not checked, 0 skipped.
+
+$ gh api repos/alexar76/warden/issues/14 (read-only)
+state open, comments 3
+2026-11-14T20:02:14Z alexar76 comment 6883419089
+2026-11-14T22:19:24Z minia2auk comment 6885083121
+2026-11-15T07:21:28Z alexar76 comment 6890999472
+reply 6890999472 = PromoMaterials/outreach/replies-2026-11-14/warden-14-reply.md, Reply 2, text identical

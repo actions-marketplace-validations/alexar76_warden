@@ -136,7 +136,8 @@ type GuardName =
   | "keyReference"
   | "keyStaysLocal"
   | "transferRefusal"
-  | "chineseRefusal";
+  | "chineseRefusal"
+  | "evmOpcodeMnemonic";
 
 // Imperative instructions aimed at the model — the classic injection tells.
 const INJECTION_PATTERNS: SignaturePattern[] = [
@@ -278,7 +279,7 @@ const SECRET_PATTERNS: SignaturePattern[] = [
   // maximally compromised" — and with the polarity guard, the template that
   // caused it ("do not … include private key material") no longer matches at all.
   { re: /\bprivate[_\s-]?key\b/i, code: "TOOL_DEF_SECRET_REQUEST", severity: "high", tier: "block", surfaces: PROSE, guards: ["polarity", "detection", "identifierFragment", "keyValue", "outputEnumLabel", "keyStaysLocal"] },
-  { re: /\bseed[_\s-]?phrase\b|\bmnemonic\b/i, code: "TOOL_DEF_SECRET_REQUEST", severity: "high", tier: "block", surfaces: PROSE, guards: ["polarity", "mention", "detection", "identifierFragment"] },
+  { re: /\bseed[_\s-]?phrase\b|\bmnemonic\b/i, code: "TOOL_DEF_SECRET_REQUEST", severity: "high", tier: "block", surfaces: PROSE, guards: ["polarity", "mention", "detection", "identifierFragment", "evmOpcodeMnemonic"] },
   { re: /~\/\.ssh|\bid_rsa\b|\.ssh\/[\w.-]+/i, code: "TOOL_DEF_SECRET_REQUEST", severity: "high", tier: "block", surfaces: PROSE, guards: ["polarity", "publicKeyPath"] },
   // v13. An ARGUMENT that takes key material by value, in words the private-key and seed-phrase rules do not
   // spell: a signing key, a wallet key, a key pair, a recovery phrase. The one rule that skips the tool's
@@ -1030,6 +1031,37 @@ const GUARDS: Record<GuardName, Guard> = {
   },
 
   /**
+   * "mnemonic" is also the EVM word for the human-readable name of an opcode
+   * (PUSH1, SSTORE, …), not only a BIP39 seed phrase. A bytecode disassembler,
+   * decompiler or analyzer that names the mnemonic of an instruction is not
+   * asking for a recovery phrase. The bare `\bmnemonic\b` rule cannot tell the
+   * two senses apart, so a nearby EVM word is what drops the finding — but only
+   * when nothing in the clause asks for a secret. An EVM word must never excuse a
+   * request: "Provide your wallet mnemonic to sign the EVM transaction" is a
+   * seed-phrase request with an EVM word in it, and stays blocked.
+   */
+  evmOpcodeMnemonic(m, text) {
+    if (!/\bmnemonic\b/i.test(m[0])) return null;
+    const { before, after } = clauseAround(text, m.index, m.index + m[0].length);
+    const clause = before + after;
+    // Whose mnemonic: a possessive right before it ("your mnemonic", "the user's wallet mnemonic").
+    if (/\b(?:your|their|his|her|my|our|user'?s|owner'?s|holder'?s)\s+(?:[\w-]+\s+){0,2}$/i.test(before)) return null;
+    // Wallet-secret words anywhere in the clause: an opcode name is never any of these.
+    if (/\b(?:wallet|recovery|seed|bip-?39|bip-?32|secret|private|passphrase|keystore|(?:12|24)[\s-]?words?)\b/i.test(clause)) return null;
+    // A request whose object is the mnemonic: a request verb, then the word within a short window
+    // ("enter the wallet mnemonic", "supply a 12-word mnemonic", "ask the user for the mnemonic"), or the
+    // word, then a requirement ("the mnemonic is required", "mnemonic must be provided"). A request verb
+    // aimed at something else in the clause does not count: "Paste your bytecode and get the mnemonic of
+    // each opcode" asks for bytecode (warden#14, the reporter's follow-up).
+    if (/\b(?:enter|provide|paste|send|supply|share|give|submit|upload|reveal|import|restore|recover|type(?:\s+in)?|input|ask(?:s|ing)?\s+(?:[\w'’-]+\s+){0,3}for|requires?|needs?)\s+(?:[\w'’-]+\s+){0,3}$/i.test(before)) return null;
+    if (/^\s+(?:[\w'’-]+\s+){0,2}(?:is|are|be)\s+(?:required|needed|mandatory)\b|^\s+(?:must|should|has\s+to|have\s+to)\s+be\s+(?:provided|entered|supplied|given|pasted|sent|typed)\b/i.test(after)) return null;
+    if (/\b(?:opcodes?|instructions?|bytecode|disassembl\w*|decompil\w*|evm|program\s+counter|push\d+|sstore|sload|mstore|callvalue|keccak256)\b/i.test(clause)) {
+      return "EVM opcode mnemonic — the human-readable name of an instruction, not a seed phrase";
+    }
+    return null;
+  },
+
+  /**
    * A harvest instruction says WHOSE secret, or WHERE it lives.
    *
    * The rule's own comment always claimed this: "read the user's api_key from
@@ -1291,7 +1323,7 @@ function hasExternalAddress(text: string): boolean {
 // not other tools), and an order to rewrite a parameter to a fixed value (`zeroArgRewrite`).
 // v19 is a post-hoc repair after the retained v18 MCPTox measurement. It keeps
 // public-key reads non-secret while blocking forced security-file side effects.
-export const STATIC_SCAN_RULESET_VERSION = "19";
+export const STATIC_SCAN_RULESET_VERSION = "20";
 
 const SEVERITY_RANK: Record<Severity, number> = {
   info: 0,
@@ -1458,7 +1490,12 @@ export class StaticScanGate implements WardenGate {
             }
             continue;
           }
-          void hay;
+          // The clause around the match goes in too (warden#14 follow-up): a blocked tool simply
+          // disappears, and its author needs to see which sentence did it to fix the prose.
+          const around = clauseAround(hay, m.index, m.index + m[0].length);
+          const clauseText = (around.before + m[0] + around.after).trim();
+          const context = clauseText.length > m[0].length + 2
+            ? ` in "${displaySafe(clauseText, CLAUSE_SHOWN_MAX)}"` : "";
           // The matched text goes into the message. Without it the reader gets
           // "matches TOOL_DEF_SECRET_HARVEST signature (\b(?:read|extract|…)" and
           // cannot tell which alternative fired, or on what — which is most of
@@ -1469,8 +1506,8 @@ export class StaticScanGate implements WardenGate {
             severity: rule.severity,
             code: rule.code,
             message: rule.note
-              ? `Tool "${shown}" ${where} ${rule.note} — at "${span}".`
-              : `Tool "${shown}" ${where} matches ${rule.code} signature (${describe(rule.re)}) at "${span}".`,
+              ? `Tool "${shown}" ${where} ${rule.note} — at "${span}"${context}.`
+              : `Tool "${shown}" ${where} matches ${rule.code} signature (${describe(rule.re)}) at "${span}"${context}.`,
             tool: tool.name,
           };
           if (rule.tier === "advise") finding.advisory = true;
@@ -1534,6 +1571,8 @@ function describe(re: RegExp): string {
 
 /** How much of the matched text a finding quotes back. */
 const SPAN_MAX = 80;
+/** How much of the clause around the match a finding quotes back (clauseAround already caps each side). */
+const CLAUSE_SHOWN_MAX = 240;
 
 /**
  * The texts a non-`raw` rule is matched against: the folded form and the raw
