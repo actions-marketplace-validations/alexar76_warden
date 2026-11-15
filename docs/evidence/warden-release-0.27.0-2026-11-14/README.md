@@ -42,8 +42,31 @@ The registry tarball equals the one in this folder byte for byte (sha256 `525622
 @aimarket/warden@0.27.0 scan` prints ruleset 20. The second reply on warden#14 went up at 07:21:28Z (comment
 6890999472, the text of the prepared draft); the issue stays open for the reporter's re-run. Check: `published.log`.
 
+## GitHub mirror, tag, MCP registry (2026-11-15)
+
+The owner pushed the mirror; the tag and the registry entries followed the same day. Checked by Claude from a
+fresh clone of github.com/alexar76/warden:
+
+- Mirror commit `d48ca87` (pushed 10:39Z by GitHub's clock): `package.json` 0.27.0; `src/`, `test/`, `docs/` and
+  `scripts/` equal the monorepo export of `7932d1609` file for file (the README badge header, LICENSE, CONTRIBUTING and
+  community files differ by the mirror's design); `verify_mirror_secrets.sh` passes on the clone; the four evidence files
+  that name the HISTOR host are absent. CI, CI macOS, npm dependency security and Pages passed.
+- Tag `v0.27.0` (annotated) points at `d48ca87`; the GitHub release (13:13:31Z) carries
+  `scripts/release-notes/v0.27.0/warden.md` unchanged. The release-triggered "Publish to MCP Registry" workflow was
+  cancelled before any step ran; the registry was published from the checkout instead.
+- Official MCP registry: `io.github.alexar76/warden` 0.27.0 (13:32:43Z) and `io.github.alexar76/aimarket-oracle-gateway`
+  0.3.3 (13:32:41Z), both active and latest.
+
 ## What is left
 
-1. The GitHub mirror still shows 0.26.1 (no v0.27.0 tag). The reply on #14 points at the A–D tests in
-   `test/warden-benign.test.ts`, which the mirror does not have until it is synced.
-2. MCP registry entry: `io.github.alexar76/warden` is at 0.26.1 in registry.modelcontextprotocol.io.
+Glama still showed 0.26.1 at the check; it reads the GitHub repo and refreshes on its own schedule. PulseMCP takes the
+official registry by itself and refuses scripted requests, so it is checked in a browser.
+
+Checked again 2026-11-15 ~16:10Z (server clock):
+- Glama: https://glama.ai/mcp/servers/alexar76/warden still shows 0.26.1.
+- PulseMCP (browser, search `alexar76`): four of our entries, none of them `io.github.alexar76/warden`. They are
+  argus3 0.3.6 (= registry latest; its card describes the WARDEN firewall inside ARGUS-3), "AIMarket Gateway"
+  (aimarket-mcp), "AIMarket Oracle Gateway" still 0.3.2 (registry 0.3.3 since 13:32Z) and "AIMarket Packager".
+  WARDEN, HISTOR, the hub and attested-memory are not listed. A banner says new submissions and listing changes are
+  paused while PulseMCP reworks ingestion, so there is nothing to submit; look again after it reopens.
+- warden#14: no new comment after Reply 2 (07:21:28Z); the issue is open, waiting for the author's A–D re-run.
