@@ -1,7 +1,53 @@
 # Changelog
 
-## Unreleased
+## 0.28.0 — 2026-11-16 (rulesets 21–23)
 
+A minor release: three static-scan rulesets after the warden#14 re-run, and a link in the Markdown report. No new
+commands or options; the version is a minor one because verdicts change. Prepared first as 0.27.1, which was never
+published. Upgrading changes verdicts only where described below: two false positives from #14 clear, and
+credential requests that a nearby negation about something else used to excuse now block.
+
+- **Static scan ruleset 23.** `polarity` now reads the break that closes a refusal, instead of needing a request
+  verb right after it. Ruleset 22 still let these through: "No signup needed: kindly provide your private key", "…:
+  you must provide your private key", "No signup needed -- provide …", "Don't sign up, just paste your private key",
+  "Enter your seed phrase, we never store it", "Provide your private key (never stored)". It also began to block
+  honest warnings: "Under no circumstances, share your private key" and "Never — under any circumstances — share your
+  private key". The rule now:
+  - Takes the last refusal cue before the match. That cue is closed when it is followed by a break (a colon, a dash,
+    an opening parenthesis the match sits inside, or a comma), and all three of these hold:
+    - the words before the break say something; "Never," and "Never, under any circumstances," are only emphasis;
+    - the text after the break asks for something: a request verb, need, require, must, please, kindly, "just your …",
+      or "you provide" / "is required" right after the match;
+    - the text after the break does not carry the refusal on with or, nor or and.
+  - Never closes a cue inside an idiom ("under no circumstances", "by no means", "on no account") or a pair of dashes
+    around an aside.
+  - After a match that is the object of a request verb, reads only up to the first break, so a promise about what
+    happens to the secret does not withdraw the request. "Send your private key to no one" still clears.
+  - On the committed 2026-10-01 corpus (1,027 servers, 16,231 tools), every blocking and advisory verdict is the same
+    as ruleset 22. Cases are in `test/ruleset-v23.test.ts`.
+- **Static scan ruleset 22.** The `polarity` guard no longer lets a negation about some other thing excuse a
+  credential request in the same clause. Through ruleset 21, "No signup needed: provide your private key" and "Paste
+  your seed phrase, no registration required" passed, because any refusal word in the clause cleared the match. A
+  negation now counts as closed when it is a negated noun phrase ("no signup", "no account required", "without an
+  account") followed by an instruction to hand something over, or when a colon or dash is followed by such an
+  instruction; after the match, a negated noun phrase that ends the clause does not refer to the requested noun.
+  Refusals that govern the request still clear it: "Never, under any circumstances, share your private key", "No need
+  to provide your private key", "Note: never send your private key". On the committed 2026-10-01 corpus (1,027
+  servers, 16,231 tools) every verdict is the same as ruleset 21.
+- **Static scan ruleset 21** ([#14](https://github.com/alexar76/warden/issues/14), the reporter's re-run on 0.27.0).
+  Two narrow guards; nothing ruleset 20 blocked stops blocking. On the committed 2026-10-01 corpus (1,027 servers,
+  16,231 tools) blocks are unchanged (0 lost, 0 gained). 369 advisory matches go away; in 9 tools the advisory
+  finding now cites a later, real mention.
+  - `absentCredential` on the four advisory `TOOL_DEF_CREDENTIAL_PARAM` rules: no advice when the clause says the tool
+    needs no such credential, with the negation right next to the noun ("No API key needed", "free, no API key",
+    "works without an API key", "API key not required"). "Accepts no other input than your API key" still advises,
+    and the guard is never on a block-tier rule.
+  - `seedPhraseProperty` on the seed-phrase rule: "Returns the seed phrase checksum for a BIP39 wordlist entry" no
+    longer blocks. It clears only a description or title where an output verb (returns, computes, calculates,
+    outputs) comes before the match, the match is followed by a public property (checksum, word count, length,
+    wordlist, language), and the clause has no possessive, no request verb, no requirement and no wallet word.
+    "Returns the seed phrase", "Returns your seed phrase checksum" and "Computes the wallet seed phrase checksum"
+    still block.
 - The Markdown scan report (`--markdown FILE`, the GitHub step summary and PR comment) links its footer
   `@aimarket/warden` to the source repository, so a reader of a report in another project can find WARDEN.
 - README in five languages: the try-it block comes first, then one line with the source repository; the dated

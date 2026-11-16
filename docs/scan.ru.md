@@ -7,11 +7,11 @@
 `warden-mcp scan` читает уже существующую у вас конфигурацию MCP, подключается к каждому серверу из неё и проверяет определения инструментов до того, как их увидит модель. Это та же цепочка гейтов, что у [`wrap`](../README-ru.md) и у [библиотеки](integration.ru.md), только пройденная один раз по вашим конфигам, а не перед одним сервером.
 
 ```bash
-npx -y @aimarket/warden@0.27.0 scan
+npx -y @aimarket/warden@0.28.0 scan
 ```
 
 ```text
-WARDEN scan 0.27.0 · ruleset 20 sha256-s6KT1C2YyL3X… · block at high
+WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.27.0
+      - uses: alexar76/warden@v0.28.0
         with:
           upload-sarif: 'true'
 ```

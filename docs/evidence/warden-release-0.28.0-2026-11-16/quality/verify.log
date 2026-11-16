@@ -1,0 +1,5 @@
+files prod 10995 candidate 10995
+outside WARDEN: only prod [] only candidate [] differ []
+candidate warden 0.28.0 dist js 71 buildDigest 25e77ff9c307fd9bf65296985b8137e831d6ee6a6d966e33b53c326f6fbf41c7
+source files 71
+HISTOR scanner imports @aimarket/warden 0.28.0 {"version":"23","digest":"sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g="}

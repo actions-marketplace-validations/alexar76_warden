@@ -1,0 +1,20 @@
+tarball buildDigest 25e77ff9c307fd9bf65296985b8137e831d6ee6a6d966e33b53c326f6fbf41c7
+install=0 (npm install --ignore-scripts of the tarball into an empty project)
+exports: main true | codex.codexPre function | opencode.createWardenPlugin function
+ruleset 23 sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g=
+#14 A: []
+#14 C: []
+#14 D: ["TOOL_DEF_SECRET_REQUEST/high"] | "mnemonic" in "Provide your mnemonic to derive the address".
+#14 E: []
+#14 G: ["TOOL_DEF_SECRET_REQUEST/high"] | "mnemonic" in "The mnemonic is required to derive the address".
+#14 J: []
+#14 K: ["TOOL_DEF_SECRET_REQUEST/high"] | "mnemonic" in "Derive the address from the mnemonic".
+v21 seed checksum: []
+v23 colon+word: ["TOOL_DEF_SECRET_REQUEST/high"] | "private key" in "No signup needed: kindly provide your private key".
+v23 comma: ["TOOL_DEF_SECRET_REQUEST/high"] | "private key" in "Don't sign up, just paste your private key".
+v23 promise: ["TOOL_DEF_SECRET_REQUEST/high"] | "seed phrase" in "Enter your seed phrase, we never store it".
+v23 honest idiom: []
+v23 honest dashes: []
+v21 "No API key needed" advisory credential findings: 0
+Usage: warden-mcp [command] [options]
+Usage: warden-mcp interceptor [--lock PATH]

@@ -9,8 +9,8 @@ authors:
 repository-code: "https://github.com/alexar76/warden"
 url: "https://warden.modelmarket.dev/"
 license: MIT
-version: 0.27.0
-date-released: 2026-11-14
+version: 0.28.0
+date-released: 2026-11-16
 keywords:
   - model-context-protocol
   - mcp-security

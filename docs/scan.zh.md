@@ -7,11 +7,11 @@
 `warden-mcp scan` 读取你已有的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。它与 [`wrap`](../README-zh.md) 和[库](integration.zh.md)使用同一条关卡链，只是对你的配置运行一次，而不是挡在单个服务器前面。
 
 ```bash
-npx -y @aimarket/warden@0.27.0 scan
+npx -y @aimarket/warden@0.28.0 scan
 ```
 
 ```text
-WARDEN scan 0.27.0 · ruleset 20 sha256-s6KT1C2YyL3X… · block at high
+WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.27.0
+      - uses: alexar76/warden@v0.28.0
         with:
           upload-sarif: 'true'
 ```

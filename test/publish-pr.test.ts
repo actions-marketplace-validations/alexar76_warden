@@ -15,6 +15,7 @@ it('Gitea PR mode retains gates, preserves the base branch and encodes a body fi
     for (const file of ['push_gitea_monorepo.sh', 'sanitize_git_commit_meta.py']) copyFileSync(join(source, file), join(scripts, file));
     writeFileSync(join(scripts, 'verify_whitepaper_links.sh'), '#!/bin/bash\nexit 0\n', { mode: 0o755 });
     writeFileSync(join(scripts, 'python_bug_gate.sh'), '#!/bin/bash\nexit 0\n', { mode: 0o755 });
+    writeFileSync(join(scripts, 'code_scan_gate.sh'), '#!/bin/bash\nexit 0\n', { mode: 0o755 });
     writeFileSync(join(bin, 'git'), `#!${process.execPath}
 const fs = require('node:fs');
 const args = process.argv.slice(2); fs.appendFileSync(process.env.TRACE, JSON.stringify(args)+'\\n');

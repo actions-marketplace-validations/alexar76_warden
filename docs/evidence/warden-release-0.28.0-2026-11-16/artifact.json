@@ -1,0 +1,24 @@
+{
+  "name": "@aimarket/warden",
+  "version": "0.28.0",
+  "tarball": "aimarket-warden-0.28.0.tgz",
+  "sha256": "f5cfaa70b30ba85dce6b48c7c5f82696cdc68cd0e6219ac65c117c2065adb958",
+  "npmShasum": "6b3752baae7821dcee3f599f2a8f40619c559906",
+  "integrity": "sha512-JfOF6FrI/Z/WpM6doelCYACLyez7aCVM3pOZWA7meqn8CciIzxs0XZbIOoWL9WQwg0tCaYFGQRQpHccPiThYHw==",
+  "size": 1143446,
+  "unpackedSize": 3842149,
+  "entryCount": 416,
+  "buildDigest": "25e77ff9c307fd9bf65296985b8137e831d6ee6a6d966e33b53c326f6fbf41c7",
+  "ruleset": {
+    "version": "23",
+    "digest": "sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g="
+  },
+  "sourceBase": "3e11a0697",
+  "preparedAt": "2026-11-16",
+  "published": false,
+  "supersedes": {
+    "version": "0.27.1",
+    "tarballSha256": "1946fddd8dcf131865fffdd2a7bae965d7560bcd5e62fbd21c594a456d7b1b15",
+    "why": "renumbered to a minor version at the owner's request; same source and build digest, never published"
+  }
+}

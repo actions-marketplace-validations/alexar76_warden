@@ -354,10 +354,10 @@ describe("exfil detection is anchored on an external destination", () => {
 describe("ruleset is versioned and digestible", () => {
   it("exposes a stable digest over the rule table", () => {
     const rs = staticScanRuleset();
-    expect(rs.version).toBe("20");
+    expect(rs.version).toBe("23");
     // If this fails you changed a rule: bump STATIC_SCAN_RULESET_VERSION and
     // update the value here. A scan result is only comparable within one digest.
-    expect(rs.digest).toBe("sha256-s6KT1C2YyL3XbyqasSyExSh+0U8lsUjtypaSYo5bckA=");
+    expect(rs.digest).toBe("sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g=");
     // The fold is part of the ruleset identity: the same regexes over folded and
     // unfolded text are different scans, so the digest covers it too.
     expect(rs.fold).toBe("escapes+entities+percent+base64/4x64k+nfkc+tags+invisible+confusables/2");
@@ -369,7 +369,8 @@ describe("ruleset is versioned and digestible", () => {
     // A rule's guards are part of the table, so the digest changes when a guard
     // is added even if every regex stays byte-identical. v5 added the navigation
     // and autonomy guards and the secret-exfil pair guard.
-    expect(rs.rules.filter((r) => r.guards.length > 0).length).toBe(32);
+    // v21 gave the four advisory TOOL_DEF_CREDENTIAL_PARAM rules the absentCredential guard: 32 → 36.
+    expect(rs.rules.filter((r) => r.guards.length > 0).length).toBe(36);
     // v3: every rule declares its surfaces, and the tool name is scanned by the
     // phrase and hidden-payload rules but by none of the noun-keyed ones.
     // One exception since v13: the rule for key material taken BY VALUE reads argument descriptions only,
