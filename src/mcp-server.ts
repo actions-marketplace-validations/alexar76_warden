@@ -85,6 +85,7 @@ const USAGE = `Usage: warden-mcp [command] [options]
   hook              Claude Code hook (session-start|pre-tool-use|post-tool-use|user-prompt-submit|stop)
   task              constrained task mode: warden-mcp task --help
   flow-labels       list the unlabeled MCP tools your sessions used, with a labels block to correct
+  gateway           HTTP proxy for MCP/OpenAPI tool servers + flow-guard decision service (OpenWebUI): --config FILE
 
 Docs: https://github.com/alexar76/warden#readme · scan guide: docs/scan.md
 `;
@@ -111,6 +112,10 @@ async function entry(): Promise<void> {
   if (process.argv[2] === 'interceptor') {
     const code = await (await import("./interceptor-server.js")).runInterceptorCli(process.argv.slice(3));
     stdout.write("", () => process.exit(code));
+    return;
+  }
+  if (process.argv[2] === 'gateway') {
+    process.exitCode = await (await import("./gateway.js")).runGatewayCli(process.argv.slice(3));
     return;
   }
   if (process.argv[2] === 'flow-labels') {

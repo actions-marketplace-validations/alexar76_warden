@@ -1,0 +1,24 @@
+{
+  "name": "@aimarket/warden",
+  "version": "0.30.0",
+  "tarball": "aimarket-warden-0.30.0.tgz",
+  "sha256": "83b7b8086fb00358e97c3e6966fbe9043782367e5fce9da835ead29665c7ea90",
+  "npmShasum": "2c43b950f5284fd8215de7f6b409a9fe1d880d68",
+  "integrity": "sha512-8jQOkrJr3k0T5xAJxOOgj20KbbRn8mSOepf4uBLbs1L8Q8WA5XZbdfCrsajm2RE9gJJr3DqSHXTJGqq/E+oGDQ==",
+  "size": 3708725,
+  "unpackedSize": 6872908,
+  "entryCount": 470,
+  "buildDigest": "73c618fbc7e75ce7d506d17a7c5b061e8ad9fd75fb81b728fc5829f6a255218d",
+  "ruleset": {
+    "version": "23",
+    "digest": "sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g="
+  },
+  "malwareList": {
+    "sha256": "b656eb8a15d8b2d0ad9d54a4f02606f9fd28a460d90dbc8d91968ffc38b80526",
+    "packages": 237594
+  },
+  "sourceBase": "49e1c6b39",
+  "preparedAt": "2026-11-17",
+  "published": false,
+  "qualityGate": "pending"
+}

@@ -36,8 +36,18 @@ export interface ScreenCall {
 const SCREEN_WORDS = /(^|_|-)(screenshot|snapshot|screen|observe|accessibility|a11y|read_?page|page_?content|get_?(page|elements|ui|tree|screen|state)|elements|ui_?tree|dom|inspect)(_|-|$)/i;
 const POINTER_WORDS = /(^|_|-)(click|tap|double_?click|right_?click|left_?click|middle_?click|triple_?click|press_?(button|element)|mouse|pointer|touch|drag|drop|swipe|long_?press)(_|-|$)/i;
 // `type` in known control names, not arbitrary nouns such as `get_cuisine_type`.
-const TYPE_WORDS = /(^|_|-)(type_?text|input_?text|insert_?text|enter_?text|fill)(_|-|$)|^type(_|-|$)|^(browser|screen|computer|desktop|keyboard)[_-]type$/i;
-const KEY_WORDS = /(^|_|-)(key|keys|keypress|key_?press|hotkey|shortcut|keyboard|paste)(_|-|$)/i;
+const TYPE_WORDS = /(^|_|-)(type_?text|input_?text|insert_?text|enter_?text|fill|typewrite)(_|-|$)|^type(_|-|$)|^(browser|screen|computer|desktop|keyboard)[_-]type$/i;
+// Any `key` segment is a key press (`key`, `Key-Tool`, `key_toggle`, `vnc_key`, `press_keys`, `keyevent`), except where
+// it names a credential or a data key: `read_api_key`, `delete_ssh_keys`, `key_value_get`, `list_keys`, `rotate_key`.
+// The plain segment rule refused those after outside text (OpenWebUI live check, 2026-11-17); a first narrowing to
+// press verbs missed real keyboard tools (independent review, same day), so the exemptions are listed instead.
+const KEY_SEGMENT = /(^|_|-)(key|keys|keypress|keyevent|key_?press|hotkey|shortcut|keyboard|paste)(_|-|$)|^press$/i;
+const KEY_PRESSING = /(press|send|type|hit|hold|release|tap)_?keys?(_|$)|(^|_)keys?_?(press|down|up|combo|combination|stroke|event|action|toggle|sequence|input|type|send|tap)|keypress|keyevent|keystrokes?|hotkeys?|keyboard|shortcut|paste|^press$/i;
+const KEY_NOUN = /(^|_)(api|ssh|access|secret|private|public|licen[cs]e|encryption|signing|gpg|pgp|rsa|ecdsa|ed25519|aes|crypto|auth|session|primary|foreign|partition|sort|cache|idempotency|object|s3|kms|master|product|registry|deploy|webhook|client|service|account|jwt|cert|certificate|storage|bucket|redis|kv|hash|dict|json|config|env|lookup|index|unique|composite|translation|i18n|metric|label|wallet|host_?)_?keys?(_|$)|(^|_)keys?_(value|values|id|ids|name|names|pair|pairs|store|stores|list|vault|ring|chain|file|files|path|rotation|material|spec|info|metadata|exists|count)(_|$)/i;
+// A data verb before the key, with up to three words between (`get_stripe_key`, `redis_get_key`, `set_key`), or after
+// it (`key_get`, `kv_key_delete`). Press verbs (`send_key`, `press_key`, `hold_key`) are matched first by KEY_PRESSING.
+const KEY_DATA_VERB = /(^|_)(list|rotate|create|delete|del|revoke|generate|import|export|read|get|set|put|fetch|store|save|update|describe|lookup|find|show|retrieve|copy|upload|download|add|remove|manage|verify|validate|check|sign|encrypt|decrypt|new|issue|renew|has|count|exists|expire|rename|scan|load|reset|regenerate)_([a-z0-9]+_){0,3}keys?$|(^|_)keys?_(get|set|put|read|fetch|del|delete|remove|list|exists|lookup|expire|rename|scan|ttl|create|rotate|revoke)(_|$)/i;
+const KEY_WORDS = { test: (name: string) => KEY_SEGMENT.test(name) && (KEY_PRESSING.test(name) || !(KEY_NOUN.test(name) || KEY_DATA_VERB.test(name))) };
 const keyControl = (name: string) => KEY_WORDS.test(name) || TYPE_WORDS.test(name);
 const GENERIC_CONTROL = /^(computer|screen_control|desktop_control|browser_control)$/i;
 // Exempt only complete observation names, never a substring such as `screenshot_then_submit`.

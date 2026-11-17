@@ -1,0 +1,76 @@
+# OpenWebUI behind the WARDEN gateway, as one local stack (scripts/openwebui-local-deploy.sh fills ./warden, ./fixtures,
+# ./state and .env). Two networks:
+#   tools  — the tool servers and the gateway. OpenWebUI is not on it, so it reaches tool servers only through the gateway.
+#   front  — OpenWebUI, the gateway, and what OpenWebUI may call directly (models, web search).
+# Published on 127.0.0.1 only: OpenWebUI, and the control port of the demo tool servers (call log, poison/reset) for
+# the checks — not their MCP or OpenAPI ports.
+#
+# Image: the same OpenWebUI release as the deployed chat (0.11.4, slim). Models: OpenRouter (the allowed ids are set
+# by the deploy script) plus the scripted model of the live checks. Replace `fixtures` with your real tool servers on
+# the `tools` network and list them in state/gateway.json.
+name: warden-openwebui
+
+networks:
+  tools: {}
+  front: {}
+
+services:
+  fixtures:                     # demo tool servers: MCP :9101 (chat), :9101/mcp-web (web), OpenAPI :9103 (notes)
+    image: node:22-bookworm-slim
+    command: ["node", "/fx/fixtures.mjs"]
+    environment: { FIXTURES_ROLE: tools }
+    volumes: ["./fixtures:/fx:ro"]
+    networks: [tools]
+    ports: ["127.0.0.1:${FIXTURES_PORT:-19101}:9104"]   # control only: /calls, /control/*
+    restart: unless-stopped
+
+  fakes:                        # scripted model :9100 and web search :9102, for the checks
+    image: node:22-bookworm-slim
+    command: ["node", "/fx/fixtures.mjs"]
+    environment: { FIXTURES_ROLE: front }
+    volumes: ["./fixtures:/fx:ro"]
+    networks: [front]
+    restart: unless-stopped
+
+  warden-gateway:
+    image: node:22-bookworm-slim
+    command: ["node", "/warden/dist/mcp-server.js", "gateway", "--config", "/state/gateway.json"]
+    environment:
+      WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN:?}
+      WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN:?}
+    volumes: ["./warden:/warden:ro", "./state:/state"]
+    networks: [tools, front]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:${OWUI_TAG:-v0.11.4-slim}
+    depends_on: [warden-gateway, fakes]
+    networks: [front]
+    ports: ["127.0.0.1:${OWUI_PORT:-3000}:8080"]
+    environment:
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:?}
+      ENABLE_SIGNUP: "false"                       # as on the deployed chat; the first admin is still created
+      ENABLE_OLLAMA_API: "false"
+      OPENAI_API_BASE_URLS: "https://openrouter.ai/api/v1;http://fakes:9100/v1"
+      OPENAI_API_KEYS: "${OPENROUTER_API_KEY:?};scripted"
+      # WARDEN: tool servers learn the chat and the user (X-OpenWebUI-Chat-Id / -User-Id).
+      ENABLE_FORWARD_USER_INFO_HEADERS: "true"
+      TOOL_SERVER_CONNECTIONS: >-
+        [{"type":"mcp","url":"http://warden-gateway:8787/mcp/chat","path":"","auth_type":"bearer","key":"${WARDEN_GATEWAY_TOKEN}","config":{"enable":true},"info":{"id":"chat","name":"chat (via WARDEN)"}},
+         {"type":"mcp","url":"http://warden-gateway:8787/mcp/web","path":"","auth_type":"bearer","key":"${WARDEN_GATEWAY_TOKEN}","config":{"enable":true},"info":{"id":"web","name":"web (via WARDEN)"}},
+         {"type":"openapi","url":"http://warden-gateway:8787/openapi/notes","path":"openapi.json","auth_type":"bearer","key":"${WARDEN_GATEWAY_TOKEN}","config":{"enable":true},"info":{"id":"notes","name":"notes (via WARDEN)"}}]
+      ENABLE_WEB_SEARCH: "true"
+      WEB_SEARCH_ENGINE: external
+      EXTERNAL_WEB_SEARCH_URL: http://fakes:9102/search
+      BYPASS_WEB_SEARCH_WEB_LOADER: "true"
+      BYPASS_EMBEDDING_AND_RETRIEVAL: "true"
+      RAG_EMBEDDING_MODEL_AUTO_UPDATE: "false"
+      OFFLINE_MODE: "true"
+    volumes: ["owui-data:/app/backend/data"]
+    restart: unless-stopped
+
+volumes:
+  owui-data:

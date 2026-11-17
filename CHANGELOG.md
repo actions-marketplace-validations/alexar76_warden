@@ -1,7 +1,26 @@
 # Changelog
 
-## Unreleased
+## 0.30.0 — 2026-11-17 (gateway for OpenWebUI, launch package checks)
 
+A minor release: `warden-mcp gateway`, a new command that brings WARDEN to platforms without agent hooks (OpenWebUI
+first), and a malware gate that checks every package a launch line installs. Prepared first as 0.29.1 with the launch
+package checks only, never published. Rulesets are unchanged (23). Verdicts change for stdio launches that install an
+extra listed package (`--package`, `npm:` aliases, `--with`), and for tool names with `key`: data keys are no longer
+keyboard input, keyboard tools still are.
+
+- **Check every package named by a stdio launcher before starting it.** The malware gate now checks repeatable
+  npm `--package` options, resolves `npm:` aliases to the package they install, and checks additional packages
+  named with Python launchers’ `--with`. `pipx run --spec` selects the package when its executable has a different
+  name. An OpenSSF match blocks the launch even when its main package is clean.
+- **Flow guard: reading a key is not a key press.** The screen heuristic took any `key` segment in a tool name for
+  keyboard input, so after outside text `read_api_key`, `get_api_key`, `list_keys` or `rotate_key` were refused or
+  asked about as a `screen_action` (found by a real model in the OpenWebUI live check, 2026-11-17). A `key` segment is
+  still a key press (`key`, `Key-Tool`, `key_toggle`, `vnc_key`, `press_keys`, `keyevent`, `press`, `typewrite`), except
+  where it names a credential or data key (`api_key`, `ssh_keys`, `key_value`, `list_keys`, `rotate_key`, `get_key`,
+  `get_stripe_key`, `redis_get_key`, `key_get`). A
+  first narrowing to press verbs missed real keyboard tools and was replaced after an independent review. Applies to the
+  Claude Code plugin, Codex hooks, OpenCode and the gateway. Red-team replay unchanged: 0 of 28; `data` profiles 3 of 28,
+  the same three.
 - **A verdict names the threshold it was decided under.** `Warden.evaluate()` (and `vet`, `vetLaunch`) returned
   `allow` and the findings without the `blockAtSeverity` that turned one into the other, so two consumers with
   different policies stored different answers for the same findings and neither record said why. The verdict now
@@ -9,6 +28,52 @@
   The `vet_mcp_server` MCP tool returns it too. `warden scan` reports already had it as `policy.blockAtSeverity`.
   Suggested in [#14](https://github.com/alexar76/warden/issues/14). `WardenVerdict` gains the required field;
   code that builds a `WardenVerdict` by hand must set it. Verdicts and the ruleset digest do not change.
+- **`warden-mcp gateway`: WARDEN for platforms without agent hooks, OpenWebUI first.** One process with one
+  flow-guard state per chat:
+  - `/mcp/<name>`: proxy in front of an MCP server over Streamable HTTP. It answers `tools/list` itself after the
+    gates and pinning `wrap` uses (`vetAndPin`), asks the flow guard before `tools/call`, records and screens the
+    result, and passes JSON or SSE answers through; a blocked list leaves nothing callable from before.
+  - `/openapi/<name>/…`: the same for OpenAPI tool servers (`mcpo`); operations are tools named by `operationId`, and
+    the client gets a spec with only allowed operations and no `servers`.
+  - `/v1/prompt|source|pre|post|approve|health`: the decision service for what never passes a proxy (the person's
+    message, web search, documents, the platform's own tools). No new rules: `flowPre`, `flowPost`, `flowPrompt`.
+  - `ask` becomes a one-time approval code bound to the chat, the user, the tool and the exact arguments, valid ten
+    minutes; only `/v1/approve` (optional separate token) redeems it. A call without a chat id is judged as made after
+    outside text.
+  - `integrations/openwebui/`: a Filter function and `@warden_guard` for OpenWebUI Python tools (standard library).
+  - A tool list WARDEN blocked, or could not read or check, is answered as an empty list, not an error (OpenWebUI 0.11
+    fails the whole message on a `tools/list` error), and clears what every session could call.
+  - Approval codes are files under `<stateDir>/gateway/approvals` (exclusive create, answered and consumed by rename): a
+    restart keeps them and several processes can share a state folder. The preview marks everything it shortens.
+  - `requireAdapter` (default on): a chat the adapter never reported a message for counts as having read outside text,
+    so switching the Filter off cannot make proxied sends look clean.
+  - The Filter's `guard_builtin_tools` (default on) wraps OpenWebUI's own tools from inside the Function: `search_web` and
+    `fetch_url` reach the flow guard as `WebSearch` / `WebFetch` when their result arrives; notes, memory, code and the
+    rest go through `/v1/pre` and `/v1/post` with OpenWebUI's confirmation dialog. Sources the Filter cannot record are
+    removed from the message; a chat new to the gateway with history counts as outside text.
+  - Fixes from an independent review: RFC 8785 argument hash (a decimal no longer breaks approval); any gateway error
+    refuses (the Python guard ran the tool on one) and `risky=True` is the default; SSE ids compared as strings and other
+    responses in a call's stream dropped; `tools/call` without an id refused; `resources/read`, `prompts/get` and
+    `completion` results recorded; GET-stream responses dropped and `last-event-id` not forwarded; OpenAPI picks the most
+    specific path, refuses equal matches and argument names in two places, binds a code to the exact request and drops
+    `servers` at every level; dot segments refused; `/v1/health` details only with the token; session ids encoded; no
+    code without a chat id.
+  - Fixes from the second review round: any message with `result` or `error` is a response, so `"method": null` no
+    longer skips screening, and stray responses, batches and unreadable data are dropped (also from JSON answers to
+    passed-on requests); `resources/read`, `prompts/get` and `completion/complete` are judged before they are sent and
+    get a notice; backslashes in the path refused; a chat whose state retention removed comes back as having read
+    outside text; unrecorded earlier messages are kept from the model; OpenAPI reads the spec on every call (no
+    15-second window) and forwards the body it judged in RFC 8785 form, refusing integers over 15 digits; the purge
+    also removes expired codes and their previews; the dialog shows arguments line by line; key names such as
+    `get_crm_key`, `redis_get_key` and `key_get` read as data.
+  - `examples/openwebui/docker-compose.yml` and `scripts/openwebui-local-deploy.sh`: OpenWebUI (default `v0.11.4-slim`)
+    behind the gateway, tool servers on their own network. Checks: `scripts/openwebui-live-check.sh` (throw-away copy,
+    scripted model, native, "Default" and OpenAPI), `scripts/openwebui-live/browser.py` (dialogs, built-in tools, web
+    search with real models, in Chromium), `scripts/openwebui-live/client-cdp.mjs` (the Open WebUI desktop app),
+    `drive.py real` (real models). On 2026-11-17, on v0.11.4, every scenario ended as expected; Qwen 3.8 27B once
+    followed an injected document and WARDEN refused the delete; every attempt to send a live key on was refused.
+    Docs in five languages with diagrams: [gateway](docs/gateway.md), [OpenWebUI](docs/openwebui.md); their terms
+    are in the localization glossary (WARDEN gateway and OpenWebUI terms).
 
 ## 0.29.0 — 2026-11-17 (known-malicious packages)
 

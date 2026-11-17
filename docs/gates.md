@@ -253,7 +253,7 @@ Built-in codes: `THREAT_TYPOSQUAT`, `THREAT_CRYPTO_DRAINER`, `THREAT_SEED_PHRASE
 
 ## malware-list
 
-Checks the package a stdio server is started from (`npx`, `bunx`, `npm exec`, `pnpm dlx`, `yarn dlx`, `bun x`, `uvx`, `uv tool run`, `pipx run`) against a list of known-malicious npm and PyPI packages that ships with WARDEN. It reads the launch line only, so `vetLaunch` runs it before anything starts: `npx -y` and `uvx` run a package's install scripts, and a known piece of malware has done its harm before any tool definition can be read.
+Checks each registry package explicitly named by a stdio launcher (`npx`, `bunx`, `npm exec`, `pnpm dlx`, `yarn dlx`, `bun x`, `uvx`, `uv tool run`, `pipx run`) against the list of known-malicious npm and PyPI packages shipped with WARDEN. This covers repeated `--package` options, npm alias targets, and additional packages specified with `--with`. `vetLaunch` checks them before install scripts can run. The gate reads the launch arguments. Transitive dependencies, requirements files and non-registry sources need separate inspection.
 
 | Source | What a match does |
 |---|---|

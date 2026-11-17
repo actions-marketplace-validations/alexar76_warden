@@ -1,0 +1,13 @@
+tarball sha256 83b7b8086fb00358e97c3e6966fbe9043782367e5fce9da835ead29665c7ea90
+install=0 (npm i --ignore-scripts into an empty project)
+exports: main function | codex.codexPre function | opencode.createWardenPlugin function
+launchPackage npx -y --package flatmap-stream@0.1.1 some-cli -> {"ecosystem":"npm","name":"flatmap-stream","version":"0.1.1"}
+launchPackage npx -y npm:flatmap-stream@0.1.1 -> {"ecosystem":"npm","name":"flatmap-stream","version":"0.1.1"}
+launchPackage uvx --with foo==1.0 bar -> {"ecosystem":"pypi","name":"bar"}
+malware gate, npx -y --package flatmap-stream@0.1.1 harmless-cli: BLOCK KNOWN_MALICIOUS_PACKAGE
+keyboard tools: vnc_key=keyboard Key-Tool=keyboard key_toggle=keyboard press_keys=keyboard
+data keys: read_api_key=data list_keys=data get_stripe_key=data key_get=data
+$ warden-mcp gateway --config gateway.json (no servers)
+  health without token: {"ok":true,"version":"0.30.0"}
+  health with token:    {"ok":true,"version":"0.30.0","mode":"ask","servers":[]}
+  /v1/pre without token: HTTP 401
