@@ -1668,7 +1668,7 @@ export class StaticScanGate implements WardenGate {
       }
     }
 
-    return { findings, score: scoreFor(findings) };
+    return { findings, score: scoreFor(findings), ruleset: staticScanRulesetRef() };
   }
 }
 

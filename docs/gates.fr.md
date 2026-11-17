@@ -22,7 +22,7 @@ avant tout examen.
 
 ## Comment un verdict est assemblé
 
-Chaque porte renvoie `{ findings, score, fatal? }`. La chaîne :
+Chaque porte renvoie `{ findings, score, fatal?, ruleset? }` ; la porte d'analyse statique renseigne toujours `ruleset` avec son `{ version, digest }`. La chaîne :
 
 1. exécute toutes les portes dans l'ordre, en accumulant les constats (chaque porte voit `prior`) ;
 2. multiplie les scores des portes — le composite est un **produit**, donc une porte mauvaise tire tout

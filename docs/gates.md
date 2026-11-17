@@ -21,7 +21,7 @@ only fetch WARDEN ever makes is `ThreatFeed.load(url)`, which you call yourself,
 
 ## How a verdict is assembled
 
-Each gate returns `{ findings, score, fatal? }`. The chain:
+Each gate returns `{ findings, score, fatal?, ruleset? }`; the static-scan gate always sets `ruleset` to its `{ version, digest }`. The chain:
 
 1. runs every gate in order, accumulating findings (each gate sees `prior`);
 2. multiplies the gate scores — the composite is a **product**, so one bad gate drags the server down

@@ -20,7 +20,7 @@ static-scan  →  threat-feed  →  origin  →  pinning
 
 ## 裁定是怎么拼出来的
 
-每个门控返回 `{ findings, score, fatal? }`。整条链：
+每个门控返回 `{ findings, score, fatal?, ruleset? }`；静态扫描门控总会在 `ruleset` 中给出其 `{ version, digest }`。整条链：
 
 1. 按顺序运行每个门控，累积发现（每个门控都能看到 `prior`）；
 2. 把各门控的评分**相乘**——综合评分是乘积，所以一个坏门控会把整台服务器拉下来，而不是被三个好门控平均掉；

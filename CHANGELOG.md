@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **The static-scan gate's result names its ruleset.** `StaticScanGate.evaluate()` returned `{ findings, score }`
+  only, so a caller running the gate on its own could not tell which rule table produced a verdict. It now also
+  returns `ruleset: { version, digest }`, the same ref `warden scan` puts at the top of its report and
+  `Warden.evaluate()` returns as `rulesets.staticScan`. Suggested in
+  [#14](https://github.com/alexar76/warden/issues/14). `WardenGateResult` gains the optional `ruleset` field; other
+  gates leave it unset. Verdicts and the ruleset digest do not change.
+
 ## 0.28.0 — 2026-11-16 (rulesets 21–23)
 
 A minor release: three static-scan rulesets after the warden#14 re-run, and a link in the Markdown report. No new

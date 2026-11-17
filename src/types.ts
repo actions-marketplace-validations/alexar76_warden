@@ -101,6 +101,12 @@ export interface WardenGateResult {
   score: number;
   /** If true, short-circuit the chain and block immediately. */
   fatal?: boolean;
+  /**
+   * The rule table that produced these findings, for a gate that has one. The
+   * static-scan gate always sets it, so a caller that runs the gate on its own
+   * can tell a ruleset change from a description change between two versions.
+   */
+  ruleset?: RulesetRef;
 }
 
 export interface WardenGate {

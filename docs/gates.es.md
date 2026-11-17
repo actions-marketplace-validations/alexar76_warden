@@ -21,7 +21,7 @@ descarga que WARDEN llega a hacer es `ThreatFeed.load(url)`, que llamas tú, ant
 
 ## Cómo se ensambla un veredicto
 
-Cada puerta devuelve `{ findings, score, fatal? }`. La cadena:
+Cada puerta devuelve `{ findings, score, fatal?, ruleset? }`; la puerta de análisis estático siempre rellena `ruleset` con su `{ version, digest }`. La cadena:
 
 1. ejecuta todas las puertas en orden, acumulando hallazgos (cada puerta ve `prior`);
 2. multiplica las puntuaciones de las puertas — la compuesta es un **producto**, así que una puerta
