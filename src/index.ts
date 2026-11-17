@@ -218,6 +218,7 @@ export class Warden {
       allowedTools,
       blockedTools,
       rulesets: { staticScan: staticScanRulesetRef() },
+      blockAtSeverity: this.policy.blockAtSeverity,
     };
   }
 

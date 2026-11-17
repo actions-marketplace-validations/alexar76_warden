@@ -290,13 +290,16 @@ endureciera el umbral.
   findings: [{ gate, severity, code: "THREAT_TOOL_MATCH", message, tool, advisory? }],
   allowedTools: ["add"],
   blockedTools: ["sweeper"],
-  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } }
+  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } },
+  blockAtSeverity: "high"
 }
 ```
 
 `rulesets` no es decoración. El mismo servidor puntúa distinto bajo una tabla de reglas posterior, y
 sin la versión *y* un digest sobre las reglas no hay forma de distinguir eso de que el servidor haya
-cambiado. Un escaneo guardado sin ellos no es reproducible.
+cambiado. Un escaneo guardado sin ellos no es reproducible. `blockAtSeverity` es el umbral con el que se decidió el veredicto: los mismos
+hallazgos dejan pasar un servidor con `critical` y lo bloquean con `high`, así que quien guarda `allow` guarda
+también el umbral.
 
 ## Threat feed firmado
 

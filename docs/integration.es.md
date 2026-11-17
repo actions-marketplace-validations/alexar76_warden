@@ -55,6 +55,7 @@ Tres cosas que compra este orden, y todas se pierden con facilidad moviendo una 
    buenas sigue siendo utilizable; quita solo lo que el veredicto nombró.
 3. **Registra el veredicto, incluido `verdict.rulesets`.** Sin la versión y el digest del conjunto de
    reglas, un escaneo guardado no se puede distinguir de que el servidor cambiara después.
+   Guarda también `verdict.blockAtSeverity`: con otro umbral, los mismos hallazgos dan otro `allow`.
 
 ## Aprobación por llamada
 

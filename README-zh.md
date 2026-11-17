@@ -282,12 +282,14 @@ flowchart LR
   findings: [{ gate, severity, code: "THREAT_TOOL_MATCH", message, tool, advisory? }],
   allowedTools: ["add"],
   blockedTools: ["sweeper"],
-  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } }
+  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } },
+  blockAtSeverity: "high"
 }
 ```
 
 `rulesets` 不是装饰。同一台服务器在更晚的规则表下会得到不同评分；如果既没有版本号、也没有对规则内容的摘要，
-就无法把这种情况与「服务器本身变了」区分开。缺了它们，留档的扫描结果不可复现。
+就无法把这种情况与「服务器本身变了」区分开。缺了它们，留档的扫描结果不可复现。`blockAtSeverity` 是作出该裁定时的阈值：同样的发现在 `critical` 下放行服务器、在 `high` 下
+阻断它，所以保存 `allow` 时也要保存阈值。
 
 ## 已签名的威胁情报 feed
 

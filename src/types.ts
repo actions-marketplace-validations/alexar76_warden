@@ -76,6 +76,13 @@ export interface WardenVerdict {
    * to tell that apart from the server having changed.
    */
   rulesets: { staticScan: RulesetRef };
+  /**
+   * The policy threshold that turned these findings into `allow`. Findings at
+   * or above it block unless they are advisory; advisory findings never block.
+   * The same findings can give a different `allow` under another threshold, so
+   * a stored verdict names the one it was decided under.
+   */
+  blockAtSeverity: Severity;
 }
 
 /** Identifies an exact rule table: a human version plus a digest of its content. */

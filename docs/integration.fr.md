@@ -55,6 +55,7 @@ Trois choses que cet ordre vous achète, et qu'il est facile de perdre en dépla
    bons reste utilisable ; ne retirez que ce que le verdict a nommé.
 3. **Consignez le verdict, y compris `verdict.rulesets`.** Sans la version et l'empreinte du jeu de
    règles, un scan archivé ne peut pas être distingué d'un serveur qui a changé après coup.
+   Conservez aussi `verdict.blockAtSeverity` : sous un autre seuil, les mêmes constats donnent un autre `allow`.
 
 ## Approbation par appel
 

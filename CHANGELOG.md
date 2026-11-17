@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **A verdict names the threshold it was decided under.** `Warden.evaluate()` (and `vet`, `vetLaunch`) returned
+  `allow` and the findings without the `blockAtSeverity` that turned one into the other, so two consumers with
+  different policies stored different answers for the same findings and neither record said why. The verdict now
+  carries `blockAtSeverity` beside `rulesets`: the effective threshold, after an invalid value is repaired to `high`.
+  The `vet_mcp_server` MCP tool returns it too. `warden scan` reports already had it as `policy.blockAtSeverity`.
+  Suggested in [#14](https://github.com/alexar76/warden/issues/14). `WardenVerdict` gains the required field;
+  code that builds a `WardenVerdict` by hand must set it. Verdicts and the ruleset digest do not change.
+
 ## 0.29.0 — 2026-11-17 (known-malicious packages)
 
 A minor release: a new gate that refuses to start npm and PyPI packages OpenSSF lists as malware, and the ruleset

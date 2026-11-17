@@ -290,13 +290,16 @@ bloquante pour quiconque durcissait le seuil.
   findings: [{ gate, severity, code: "THREAT_TOOL_MATCH", message, tool, advisory? }],
   allowedTools: ["add"],
   blockedTools: ["sweeper"],
-  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } }
+  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } },
+  blockAtSeverity: "high"
 }
 ```
 
 `rulesets` n'est pas un ornement. Le même serveur obtient un autre score sous une table de règles
 plus récente, et sans la version *et* une empreinte des règles, rien ne permet de distinguer cela
-d'un serveur qui a changé. Un scan conservé sans elles n'est pas reproductible.
+d'un serveur qui a changé. Un scan conservé sans elles n'est pas reproductible. `blockAtSeverity` est le seuil sous lequel le verdict a été rendu : les mêmes
+constats laissent passer un serveur sous `critical` et le bloquent sous `high`, donc qui conserve `allow` conserve
+aussi le seuil.
 
 ## Threat feed signé
 

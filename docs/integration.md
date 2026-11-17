@@ -53,7 +53,8 @@ Three things this ordering buys you, all of which are easy to lose by moving one
 2. **`blockedTools` is not the same as blocking.** A server with one poisoned tool and nine good ones
    stays usable; drop only what the verdict named.
 3. **Record the verdict, including `verdict.rulesets`.** Without the ruleset version and digest, a
-   stored scan cannot be told apart from the server having changed later.
+   stored scan cannot be told apart from the server having changed later. Keep
+   `verdict.blockAtSeverity` with it: the same findings give a different `allow` under another threshold.
 
 ## Per-call approval
 

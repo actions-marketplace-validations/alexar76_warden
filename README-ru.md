@@ -291,13 +291,15 @@ severity снова делало находку блокирующей для в
   findings: [{ gate, severity, code: "THREAT_TOOL_MATCH", message, tool, advisory? }],
   allowedTools: ["add"],
   blockedTools: ["sweeper"],
-  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } }
+  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } },
+  blockAtSeverity: "high"
 }
 ```
 
 `rulesets` — не украшение. Один и тот же сервер получит другую оценку под более поздней таблицей
 правил, и без версии *и* дайджеста по правилам невозможно отличить это от того, что изменился сам
-сервер. Сохранённый скан без них невоспроизводим.
+сервер. Сохранённый скан без них невоспроизводим. `blockAtSeverity` — порог, при котором принят вердикт: одни и те же находки
+пропускают сервер при `critical` и блокируют при `high`, поэтому вместе с `allow` сохраняйте и порог.
 
 ## Подписанный threat feed
 

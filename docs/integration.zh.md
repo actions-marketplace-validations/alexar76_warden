@@ -53,7 +53,7 @@ async function connect(ref) {
 2. **`blockedTools` 不等于阻止整台服务器。** 一台有一个被投毒工具、九个正常工具的服务器仍然可用；只丢掉裁定点名
    的那些。
 3. **把裁定连同 `verdict.rulesets` 一起留档。** 没有规则集的版本与摘要，留档的扫描结果就无法与「服务器后来变了」
-   区分开。
+   区分开。同时保存 `verdict.blockAtSeverity`：换一个阈值，同样的发现会得出不同的 `allow`。
 
 ## 逐次调用的审批
 

@@ -310,13 +310,15 @@ second as a low severity made it blocking again for anyone who tightened the thr
   findings: [{ gate, severity, code: "THREAT_TOOL_MATCH", message, tool, advisory? }],
   allowedTools: ["add"],
   blockedTools: ["sweeper"],
-  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } }
+  rulesets: { staticScan: { version: "7", digest: "sha256-nMFVesjb…" } },
+  blockAtSeverity: "high"
 }
 ```
 
 `rulesets` is not decoration. The same server scores differently under a later rule table, and
 without the version *and* a digest over the rules there is no way to tell that apart from the server
-having changed. A stored scan without them is not reproducible.
+having changed. A stored scan without them is not reproducible. `blockAtSeverity` is the threshold the verdict was decided under: the same findings allow a server under
+`critical` and block it under `high`, so a record that keeps `allow` keeps the threshold too.
 
 ## Signed threat feed
 

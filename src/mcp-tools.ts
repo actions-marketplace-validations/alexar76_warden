@@ -247,7 +247,7 @@ export const MCP_TOOLS: McpToolDef[] = [
     outputSchema: {
       type: "object",
       additionalProperties: false,
-      required: ["allow", "score", "findings", "allowedTools", "blockedTools", "rulesets"],
+      required: ["allow", "score", "findings", "allowedTools", "blockedTools", "rulesets", "blockAtSeverity"],
       properties: {
         allow: { type: "boolean", description: "false when a gate was fatal or a non-advisory finding reached blockAtSeverity." },
         score: {
@@ -266,6 +266,11 @@ export const MCP_TOOLS: McpToolDef[] = [
           required: ["staticScan"],
           properties: { staticScan: RULESET_REF_SCHEMA },
           description: "Rule-table identity in force for this verdict. Store this with the scan.",
+        },
+        blockAtSeverity: {
+          type: "string",
+          enum: [...SEVERITIES],
+          description: "Policy threshold this verdict was decided under: non-advisory findings at or above it block. Store it with the scan beside rulesets.",
         },
       },
     },
