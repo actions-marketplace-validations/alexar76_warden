@@ -250,6 +250,26 @@ qu'un feed signé a ajouté (voir [le contrat du feed](threat-feed.fr.md)).
 Codes intégrés : `THREAT_TYPOSQUAT`, `THREAT_CRYPTO_DRAINER`, `THREAT_SEED_PHRASE`,
 `THREAT_SSH_KEY_READ`, `THREAT_ENV_EXFIL`, `THREAT_DESTRUCTIVE_CMD`, `THREAT_FORK_BOMB`.
 
+## malware-list
+
+Compare le paquet qui lance un serveur stdio (`npx`, `bunx`, `npm exec`, `pnpm dlx`, `yarn dlx`, `bun x`, `uvx`, `uv tool run`, `pipx run`) à une liste de paquets npm et PyPI malveillants connus, livrée avec WARDEN. Elle ne lit que la ligne de lancement : `vetLaunch` l'exécute donc avant tout démarrage. `npx -y` et `uvx` exécutent les scripts d'installation du paquet, et un logiciel malveillant connu a fait son œuvre avant qu'une seule définition d'outil puisse être lue.
+
+| Source | Effet d'une correspondance |
+|---|---|
+| OpenSSF malicious-packages (enregistrements OSV `MAL-`) | `KNOWN_MALICIOUS_PACKAGE`, `critical`, `fatal` : toutes les versions sont listées, ou la version que la ligne de lancement épingle, ou la ligne n'en épingle aucune alors que toutes les versions à partir d'une certaine sont listées (le registre fournit la dernière). |
+| OpenSSF, certaines versions seulement, et la ligne n'en épingle aucune | `KNOWN_MALICIOUS_VERSIONS`, `high`, advisory : épinglez une version absente de la liste. Aussi quand la version épinglée n'a pas pu être comparée à une plage de la liste. |
+| OpenSourceMalware.com, via la base d'avis de Vulnetix, pour les paquets qu'OpenSSF ne liste pas | `REPORTED_MALICIOUS_PACKAGE`, `medium`, advisory. Ces signalements ne sont pas confirmés : le 2026-11-17, le registre servait encore 27 des 40 paquets npm et 11 des 20 paquets PyPI d'un échantillon de ceux qui ne figurent que là. |
+
+Versions : une version épinglée exacte (`pkg@1.2.3`, `pkg==1.2`, ou `pkg@1.2` avec uv) est comparée ; étiquettes et plages (`@latest`, `^1.2`, `>=1`) comptent comme non épinglées. Les versions npm se comparent en semver, celles de PyPI par numéro de release ; deux versions PyPI qui ne diffèrent que par un suffixe pre, post ou dev ne sont pas comparées (`uncertain`).
+
+Certains enregistrements nomment les versions trouvées et portent en plus une plage ouverte depuis la première version. Ceux-là ne bloquent que les versions nommées ; une ligne de lancement sans version épinglée, ou avec une autre, reçoit `KNOWN_MALICIOUS_VERSIONS`. Le 2026-11-17, le registre avait déjà remplacé par un paquet de sécurité ou retiré les 40 paquets npm échantillonnés portant de tels enregistrements. Un enregistrement de ce type concerne un serveur officiel : `@browserbasehq/mcp` 2.1.1 a été retiré, 3.0.0 est servi.
+
+Sur les 14 933 paquets de serveurs MCP npm et PyPI que HISTOR connaissait le 2026-10-16, aux versions qu'il a observées, la liste en bloque 3 (`@2oolkit/hyperliquid-cli` 0.2.7, `vulndify-mcp-server` 0.3.0, `agentic-awesome-skills` 19.7.0) et en signale 3 autres. Sans version épinglée, aucun n'est bloqué ; 22 reçoivent `KNOWN_MALICIOUS_VERSIONS`, dont `@postman/postman-mcp-server`, `@antv/mcp-server-chart` et `@mastra/mcp-docs-server`, qui ont un jour publié des versions compromises. Méthode et comptes : [evidence/malware-list-2026-11-17](evidence/malware-list-2026-11-17/README.md).
+
+La liste est `lists/malware-list.tsv`. Le build l'empaquette dans `dist/malware-list.tsv.gz`, et son SHA-256 est épinglé dans `src/malware-list-pin.ts` : le digest de build que signe MOMUS la couvre donc aussi. Rien n'est téléchargé pendant la vérification. Une liste absente ou différente de son digest n'est pas utilisée, et `warden scan` affiche `malware list OFF` dans son en-tête. `scripts/update-malware-list.mjs --fetch DIR` reconstruit les deux fichiers depuis les deux dépôts ; chaque version publiée embarque la liste du jour de son build. Dans 0.29.0 : 224 098 paquets npm et 12 034 PyPI d'OpenSSF (commit f8c4d3d, 2026-11-17), et 1 234 npm et 228 PyPI listés seulement par OpenSourceMalware.com (commit Vulnetix c337489).
+
+Un hôte qui ne veut pas de cette porte passe `malwareList: null` à `Warden.create`.
+
 ## origin
 
 L'opérateur a-t-il déclaré ce serveur, ou provient-il d'un catalogue distant (`McpServerRef.catalog`

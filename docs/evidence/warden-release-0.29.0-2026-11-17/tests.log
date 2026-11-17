@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 <clean checkout of 90fcf7a51>/warden
+
+warning: on branch 'main', pushing ref 'codex/warden-wrap'
+warning: on branch 'main', pushing ref 'codex/warden-wrap'
+
+ Test Files  78 passed (78)
+      Tests  1908 passed (1908)
+   Start at  10:49:28
+   Duration  39.07s (tests 94%, import 3%, transform 2%, setup 1%)
+
+tests rc=0

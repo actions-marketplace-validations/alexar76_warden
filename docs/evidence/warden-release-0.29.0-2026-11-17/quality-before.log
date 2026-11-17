@@ -1,0 +1,6 @@
+
+> @aimarket/warden@0.29.0 check:quality
+> node scripts/check-quality-gate.mjs
+
+Release blocked: This exact WARDEN build has not passed
+rc=1

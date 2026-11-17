@@ -15,6 +15,7 @@ import { StaticScanGate, staticScanRulesetRef } from "./static-scan.js";
 import { PinningGate } from "./pinning.js";
 import { OriginGate } from "./origin.js";
 import { ThreatFeed, ThreatGate } from "./threat-feed.js";
+import { MalwareList, MalwareListGate } from "./malware-list.js";
 import { classifyTools } from "./sandbox.js";
 import { isSemanticallyClean, type ClassifierInspection } from "./classifier.js";
 import { silentLogger } from "./logger.js";
@@ -32,6 +33,10 @@ export { PinningGate, canonicalToolsHash, tryCanonicalToolsHash, pinToolsHash, R
 export { FilePinStore } from "./pin-store.js";
 export { OriginGate } from "./origin.js";
 export { ThreatFeed, ThreatGate, DEFAULT_FEED_MAX_AGE_MS, FEED_CLOCK_SKEW_MS } from "./threat-feed.js";
+export { MalwareList, MalwareListGate, matchPackage, matchEntry, compareVersions } from "./malware-list.js";
+export type { MalwareEntry, MalwareListSource, MalwareListStatus, MalwareMatch, MalwareMatchKind, MalwareRange, MalwareSource } from "./malware-list.js";
+export { launchPackage } from "./launch-package.js";
+export type { LaunchPackage, LaunchEcosystem } from "./launch-package.js";
 export { EgressGuard, isSensitiveTool, classifyTools } from "./sandbox.js";
 export { canonicalize, parseJsonStrict, CanonicalizationError, MAX_SAFE_JSON_INTEGER } from "./jcs.js";
 export type { CanonicalizationCode } from "./jcs.js";
@@ -74,6 +79,11 @@ export interface WardenCreateDeps {
    * would hide from the host that no external intel is in play.
    */
   threatFeed: ThreatFeed;
+  /**
+   * Known-malicious npm and PyPI packages, checked against a stdio launch line before
+   * anything starts. Undefined: the list shipped with this build. `null`: no list.
+   */
+  malwareList?: MalwareList | null;
   log?: WardenLogger;
 }
 
@@ -82,7 +92,7 @@ export interface WardenCreateDeps {
  *
  * Every MCP server is vetted through an ordered gate chain before its tools are
  * exposed to the agent: cheap static scanning first, then the known-bad threat
- * feed, then origin (declared by the operator, or offered by a remote catalog),
+ * feed and the list of known-malicious npm and PyPI packages, then origin (declared by the operator, or offered by a remote catalog),
  * then drift/pinning. Findings accumulate across gates; the verdict is allow/block
  * plus a composite 0..1 safety score and a per-tool partition so a mostly-trusted
  * server can have one poisoned tool quarantined without severing the whole
@@ -129,11 +139,12 @@ export class Warden {
     return { ...policy, blockAtSeverity: fallback };
   }
 
-  /** Build the standard gate chain: static → threat → origin → pinning. */
+  /** Build the standard gate chain: static → threat → known-malicious packages → origin → pinning. */
   static create(deps: WardenCreateDeps): Warden {
     const gates: WardenGate[] = [
       new StaticScanGate(deps.log, tool => isSemanticallyClean(deps.semanticReview, tool)),
       new ThreatGate(deps.threatFeed),
+      ...(deps.malwareList === null ? [] : [new MalwareListGate(deps.malwareList)]),
       new OriginGate(),
       new PinningGate(deps.store),
     ];

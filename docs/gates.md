@@ -251,6 +251,26 @@ signed feed added (see [the feed contract](threat-feed.md)).
 Built-in codes: `THREAT_TYPOSQUAT`, `THREAT_CRYPTO_DRAINER`, `THREAT_SEED_PHRASE`,
 `THREAT_SSH_KEY_READ`, `THREAT_ENV_EXFIL`, `THREAT_DESTRUCTIVE_CMD`, `THREAT_FORK_BOMB`.
 
+## malware-list
+
+Checks the package a stdio server is started from (`npx`, `bunx`, `npm exec`, `pnpm dlx`, `yarn dlx`, `bun x`, `uvx`, `uv tool run`, `pipx run`) against a list of known-malicious npm and PyPI packages that ships with WARDEN. It reads the launch line only, so `vetLaunch` runs it before anything starts: `npx -y` and `uvx` run a package's install scripts, and a known piece of malware has done its harm before any tool definition can be read.
+
+| Source | What a match does |
+|---|---|
+| OpenSSF malicious-packages (OSV `MAL-` records) | `KNOWN_MALICIOUS_PACKAGE`, `critical`, `fatal`: every version is listed, the version the launch pins is listed, or the launch pins none while every version from some release on is listed (the registry hands out the latest). |
+| OpenSSF, some versions only, and the launch pins none | `KNOWN_MALICIOUS_VERSIONS`, `high`, advisory: pin a version that is not listed. Also when the pinned version could not be compared with a listed range. |
+| OpenSourceMalware.com, through the Vulnetix advisory database, for packages OpenSSF does not list | `REPORTED_MALICIOUS_PACKAGE`, `medium`, advisory. Reports there are not confirmed: on 2026-11-17 the registry still served 27 of 40 sampled npm packages and 11 of 20 PyPI packages listed only there. |
+
+Versions: an exact pin (`pkg@1.2.3`, `pkg==1.2`, or `pkg@1.2` for uv) is compared; tags and ranges (`@latest`, `^1.2`, `>=1`) count as unpinned. npm versions compare as semver, PyPI versions by release number; two PyPI versions that differ only in a pre-, post- or dev-release suffix are not compared (`uncertain`).
+
+Some records name the releases that were found and also carry a range open from the first version. Those block the named releases only; a launch that pins none, or pins another release, gets `KNOWN_MALICIOUS_VERSIONS`. On 2026-11-17 the registry had replaced all 40 sampled npm packages with such records by a security placeholder or removed them. One record of this kind covers an official server: `@browserbasehq/mcp` 2.1.1 was removed, 3.0.0 is served.
+
+On the 14,933 npm and PyPI MCP server packages HISTOR knew on 2026-10-16, at the versions it observed, the list blocks 3 (`@2oolkit/hyperliquid-cli` 0.2.7, `vulndify-mcp-server` 0.3.0, `agentic-awesome-skills` 19.7.0) and reports 3 more. Launched without a version pin, none is blocked; 22 get `KNOWN_MALICIOUS_VERSIONS`, among them `@postman/postman-mcp-server`, `@antv/mcp-server-chart` and `@mastra/mcp-docs-server`, which once shipped compromised releases. Method and counts: [evidence/malware-list-2026-11-17](evidence/malware-list-2026-11-17/README.md).
+
+The list is `lists/malware-list.tsv`. The build packs it into `dist/malware-list.tsv.gz`, and its SHA-256 is pinned in `src/malware-list-pin.ts`, so the build digest that MOMUS signs covers it. Nothing is fetched while vetting. A list that is missing or does not match its pin is not used, and `warden scan` says `malware list OFF` in its header. `scripts/update-malware-list.mjs --fetch DIR` rebuilds both files from the two repositories; each release ships the list of its build day. In 0.29.0: 224,098 npm and 12,034 PyPI packages from OpenSSF (commit f8c4d3d, 2026-11-17), and 1,234 npm and 228 PyPI packages listed only by OpenSourceMalware.com (Vulnetix commit c337489).
+
+A host that does not want the gate passes `malwareList: null` to `Warden.create`.
+
 ## origin
 
 Did the operator declare this server, or did it arrive from a remote catalog (`McpServerRef.catalog`

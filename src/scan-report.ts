@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { displaySafe } from './sanitize.js';
+import { malwareListLabel } from './malware-list.js';
 import type { ScanReport, ScanServerResult } from './scan.js';
 import type { Severity, ToolDef, WardenFinding } from './types.js';
 
@@ -64,7 +65,7 @@ export function toTable(report: ScanReport, cwd: string, color: boolean): string
   const c = (code: string, text: string) => color ? `\x1b[${code}m${text}\x1b[0m` : text;
   const lines: string[] = [];
   const r = report.ruleset;
-  lines.push(`WARDEN scan ${report.version} · ruleset ${r.version} ${r.digest.slice(0, 19)}… · block at ${report.policy.blockAtSeverity}`);
+  lines.push(`WARDEN scan ${report.version} · ruleset ${r.version} ${r.digest.slice(0, 19)}… · ${malwareListLabel(report.malwareList)} · block at ${report.policy.blockAtSeverity}`);
   if (!report.sources.length) lines.push('No MCP client config found. Pass a file, or run where .mcp.json lives.');
   for (const s of report.sources) lines.push(`  ${s.error ? c('31', 'unreadable') : 'read'} ${displayPath(s.path, cwd)} (${s.client}, ${s.servers} server${s.servers === 1 ? '' : 's'})${s.error ? ': ' + displaySafe(s.error, 200) : ''}`);
   lines.push('');
@@ -168,7 +169,7 @@ export function toSarif(report: ScanReport, cwd: string): object {
         })),
       } },
       results,
-      properties: { ruleset: report.ruleset, blockAtSeverity: report.policy.blockAtSeverity },
+      properties: { ruleset: report.ruleset, ...(report.malwareList ? { malwareList: report.malwareList } : {}), blockAtSeverity: report.policy.blockAtSeverity },
     }],
   };
 }
@@ -219,7 +220,7 @@ export function toMarkdown(report: ScanReport, cwd: string): string {
   const out: string[] = [];
   out.push(`## WARDEN · MCP server scan`);
   out.push('');
-  out.push(`${m.blocked ? '❌' : '✅'} **${m.blocked} blocked**, ${m.allowed} allowed, ${m.errors} not checked, ${m.skipped} skipped${m.launchOnly ? `, ${m.launchOnly} not started` : ''} · ruleset ${mdCode(report.ruleset.version)} · block at ${mdCode(report.policy.blockAtSeverity)}`);
+  out.push(`${m.blocked ? '❌' : '✅'} **${m.blocked} blocked**, ${m.allowed} allowed, ${m.errors} not checked, ${m.skipped} skipped${m.launchOnly ? `, ${m.launchOnly} not started` : ''} · ruleset ${mdCode(report.ruleset.version)} · ${malwareListLabel(report.malwareList)} · block at ${mdCode(report.policy.blockAtSeverity)}`);
   out.push('');
   if (!report.servers.length) { out.push('No MCP servers found in the scanned config files.'); return out.join('\n') + '\n'; }
   out.push('| | Server | Config | Tools | Findings | Lock |');

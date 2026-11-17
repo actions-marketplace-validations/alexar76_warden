@@ -1,0 +1,5 @@
+
+> @aimarket/warden@0.29.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+typecheck rc=0

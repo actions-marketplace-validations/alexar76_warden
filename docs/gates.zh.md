@@ -125,6 +125,26 @@ v13 把单词边缘的句点或连字符当作标点。这暴露了此前被同�
 内置代码：`THREAT_TYPOSQUAT`、`THREAT_CRYPTO_DRAINER`、`THREAT_SEED_PHRASE`、`THREAT_SSH_KEY_READ`、
 `THREAT_ENV_EXFIL`、`THREAT_DESTRUCTIVE_CMD`、`THREAT_FORK_BOMB`。
 
+## malware-list
+
+把启动 stdio 服务器的包（`npx`、`bunx`、`npm exec`、`pnpm dlx`、`yarn dlx`、`bun x`、`uvx`、`uv tool run`、`pipx run`）与 WARDEN 自带的已知恶意 npm 和 PyPI 包列表比对。它只读启动命令行，所以 `vetLaunch` 在启动任何东西之前就运行它：`npx -y` 和 `uvx` 会执行包的安装脚本，一个已知的恶意包在任何工具定义能被读到之前就已经造成了损害。
+
+| 来源 | 命中后的效果 |
+|---|---|
+| OpenSSF malicious-packages（OSV `MAL-` 记录） | `KNOWN_MALICIOUS_PACKAGE`，`critical`，`fatal`：列表包含所有版本；或包含启动命令固定的版本；或启动命令没有固定版本，而列表包含从某个版本起的所有版本（注册表会给出最新版）。 |
+| OpenSSF，只列了部分版本，且启动命令没有固定版本 | `KNOWN_MALICIOUS_VERSIONS`，`high`，advisory：请固定一个不在列表中的版本。固定的版本无法与列表中的范围比较时也是如此。 |
+| OpenSourceMalware.com（经由 Vulnetix 公告数据库），仅限 OpenSSF 未列出的包 | `REPORTED_MALICIOUS_PACKAGE`，`medium`，advisory。那里的报告未经确认：2026-11-17 抽样中只在那里出现的包，注册表仍在提供 40 个 npm 包中的 27 个、20 个 PyPI 包中的 11 个。 |
+
+版本：精确固定的版本（`pkg@1.2.3`、`pkg==1.2`，或 uv 的 `pkg@1.2`）会被比较；标签和范围（`@latest`、`^1.2`、`>=1`）视为未固定。npm 版本按 semver 比较，PyPI 版本按发布号比较；只在 pre、post 或 dev 后缀上不同的两个 PyPI 版本不做比较（`uncertain`）。
+
+有些记录列出了被发现的版本，同时还带有一个从第一个版本开始的开放范围。这类记录只拦截列出的版本；没有固定版本或固定了其他版本的启动命令会得到 `KNOWN_MALICIOUS_VERSIONS`。2026-11-17 抽样的 40 个带此类记录的 npm 包已全部被注册表替换为安全占位包或移除。另有一条此类记录涉及官方服务器：`@browserbasehq/mcp` 2.1.1 已被移除，3.0.0 仍在提供。
+
+在 HISTOR 于 2026-10-16 已知的 14,933 个 npm 和 PyPI MCP 服务器包上，按它观察到的版本，列表拦截 3 个（`@2oolkit/hyperliquid-cli` 0.2.7、`vulndify-mcp-server` 0.3.0、`agentic-awesome-skills` 19.7.0），另报告 3 个。不固定版本启动时，没有一个被拦截；22 个得到 `KNOWN_MALICIOUS_VERSIONS`，其中包括曾发布过被入侵版本的 `@postman/postman-mcp-server`、`@antv/mcp-server-chart` 和 `@mastra/mcp-docs-server`。方法与计数：[evidence/malware-list-2026-11-17](evidence/malware-list-2026-11-17/README.md)。
+
+列表是 `lists/malware-list.tsv`。构建时它被打包为 `dist/malware-list.tsv.gz`，其 SHA-256 固定在 `src/malware-list-pin.ts` 中，因此 MOMUS 签名的构建摘要也覆盖它。检查时不下载任何东西。列表缺失或与固定的摘要不符时不会被使用，`warden scan` 会在报告头显示 `malware list OFF`。`scripts/update-malware-list.mjs --fetch DIR` 从两个仓库重建这两个文件；每个发布版本都带着其构建当天的列表。0.29.0 中：来自 OpenSSF 的 224,098 个 npm 包和 12,034 个 PyPI 包（提交 f8c4d3d，2026-11-17），以及仅由 OpenSourceMalware.com 列出的 1,234 个 npm 包和 228 个 PyPI 包（Vulnetix 提交 c337489）。
+
+不需要这个门控的宿主向 `Warden.create` 传入 `malwareList: null`。
+
 ## origin
 
 这台服务器是运营者声明过的，还是来自远端目录（`McpServerRef.catalog` 有值）？

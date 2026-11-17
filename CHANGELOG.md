@@ -1,7 +1,35 @@
 # Changelog
 
-## Unreleased
+## 0.29.0 — 2026-11-17 (known-malicious packages)
 
+A minor release: a new gate that refuses to start npm and PyPI packages OpenSSF lists as malware, and the ruleset
+ref in the static-scan gate's result. Rulesets are unchanged (23). Upgrading changes verdicts only for stdio servers
+started from such a package; the package grows by the 2.4 MB list.
+
+- **Known-malicious npm and PyPI packages are not started.** `warden scan` and `wrap` start a stdio server to read
+  its tools, and `npx -y` or `uvx` runs the package's install scripts on the way, so a package already known to be
+  malware ran before WARDEN saw anything. The new `malware-list` gate reads the package and version from the launch
+  line (`npx`, `bunx`, `npm exec`, `pnpm dlx`, `yarn dlx`, `bun x`, `uvx`, `uv tool run`, `pipx run`) and looks
+  them up in a list shipped in the package. `vetLaunch` runs it, so nothing starts:
+  - OpenSSF malicious-packages, commit f8c4d3d of 2026-11-17: 224,098 npm and 12,034 PyPI packages.
+    `KNOWN_MALICIOUS_PACKAGE`, critical, fatal, for every version, for the version the launch pins, or for a launch
+    without a pin when every version from some release on is listed (`postmark-mcp` from 1.0.16).
+  - Listed releases a launch may or may not get: `KNOWN_MALICIOUS_VERSIONS`, high, advisory, with "pin a version
+    that is not listed". A record that names its bad releases and also claims every version blocks only the named
+    ones: npm had replaced or removed all 40 sampled packages with such records, and one such record covers an
+    official server (`@browserbasehq/mcp` 2.1.1 removed, 3.0.0 served).
+  - OpenSourceMalware.com, from the Vulnetix advisory database at commit c337489, for 1,234 npm and 228 PyPI
+    packages OpenSSF does not list: `REPORTED_MALICIOUS_PACKAGE`, medium, advisory only. The registry still served
+    27 of 40 sampled npm and 11 of 20 sampled PyPI packages of that kind.
+
+  On the 14,933 npm and PyPI MCP server packages HISTOR knew on 2026-10-16, at the versions it observed, the gate
+  blocks 3 and reports 3; launched without a pin, it blocks none and reports 24. Method and files:
+  `docs/evidence/malware-list-2026-11-17/`. The list is pinned by SHA-256 in `src/malware-list-pin.ts`, so the build
+  digest covers it; nothing is fetched at run time. `scripts/update-malware-list.mjs --fetch DIR` rebuilds it. The
+  scan report gains `malwareList` (packages, SHA-256, source commits) and the header says `malware list <date>`, or
+  `malware list OFF` when the list is missing or altered. `Warden.create({ malwareList: null })` leaves the gate out.
+  New exports: `MalwareList`, `MalwareListGate`, `matchPackage`, `matchEntry`, `compareVersions`, `launchPackage`.
+- **The GitHub Action's description is 120 characters**, down from 176, for a GitHub Marketplace listing.
 - **The static-scan gate's result names its ruleset.** `StaticScanGate.evaluate()` returned `{ findings, score }`
   only, so a caller running the gate on its own could not tell which rule table produced a verdict. It now also
   returns `ruleset: { version, digest }`, the same ref `warden scan` puts at the top of its report and

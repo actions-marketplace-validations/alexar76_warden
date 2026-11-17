@@ -7,11 +7,11 @@ Las llamadas de descubrimiento pueden generar cargos; consulte los [límites de 
 `warden-mcp scan` lee la configuración MCP que ya tienes, se conecta a cada servidor que inicia y revisa las definiciones de herramientas antes de que un modelo las vea. Es la misma cadena de compuertas que [`wrap`](../README-es.md) y la [biblioteca](integration.es.md), ejecutada una vez sobre tus configuraciones en lugar de delante de un solo servidor.
 
 ```bash
-npx -y @aimarket/warden@0.28.0 scan
+npx -y @aimarket/warden@0.29.0 scan
 ```
 
 ```text
-WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -41,6 +41,8 @@ Un servidor que la configuración inicia mediante `warden-mcp wrap` se analiza c
 ## Iniciar servidores
 
 Para leer las herramientas de un servidor stdio, `scan` lo inicia con el comando, los argumentos y el entorno de la configuración, igual que lo haría tu cliente, y lo detiene después de `tools/list`. Nunca llama a una herramienta. Aun así, el programa se ejecuta. Donde no lo quieras, por ejemplo en CI sobre un pull request, `--no-launch` revisa solo la línea de arranque: los registros de comandos del threat feed y la identidad de arranque del lock.
+
+Antes de iniciar un servidor que un gestor de paquetes descarga de npm o PyPI (`npx`, `uvx` y similares), `scan` busca el paquete en la lista de paquetes maliciosos conocidos que viene con WARDEN ([malware-list](gates.es.md#malware-list)). Un paquete que OpenSSF lista como malware, en todas sus versiones o en la versión que fija la línea de arranque, se bloquea y nunca se inicia; `--no-launch` también lo comprueba. La cabecera del informe indica la fecha de la lista.
 
 Los servidores remotos (`url`, streamable HTTP o el antiguo HTTP+SSE) se consultan por la red con las cabeceras de la configuración. `--public-only` rechaza los que se resuelven a direcciones loopback, privadas, link-local o de metadatos de la nube, comprobando la dirección a la que realmente se conecta. No se siguen redirecciones.
 
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.28.0
+      - uses: alexar76/warden@v0.29.0
         with:
           upload-sarif: 'true'
 ```

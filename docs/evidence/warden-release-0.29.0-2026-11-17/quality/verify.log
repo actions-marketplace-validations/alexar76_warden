@@ -1,0 +1,8 @@
+files prod 10995 candidate 11011
+outside WARDEN: only prod [] only candidate [] differ []
+candidate warden 0.29.0 dist js 74 buildDigest fbc9f734e08178a3b29377193a5baed445f5a63bafd557d7730408f42a056173
+source files 74
+rc=0
+HISTOR scanner imports @aimarket/warden 0.29.0 {"version":"23","digest":"sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g="}
+malware list in image: {"packages":237594,"sha256":"b656eb8a15d8b2d0ad9d54a4f02606f9fd28a460d90dbc8d91968ffc38b80526","sources":["ossf f8c4d3d","osm c337489"]} load ms 325 rss MB 66 -> 113
+rc=0

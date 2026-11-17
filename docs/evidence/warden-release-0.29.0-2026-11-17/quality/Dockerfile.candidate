@@ -1,0 +1,15 @@
+# WARDEN 0.29.0 for HISTOR: the running production image (histor-histor:warden-0.28.0-prod = sha256:c936f1ce5c6f…,
+# WARDEN 0.28.0) with its vendored WARDEN replaced by the release archive of 90fcf7a51 (d597feb3656eb3ec…) and the
+# WARDEN source of the same commit where the trusted recipe puts it. Nothing of HISTOR's own code changes.
+FROM histor-histor:warden-0.28.0-prod
+USER 0:0
+RUN rm -rf /app/scanner/node_modules/@aimarket/warden /opt/warden-source/src
+COPY package/ /app/scanner/node_modules/@aimarket/warden/
+COPY src/ /opt/warden-source/src/
+LABEL skopos.source.commit="90fcf7a516b337a3809dec3fbeacffa6da6f60ca" \
+      aicom.histor.overlay="warden-029-prod-20261117" \
+      org.aimarket.release.candidate="warden-0.29.0" \
+      org.aimarket.release.tarball-sha256="d597feb3656eb3ece2d7cb17093a972528374a154465995d59e30121a7a6b531" \
+      org.aimarket.release.warden-build="fbc9f734e08178a3b29377193a5baed445f5a63bafd557d7730408f42a056173"
+USER 65532:65532
+RUN node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('/app/scanner/node_modules/@aimarket/warden/package.json','utf8')); if(p.name!=='@aimarket/warden'||p.version!=='0.29.0') process.exit(1)"

@@ -5,6 +5,8 @@ import { Warden, StaticScanGate, ThreatFeed, staticScanRulesetRef, displaySafe, 
 import { asPolicy } from './mcp-tools.js';
 import { defaultStateDir } from './state.js';
 import { packageVersion } from './mcp-rpc.js';
+import { launchPackage } from './launch-package.js';
+import { malwareListRef, type MalwareListRef } from './malware-list.js';
 import { discoverServers, CLIENT_KINDS, type ClientKind, type ConfiguredServer, type DiscoveryEnv, type SourceResult } from './scan-config.js';
 import { fetchServer, McpClientError, type FetchedServer } from './mcp-client.js';
 import { mtlToolSetDigest, MtlError } from './mtl.js';
@@ -98,6 +100,8 @@ export interface ScanReport {
   version: string;
   scannedAt: string;
   ruleset: RulesetRef;
+  /** The known-malicious package list stdio launch lines were checked against (malware-list.ts). */
+  malwareList?: MalwareListRef;
   policy: WardenPolicy;
   launch: boolean;
   sources: Array<{ path: string; client: ClientKind; scope: 'user' | 'project'; servers: number; error?: string }>;
@@ -317,11 +321,6 @@ export function historEndpoint(raw: string): { endpoint?: string; reason?: strin
   return { endpoint: `${u.protocol}//${u.host}${u.pathname}` };
 }
 
-const NPM_PACKAGE = /^(@[a-z0-9][a-z0-9._~-]{0,100}\/)?[a-z0-9][a-z0-9._~-]{0,100}$/;
-const PYPI_PACKAGE = /^[A-Za-z0-9]([A-Za-z0-9._-]{0,126}[A-Za-z0-9])?$/;
-/** Launcher flags that take a value, so the value is not mistaken for the package. */
-const VALUE_FLAGS = new Set(['--python', '-p', '--with', '-w', '--with-requirements', '--cache', '--node-options', '--call', '-c', '--spec', '--pip-args']);
-
 /**
  * The npm or PyPI package a stdio launch runs, as HISTOR names it (`npm:<name>`,
  * `pypi:<normalised name>`), or why it is not sent. Only a package from the public
@@ -330,34 +329,8 @@ const VALUE_FLAGS = new Set(['--python', '-p', '--with', '-w', '--with-requireme
  * the digest already tells HISTOR which of the versions it observed you run.
  */
 export function historPackage(command: string, args: readonly string[]): { package?: string; reason?: string } {
-  const base = (command.split(/[\\/]/).pop() ?? '').toLowerCase().replace(/\.(cmd|exe|ps1)$/, '');
-  let rest = [...args];
-  let kind: 'npm' | 'pypi';
-  if (base === 'npx' || base === 'bunx') kind = 'npm';
-  else if ((base === 'npm' && rest[0] === 'exec') || ((base === 'pnpm' || base === 'yarn') && rest[0] === 'dlx') || (base === 'bun' && rest[0] === 'x')) { kind = 'npm'; rest = rest.slice(1); }
-  else if (base === 'uvx') kind = 'pypi';
-  else if (base === 'uv' && rest[0] === 'tool' && rest[1] === 'run') { kind = 'pypi'; rest = rest.slice(2); }
-  else if (base === 'pipx' && rest[0] === 'run') { kind = 'pypi'; rest = rest.slice(1); }
-  else return { reason: 'not started from a package manager (npx, uvx …)' };
-  let spec: string | undefined;
-  for (let i = 0; i < rest.length; i++) {
-    const a = rest[i]!;
-    if (/^--(registry|index-url|index|extra-index-url|find-links)(=|$)|^-i$|^-f$/.test(a)) return { reason: 'a private registry' };
-    if (a === '--') { spec = rest[i + 1]; break; }
-    if (a === '--package' || a === '--from' || (kind === 'npm' && a === '-p')) { spec = rest[i + 1]; break; }
-    if (a.startsWith('--package=') || a.startsWith('--from=')) { spec = a.slice(a.indexOf('=') + 1); break; }
-    if (a.startsWith('-')) { if (VALUE_FLAGS.has(a)) i++; continue; }
-    spec = a; break;
-  }
-  if (!spec) return { reason: 'no package in the launch line' };
-  if (spec.includes('://') || /^(file:|git[+:]|github:|link:|workspace:|\.|\/|~|[A-Za-z]:\\)/.test(spec)) return { reason: 'not a registry package' };
-  if (kind === 'npm') {
-    const at = spec.indexOf('@', 1);
-    const name = at > 0 ? spec.slice(0, at) : spec;
-    return NPM_PACKAGE.test(name) ? { package: `npm:${name}` } : { reason: 'not a registry package' };
-  }
-  const name = spec.split(/[[=<>!~@; ]/)[0]!;
-  return PYPI_PACKAGE.test(name) ? { package: `pypi:${name.toLowerCase().replace(/[-_.]+/g, '-')}` } : { reason: 'not a registry package' };
+  const pkg = launchPackage(command, args);
+  return pkg.ecosystem && pkg.name ? { package: `${pkg.ecosystem}:${pkg.name}` } : { reason: pkg.reason ?? 'not a registry package' };
 }
 
 /**
@@ -708,7 +681,7 @@ export async function runScan(opts: ScanOptions, deps: ScanDeps = {}): Promise<S
     launchOnly: servers.filter(s => s.status === 'launch-only').length,
   };
   return {
-    tool: 'warden-scan', version, scannedAt: now, ruleset: staticScanRulesetRef(), policy: opts.policy, launch: opts.launch,
+    tool: 'warden-scan', version, scannedAt: now, ruleset: staticScanRulesetRef(), malwareList: malwareListRef(), policy: opts.policy, launch: opts.launch,
     sources: results.map(r => ({ path: r.source.path, client: r.source.client, scope: r.source.scope, servers: r.servers.length, ...(r.error ? { error: displaySafe(r.error, 300) } : {}) })),
     servers, lock: lockSummary,
     flows: toxicFlows(servers.filter(s => s.status === 'scanned' && s.allow === true).map(s => ({ client: s.client, key: s.key, tools: s.tools?.filter(t => s.allowedTools.includes(t.name)), capabilities: s.tools ? boundCapabilities(serverRef(s, all), s.tools, opts.policy.capabilityBindings) : undefined }))),

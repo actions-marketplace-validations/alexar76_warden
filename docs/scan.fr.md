@@ -7,11 +7,11 @@ Les appels de découverte peuvent entraîner des frais ; consultez les [limites 
 `warden-mcp scan` lit la configuration MCP que vous avez déjà, se connecte à chaque serveur qu’elle démarre et vérifie les définitions d’outils avant qu’un modèle ne les voie. C’est la même chaîne de portes que [`wrap`](../README-fr.md) et la [bibliothèque](integration.fr.md), exécutée une fois sur vos configurations au lieu de se placer devant un seul serveur.
 
 ```bash
-npx -y @aimarket/warden@0.28.0 scan
+npx -y @aimarket/warden@0.29.0 scan
 ```
 
 ```text
-WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -41,6 +41,8 @@ Un serveur que la configuration démarre via `warden-mcp wrap` est analysé comm
 ## Démarrer les serveurs
 
 Pour lire les outils d’un serveur stdio, `scan` le démarre avec la commande, les arguments et l’environnement de la configuration, exactement comme votre client, puis l’arrête après `tools/list`. Il n’appelle jamais d’outil. Le programme s’exécute tout de même. Là où vous ne le voulez pas, par exemple en CI sur une pull request, `--no-launch` ne vérifie que la ligne de lancement : les enregistrements de commandes du threat feed et l’identité de lancement du lock.
+
+Avant de démarrer un serveur qu'un gestionnaire de paquets récupère sur npm ou PyPI (`npx`, `uvx` et similaires), `scan` cherche le paquet dans la liste des paquets malveillants connus livrée avec WARDEN ([malware-list](gates.fr.md#malware-list)). Un paquet qu'OpenSSF liste comme malveillant, dans toutes ses versions ou dans celle que la ligne de lancement épingle, est bloqué et jamais démarré ; `--no-launch` le vérifie aussi. L'en-tête du rapport donne la date de la liste.
 
 Les serveurs distants (`url`, streamable HTTP ou l’ancien HTTP+SSE) sont interrogés sur le réseau avec les en-têtes de la configuration. `--public-only` refuse ceux qui se résolvent en adresses loopback, privées, link-local ou de métadonnées cloud, en vérifiant l’adresse réellement contactée. Les redirections ne sont pas suivies.
 
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.28.0
+      - uses: alexar76/warden@v0.29.0
         with:
           upload-sarif: 'true'
 ```

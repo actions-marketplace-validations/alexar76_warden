@@ -1,0 +1,25 @@
+tarball sha256 d597feb3656eb3ece2d7cb17093a972528374a154465995d59e30121a7a6b531
+install=0 (npm i --ignore-scripts into an empty project)
+exports: main true | codex.codexPre function | opencode.createWardenPlugin function
+ruleset 23 sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g=
+new exports: MalwareList function, MalwareListGate function, matchPackage function, matchEntry function, compareVersions function, launchPackage function
+launchPackage npx -y flatmap-stream@0.1.1 -> {"ecosystem":"npm","name":"flatmap-stream","version":"0.1.1"}
+launchPackage uvx --from Foo_Bar==1.2 foo -> {"ecosystem":"pypi","name":"foo-bar","version":"1.2"}
+launchPackage pnpm dlx @a/b@^1 -> {"ecosystem":"npm","name":"@a/b"}
+launchPackage node server.js -> {"reason":"not started from a package manager (npx, uvx …)"}
+
+$ PATH=<fake npx that records its arguments>:$PATH warden-mcp scan --project (4 servers)
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
+  read .mcp.json (claude-code, 4 servers)
+
+  ✗ BLOCK   flatmap          claude-code    KNOWN_MALICIOUS_PACKAGE
+  ✗ BLOCK   postmark         claude-code    KNOWN_MALICIOUS_PACKAGE
+  ✗ BLOCK   browserbase-old  claude-code    KNOWN_MALICIOUS_PACKAGE
+  ! error   browserbase      claude-code    exited (code 1) before answering
+
+4 servers: 0 allowed, 3 blocked, 1 not checked, 0 skipped.
+Details: warden-mcp scan --json, or --markdown FILE. To review a changed server: warden-mcp scan --lock warden.lock.json --update-lock.
+started by scan: -y @browserbasehq/mcp@3.0.0
+
+Usage: warden-mcp [command] [options]
+Usage: warden-mcp interceptor [--lock PATH]

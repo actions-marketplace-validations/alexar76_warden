@@ -7,11 +7,11 @@ Discovery calls can incur costs; see [measurement limits and version evidence](s
 `warden-mcp scan` reads the MCP configuration you already have, connects to every server it starts, and vets the tool definitions before a model sees them. It is the same gate chain as [`wrap`](../README.md#protect-claude-desktop-or-cursor-with-one-wrapper) and the [library](integration.md), run once over your configs instead of in front of one server.
 
 ```bash
-npx -y @aimarket/warden@0.28.0 scan
+npx -y @aimarket/warden@0.29.0 scan
 ```
 
 ```text
-WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -41,6 +41,8 @@ A server the config starts through `warden-mcp wrap` is scanned as the server be
 ## Starting servers
 
 To read a stdio server's tools, `scan` starts it with the command, arguments and environment from the config, exactly as your client would, and stops it after `tools/list`. It never calls a tool. That still runs the program. Where you do not want that, such as CI on a pull request, `--no-launch` vets the launch line only: the threat feed's command records, and the lock's launch identity.
+
+Before it starts a server that a package manager fetches from npm or PyPI (`npx`, `uvx` and the like), `scan` looks the package up in the list of known-malicious packages that ships with WARDEN ([malware-list](gates.md#malware-list)). A package that OpenSSF lists as malware, in every version or in the version the launch pins, is blocked and never started; `--no-launch` checks it too. The report header gives the date of the list.
 
 Remote servers (`url`, streamable HTTP or the older HTTP+SSE) are asked over the network with the headers from the config. `--public-only` refuses any that resolve to loopback, private, link-local or cloud-metadata addresses, checked on the address actually dialled. Redirects are not followed.
 
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.28.0
+      - uses: alexar76/warden@v0.29.0
         with:
           upload-sarif: 'true'
 ```

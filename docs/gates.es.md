@@ -243,6 +243,26 @@ integrados más lo que haya añadido un feed firmado (ver [el contrato del feed]
 Códigos integrados: `THREAT_TYPOSQUAT`, `THREAT_CRYPTO_DRAINER`, `THREAT_SEED_PHRASE`,
 `THREAT_SSH_KEY_READ`, `THREAT_ENV_EXFIL`, `THREAT_DESTRUCTIVE_CMD`, `THREAT_FORK_BOMB`.
 
+## malware-list
+
+Compara el paquete con el que se inicia un servidor stdio (`npx`, `bunx`, `npm exec`, `pnpm dlx`, `yarn dlx`, `bun x`, `uvx`, `uv tool run`, `pipx run`) con una lista de paquetes npm y PyPI maliciosos conocidos que viene con WARDEN. Solo lee la línea de arranque, así que `vetLaunch` la ejecuta antes de iniciar nada: `npx -y` y `uvx` ejecutan los scripts de instalación del paquete, y un malware conocido ya ha hecho su daño antes de que se pueda leer una sola definición de herramienta.
+
+| Fuente | Qué hace una coincidencia |
+|---|---|
+| OpenSSF malicious-packages (registros OSV `MAL-`) | `KNOWN_MALICIOUS_PACKAGE`, `critical`, `fatal`: todas las versiones están en la lista, o la versión que fija la línea de arranque, o la línea no fija ninguna y están todas las versiones a partir de una (el registro entrega la última). |
+| OpenSSF, solo algunas versiones, y la línea no fija ninguna | `KNOWN_MALICIOUS_VERSIONS`, `high`, advisory: fije una versión que no esté en la lista. También cuando la versión fijada no se pudo comparar con un rango de la lista. |
+| OpenSourceMalware.com, a través de la base de avisos de Vulnetix, para paquetes que OpenSSF no lista | `REPORTED_MALICIOUS_PACKAGE`, `medium`, advisory. Esos reportes no están confirmados: el 2026-11-17 el registro seguía sirviendo 27 de 40 paquetes npm y 11 de 20 PyPI de una muestra de los que solo aparecen allí. |
+
+Versiones: se compara una versión fijada exacta (`pkg@1.2.3`, `pkg==1.2`, o `pkg@1.2` con uv); etiquetas y rangos (`@latest`, `^1.2`, `>=1`) cuentan como no fijados. Las versiones npm se comparan como semver y las de PyPI por número de release; dos versiones PyPI que solo difieren en un sufijo pre, post o dev no se comparan (`uncertain`).
+
+Algunos registros nombran las versiones encontradas y además llevan un rango abierto desde la primera versión. Esos bloquean solo las versiones nombradas; una línea de arranque sin versión fijada, o con otra versión, recibe `KNOWN_MALICIOUS_VERSIONS`. El 2026-11-17 el registro ya había sustituido por un marcador de seguridad o retirado los 40 paquetes npm muestreados con registros así. Un registro de este tipo afecta a un servidor oficial: `@browserbasehq/mcp` 2.1.1 fue retirado, 3.0.0 se sirve.
+
+Sobre los 14.933 paquetes de servidores MCP de npm y PyPI que HISTOR conocía el 2026-10-16, en las versiones que observó, la lista bloquea 3 (`@2oolkit/hyperliquid-cli` 0.2.7, `vulndify-mcp-server` 0.3.0, `agentic-awesome-skills` 19.7.0) e informa de otros 3. Sin versión fijada no se bloquea ninguno; 22 reciben `KNOWN_MALICIOUS_VERSIONS`, entre ellos `@postman/postman-mcp-server`, `@antv/mcp-server-chart` y `@mastra/mcp-docs-server`, que en su día publicaron versiones comprometidas. Método y recuentos: [evidence/malware-list-2026-11-17](evidence/malware-list-2026-11-17/README.md).
+
+La lista es `lists/malware-list.tsv`. La compilación la empaqueta en `dist/malware-list.tsv.gz`, y su SHA-256 está fijado en `src/malware-list-pin.ts`, de modo que el digest de compilación que firma MOMUS también la cubre. No se descarga nada durante la verificación. Una lista que falta o no coincide con su digest no se usa, y `warden scan` muestra `malware list OFF` en la cabecera. `scripts/update-malware-list.mjs --fetch DIR` reconstruye ambos archivos desde los dos repositorios; cada versión publicada lleva la lista del día de su compilación. En 0.29.0: 224.098 paquetes npm y 12.034 PyPI de OpenSSF (commit f8c4d3d, 2026-11-17), y 1.234 npm y 228 PyPI que solo lista OpenSourceMalware.com (commit de Vulnetix c337489).
+
+Un host que no quiera esta puerta pasa `malwareList: null` a `Warden.create`.
+
 ## origin
 
 ¿Declaró el operador este servidor, o llegó desde un catálogo remoto (`McpServerRef.catalog` está

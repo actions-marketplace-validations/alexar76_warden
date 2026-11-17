@@ -7,4 +7,5 @@ import { fileURLToPath } from 'node:url';
 export default function setup(): void {
   const root = fileURLToPath(new URL('..', import.meta.url));
   execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json'], { cwd: root, stdio: 'inherit' });
+  execFileSync(process.execPath, ['scripts/pack-malware-list.mjs'], { cwd: root, stdio: 'inherit' });
 }

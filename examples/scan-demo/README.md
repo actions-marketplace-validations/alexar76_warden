@@ -12,11 +12,11 @@ Run it from this directory, with nothing installed (Node ≥ 20). `--project` re
 directory's config files, so the output is the same on every machine:
 
 ```bash
-npx -y @aimarket/warden@0.28.0 scan --project
+npx -y @aimarket/warden@0.29.0 scan --project
 ```
 
 ```text
-WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90

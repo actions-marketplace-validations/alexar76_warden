@@ -7,11 +7,11 @@
 `warden-mcp scan` 读取你已有的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。它与 [`wrap`](../README-zh.md) 和[库](integration.zh.md)使用同一条关卡链，只是对你的配置运行一次，而不是挡在单个服务器前面。
 
 ```bash
-npx -y @aimarket/warden@0.28.0 scan
+npx -y @aimarket/warden@0.29.0 scan
 ```
 
 ```text
-WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -41,6 +41,8 @@ Details: warden-mcp scan --json, or --markdown FILE. To review a changed server:
 ## 启动服务器
 
 为了读取 stdio 服务器的工具，`scan` 会用配置中的命令、参数和环境启动它——与客户端的做法完全相同——并在 `tools/list` 之后停止它。它从不调用工具。但程序仍然会被执行。在不希望这样的场合，例如针对 pull request 的 CI 中，`--no-launch` 只审查启动命令：threat feed 中的命令记录，以及 lock 文件中的启动身份。
+
+在启动由包管理器从 npm 或 PyPI 获取的服务器（`npx`、`uvx` 等）之前，`scan` 会在 WARDEN 自带的已知恶意包列表中查找该包（[malware-list](gates.zh.md#malware-list)）。OpenSSF 列为恶意的包——无论是所有版本，还是启动命令固定的那个版本——都会被拦截，永不启动；`--no-launch` 同样会检查。报告头给出列表的日期。
 
 远程服务器（`url`，streamable HTTP 或较旧的 HTTP+SSE）会通过网络、带着配置中的请求头进行查询。`--public-only` 会拒绝解析到回环、私有、链路本地或云元数据地址的服务器，检查的是实际连接的地址。不跟随重定向。
 
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.28.0
+      - uses: alexar76/warden@v0.29.0
         with:
           upload-sarif: 'true'
 ```

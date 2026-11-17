@@ -7,11 +7,11 @@
 `warden-mcp scan` читает уже существующую у вас конфигурацию MCP, подключается к каждому серверу из неё и проверяет определения инструментов до того, как их увидит модель. Это та же цепочка гейтов, что у [`wrap`](../README-ru.md) и у [библиотеки](integration.ru.md), только пройденная один раз по вашим конфигам, а не перед одним сервером.
 
 ```bash
-npx -y @aimarket/warden@0.28.0 scan
+npx -y @aimarket/warden@0.29.0 scan
 ```
 
 ```text
-WARDEN scan 0.28.0 · ruleset 23 sha256-J12lNmUUNTNk… · block at high
+WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
   read .mcp.json (claude-code, 3 servers)
 
   ✓ allow   notes       claude-code    1 tool · score 0.90
@@ -41,6 +41,8 @@ Details: warden-mcp scan --json, or --markdown FILE. To review a changed server:
 ## Запуск серверов
 
 Чтобы прочитать инструменты stdio-сервера, `scan` запускает его с командой, аргументами и окружением из конфига — ровно так, как это сделал бы клиент, — и останавливает после `tools/list`. Инструменты он не вызывает никогда. Но программа при этом всё равно выполняется. Там, где это нежелательно, например в CI на pull request, `--no-launch` проверяет только строку запуска: по записям threat feed о командах и по идентичности запуска из лок-файла.
+
+Прежде чем запустить сервер, который менеджер пакетов берёт из npm или PyPI (`npx`, `uvx` и подобные), `scan` ищет пакет в списке известных вредоносных пакетов, который поставляется с WARDEN ([malware-list](gates.ru.md#malware-list)). Пакет, который OpenSSF считает вредоносным во всех версиях или в версии, закреплённой в строке запуска, блокируется и не запускается; `--no-launch` проверяет его тоже. В заголовке отчёта указана дата списка.
 
 Удалённые серверы (`url`, streamable HTTP или старый HTTP+SSE) опрашиваются по сети с заголовками из конфига. `--public-only` отказывает тем, что разрешаются в loopback, частные, link-local адреса или адрес облачных метаданных; проверяется адрес, к которому реально идёт подключение. Редиректы не выполняются.
 
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.28.0
+      - uses: alexar76/warden@v0.29.0
         with:
           upload-sarif: 'true'
 ```
