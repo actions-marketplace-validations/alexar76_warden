@@ -38,6 +38,7 @@ keyboard input after outside text (0.29.0 and 0.30.0 treat them as keyboard inpu
 | Clean consumer | the tarball installs into an empty project with `--ignore-scripts`; main, `/codex` and `/opencode` import; `--package` and `npm:` launches resolve to the installed package and a listed one is blocked; keyboard tools stay keyboard input, data keys do not; `warden-mcp gateway` starts, answers health (details only with the token) and refuses `/v1/pre` without a token | `clean-consumer.log` |
 | Malware corpus (`../malware-list-2026-11-17/corpus.mjs`) | same counts as 0.29.0: pinned 3 block, 1 + 2 advisory; unpinned 22 + 2 advisory | — |
 | OpenWebUI live checks (v0.11.4) | native 11/11, legacy 4/4, OpenAPI 7/7, browser 7/7 after the second review round | `../../openwebui.md#live-check` |
+| OpenWebUI live checks on the npm package (2026-11-18, after publication) | gateway, Filter and guarded tool taken from the npm tarball (shasum `2c43b950…`), OpenWebUI v0.11.4: scripted native 10/10, legacy 4/4, OpenAPI 7/7; real models (`qwen/qwen3.8-27b`, `minimax/minimax-m3` via OpenRouter) 8/8 each; Chromium 9/9 (confirmation dialog Confirm/Cancel, built-in search and note tools, UI web search with both models). 46 passed, 0 failed. Not re-run: S5r (gateway restart) and the desktop app | `openwebui-npm-2026-11-18.log` |
 | Quality gate (MOMUS) | **passed**, run `20261118T041219` on HISTOR image `d75d0fe1…` (this tarball vendored): development 8,244 / 362, holdout 24 / 24, candidates 25, behaviour 72 of 72, 0 missed, 0 false positives; live on HISTOR since 07:05Z, `live` 08:02Z; this tarball's `check-quality-gate.mjs` passes | `quality/` |
 
 ## Publication
@@ -55,5 +56,7 @@ keyboard input after outside text (0.29.0 and 0.30.0 treat them as keyboard inpu
   the public `warden-scan` blocks a description with "Ignore previous instructions" (TOOL_DEF_INJECTION) and allows the
   clean tool, engine `@aimarket/warden@0.30.0`, ruleset 23. Rollback: the stopped `okx-a2mcp-prev`
   (`prod-20261115-1b1220c49`, WARDEN 0.27.0).
-- Left: mirror, tag `v0.30.0` with `scripts/release-notes/v0.30.0/warden.md`, MCP registry, Marketplace, profile
-  (colleague tasks §131).
+- 08:45Z checked: mirror, tag and release `v0.30.0` (`scripts/release-notes/v0.30.0/warden.md`), MCP registry 0.30.0,
+  Marketplace and profile done (colleague tasks §131). The mirror's "Publish to MCP Registry" run of 08:28Z, which waited
+  for approval, ended at 09:29:13Z with no step run; the registry entry `io.github.alexar76/warden` 0.30.0 (latest) comes
+  from `publish_mcp_registry.sh`.

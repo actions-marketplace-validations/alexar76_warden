@@ -1,0 +1,17 @@
+tarball sha256 4927bf1825cc6409a63aa8640b67d281d7d91c3bfa7745ec79a12602c8c59b67
+install=0 (npm i --ignore-scripts into an empty project)
+exports: Warden function | codex.codexPre function | opencode.createWardenPlugin function
+packaged integrations/openwebui/warden_filter.py true
+packaged integrations/openwebui/warden_guard.py true
+packaged scripts/openwebui-turnkey-check.sh true
+packaged docs/openwebui.md true
+packaged docs/openwebui.ru.md true
+packaged dist/openwebui-setup.js true
+$ warden-mcp openwebui --help -> Usage: warden-mcp openwebui setup --url URL [options]   put WARDEN in front of a running OpenWebUI
+setup against a closed port: exit 1, "warden-mcp openwebui setup: cannot reach OpenWebUI at http://127.0.0.1:18798 (ECONNREFUSED)"
+$ warden-mcp gateway (audit)
+  health without token: {"ok":true,"version":"0.31.0"}
+  health with token: {"ok":true,"version":"0.31.0","mode":"audit","servers":[]}
+  injected page, then fetch_url to the attacker: {"decision":"allow","mode":"audit","resolution":"audit","wouldRefuse":"unnamed_destination"}
+  own request: {"decision":"allow","mode":"audit","resolution":"audit"}
+  /v1/pre without token: HTTP 401

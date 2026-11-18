@@ -161,7 +161,8 @@ Toutes les routes prennent du JSON avec `chat_id` et `user_id`, et exigent `Auth
 | `POST /v1/approve` | `code`, `approved`, `peek` | enregistre la réponse de la personne (`peek: true` renvoie seulement l’outil et l’aperçu) ; exige le jeton d’approbation s’il est configuré |
 
 Les modes sont ceux de la politique du garde : `audit` laisse tout passer et journalise ce que `deny` refuserait, `ask`
-refuse avec un code, `deny` refuse sans code, `off`. Commencez en `audit`.
+refuse avec un code, `deny` refuse sans code, `off`. Commencez en `audit`. En `audit`, la réponse de `/v1/pre` porte
+aussi `wouldRefuse` avec le motif que donnerait `deny` (depuis 0.31.0), tout comme la ligne de journal.
 
 ## Journaux et étiquettes
 
