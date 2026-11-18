@@ -153,7 +153,7 @@ macOS 上 Claude Desktop 日志：`~/Library/Logs/Claude/mcp-server-<名称>.log
 npx -y @aimarket/warden@0.31.0 scan
 ```
 
-读取 Claude Code、Claude Desktop、Cursor、VS Code 和 Windsurf 的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。输出表格、JSON、SARIF 或 Markdown，有服务器被阻止时以 1 退出；`--no-launch` 不启动任何程序。在仓库中，`warden.lock.json` 把工具定义的改动变成可审查的 diff，CI 会在出现新的或改动过的服务器时失败。也提供 GitHub Action（`uses: alexar76/warden@v0.30.0`）、pre-commit 钩子和 Claude Code 插件（`/plugin marketplace add alexar76/warden`）。`--histor` 询问公开的 HISTOR 日志：服务器给你的是否与给所有人的相同；对远程服务器发送端点和摘要，对从 npm 或 PyPI 启动的 stdio 服务器发送软件包名（`npm:<名称>`、`pypi:<名称>`，HISTOR 会在 gVisor 沙箱中运行它）和摘要，从不发送工具文本。可选的分类器（`--classifier-url`、`--classifier-model`）会加入你所选模型（本地或托管）的判断，用于覆盖任何规则都没有提到的内容。详见 [scan 指南](docs/scan.zh.md)。与另外两款扫描器在同一批服务器上的对比，见[扫描器对比](docs/scanner-comparison.zh.md)。
+读取 Claude Code、Claude Desktop、Cursor、VS Code 和 Windsurf 的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。输出表格、JSON、SARIF 或 Markdown，有服务器被阻止时以 1 退出；`--no-launch` 不启动任何程序。在仓库中，`warden.lock.json` 把工具定义的改动变成可审查的 diff，CI 会在出现新的或改动过的服务器时失败。也提供 GitHub Action（`uses: alexar76/warden@v0.31.0`）、pre-commit 钩子和 Claude Code 插件（`/plugin marketplace add alexar76/warden`）。`--histor` 询问公开的 HISTOR 日志：服务器给你的是否与给所有人的相同；对远程服务器发送端点和摘要，对从 npm 或 PyPI 启动的 stdio 服务器发送软件包名（`npm:<名称>`、`pypi:<名称>`，HISTOR 会在 gVisor 沙箱中运行它）和摘要，从不发送工具文本。可选的分类器（`--classifier-url`、`--classifier-model`）会加入你所选模型（本地或托管）的判断，用于覆盖任何规则都没有提到的内容。详见 [scan 指南](docs/scan.zh.md)。与另外两款扫描器在同一批服务器上的对比，见[扫描器对比](docs/scanner-comparison.zh.md)。
 
 ### MCP 工具的 lock 文件
 

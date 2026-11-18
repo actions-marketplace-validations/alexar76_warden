@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexar76/warden@v0.30.0
+      - uses: alexar76/warden@v0.31.0
         with:
           upload-sarif: 'true'
 ```

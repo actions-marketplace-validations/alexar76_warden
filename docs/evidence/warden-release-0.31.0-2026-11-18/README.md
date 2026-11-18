@@ -73,3 +73,26 @@ unreachable OpenWebUI was reported as a bare "fetch failed". `3fa99ee26` names t
 
 Publication: the live receipt for this build is in place, so the owner can publish this tarball (colleague-tasks §133 step 2).
 
+## Publication
+
+- ~16:20Z checked over public HTTPS (no GitHub API): mirror `alexar76/warden` at 0.31.0 with `docs/openwebui.md` and
+  `src/openwebui-setup.ts`, the `v0.31.0` release page, Marketplace and the profile README on 0.31.0, but npm still
+  `latest` = 0.30.0 and the MCP registry entry 0.30.0, so the public `@aimarket/warden@0.31.0` commands answered 404.
+  The owner's first `npm publish` of this tarball stopped at `ENEEDAUTH` (no npm login on that machine) after npm had
+  printed shasum `e7205556…`; nothing was uploaded.
+- 2026-11-18 16:39:39Z (npm time) the owner published this tarball after checking its sha256 (`4927bf18…`). The
+  registry reports dist.shasum `e72055562cd9632012d74f7b88442b3fca3d6439`, integrity
+  `sha512-9Yxwyx2ndkEVOG7JKakqftbL7AjYrcuOsJZae51ES+ceVDfjKeB+XJ3rtooZ9dP2Ro+VYnuwXUqky4/ybO/8hQ==`, `latest` = 0.31.0.
+- ~16:40Z the registry tarball downloads (200, 3,760,663 bytes) and is byte for byte this folder's (`cmp`).
+- GitHub Action pins in the READMEs and scan guides (5 languages) moved to `v0.31.0`; `check-doc-versions --release`
+  passes. okx-a2mcp moved to 0.31.0 (registry URL + the integrity above): `npm ci` from the registry accepts the
+  integrity, 87 / 87 tests.
+- 16:44:54Z okx-a2mcp production (modelmarket.dev/a2mcp, /tools) on WARDEN 0.31.0: `okx-a2mcp/deploy.sh` from main
+  `59848cbff`, image `okx-a2mcp:prod-20261118-59848cbff` built on the host from npm, 0 restarts, no error lines; no open
+  alerts before the deploy. `/health` reports warden 0.31.0; the installed `dist/openwebui-setup.js` has the same
+  sha256 as this tarball's. The public `warden-scan` blocks a description with "Ignore previous instructions" and
+  allows the clean tool, engine `@aimarket/warden@0.31.0`, ruleset 23. Rollback: the stopped `okx-a2mcp-prev`
+  (`prod-20261118-58933ccac`, WARDEN 0.30.0).
+- Left: MCP registry 0.31.0 (colleague-tasks §133 step 5, after npm); the pin change reaches the mirror with its next
+  sync.
+
