@@ -1,4 +1,4 @@
-# WARDEN 0.30.0 — prepared 2026-11-17, MOMUS gate pending
+# WARDEN 0.30.0 — prepared 2026-11-17, MOMUS gate passed 2026-11-18
 
 Built from a clean checkout of aicom `49e1c6b39` (`npm ci --ignore-scripts`, `npm run build`, then `npm pack`, whose
 `prepare` builds again; the tree was unchanged after the build). The release adds `warden-mcp gateway` (OpenWebUI and
@@ -38,14 +38,18 @@ keyboard input after outside text (0.29.0 and 0.30.0 treat them as keyboard inpu
 | Clean consumer | the tarball installs into an empty project with `--ignore-scripts`; main, `/codex` and `/opencode` import; `--package` and `npm:` launches resolve to the installed package and a listed one is blocked; keyboard tools stay keyboard input, data keys do not; `warden-mcp gateway` starts, answers health (details only with the token) and refuses `/v1/pre` without a token | `clean-consumer.log` |
 | Malware corpus (`../malware-list-2026-11-17/corpus.mjs`) | same counts as 0.29.0: pinned 3 block, 1 + 2 advisory; unpinned 22 + 2 advisory | — |
 | OpenWebUI live checks (v0.11.4) | native 11/11, legacy 4/4, OpenAPI 7/7, browser 7/7 after the second review round | `../../openwebui.md#live-check` |
-| Quality gate (MOMUS) | **pending**: needs a HISTOR candidate with this tarball vendored and a MOMUS run, as for 0.29.0 (`../warden-release-0.29.0-2026-11-17/quality/`) | — |
+| Quality gate (MOMUS) | **passed**, run `20261118T041219` on HISTOR image `d75d0fe1…` (this tarball vendored): development 8,244 / 362, holdout 24 / 24, candidates 25, behaviour 72 of 72, 0 missed, 0 false positives; live on HISTOR since 07:05Z, `live` 08:02Z; this tarball's `check-quality-gate.mjs` passes | `quality/` |
 
 ## Before `npm publish`
 
-**HARD STOP (owner 2026-11-18):** do **not** `npm publish` `@aimarket/warden@0.30.0` (no republish) until the colleague hold is lifted. Public quickstart/docs stay pinned to live npm **0.29.0**.
+**Hold note.** 16baae29c (2026-11-18 05:52Z, another session) wrote here "HARD STOP (owner 2026-11-18): do not
+`npm publish` 0.30.0 until the colleague hold is lifted" and pinned the public installs back to 0.29.0. Its source is
+not recorded (not in the colleague tasks; the ARGUS session did not write it). The owner then asked, ~08:05Z, to
+prepare everything for 0.30 («подготовь везде все под 30»): the public pins, HISTOR's vendored scanner, okx-a2mcp and
+the profile README are on 0.30.0 again, and they answer 404 until npm has 0.30.0. Publish when the owner confirms the
+hold is lifted.
 
-1. MOMUS: build the candidate from the running HISTOR production image with this tarball vendored, run
-   `skopos-warden-quality candidate`, `authorize`; after the owner's yes, switch HISTOR and mark it `live`. Then
-   `npm run check:quality` passes for build `73c618fb…`.
+1. MOMUS: done 2026-11-18 (`quality/README.md`); the gate passes for build `73c618fb…` until 2026-11-20 04:12Z
+   unless a daily run renews the receipt.
 2. Publish this tarball (shasum `2c43b950…`), not a rebuild; check the registry shasum after.
 3. Mirror, tag `v0.30.0` with `scripts/release-notes/v0.30.0/warden.md`, MCP registry.

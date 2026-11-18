@@ -1,0 +1,9 @@
+files prod 11011 candidate 11057
+outside WARDEN: only prod [] only candidate [] differ []
+candidate warden 0.30.0 dist js 79 buildDigest 73c618fbc7e75ce7d506d17a7c5b061e8ad9fd75fb81b728fc5829f6a255218d
+source files 79
+rc=0
+HISTOR scanner imports @aimarket/warden 0.30.0 {"version":"23","digest":"sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g="}
+malware list in image: {"packages":237594,"sha256":"b656eb8a15d8b2d0ad9d54a4f02606f9fd28a460d90dbc8d91968ffc38b80526","sources":["ossf f8c4d3d","osm c337489"]} load ms 825 rss MB 63 -> 108
+rc=0
+{"warden":{"package":"@aimarket/warden@0.30.0","version":"0.30.0"},"patternSet":{"id":"urn:awr:mtl:1:patternset:argus-warden-static-scan","package":"@aimarket/warden@0.30.0","note":"Generated at runtime by calling staticScanRuleset() in the published package named above — the same function the gate calls to stamp its verdicts. A `block` rule can refuse a connection in WARDEN; an `advise` rule is

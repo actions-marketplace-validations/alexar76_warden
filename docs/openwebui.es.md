@@ -84,7 +84,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.29.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.30.0", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}
