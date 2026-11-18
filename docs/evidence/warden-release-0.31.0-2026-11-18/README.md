@@ -37,6 +37,7 @@ unreachable OpenWebUI was reported as a bare "fetch failed". `3fa99ee26` names t
 | Version references, release mode | pass | `versions.log` |
 | Clean consumer | the tarball installs into an empty project with `--ignore-scripts`; main, `/codex` and `/opencode` import; the OpenWebUI files are in the package; `warden-mcp openwebui --help` works; `setup` against a closed port names it (`ECONNREFUSED`); `warden-mcp gateway` in `audit` answers `wouldRefuse: unnamed_destination` for an injected page and nothing for the person's own request; `/v1/pre` without a token is 401 | `clean-consumer.log` |
 | OpenWebUI, one command (`scripts/openwebui-turnkey-check.sh`, fresh OpenWebUI v0.11.4, direct connections) | setup and check 8 / 8, native 10 / 10, legacy 4 / 4, OpenAPI 7 / 7, undo; the gateway reports 0.31.0 | `openwebui-turnkey.log` |
+| The same from npm after publication (2026-11-18 ~18:00Z): `npx -y @aimarket/warden@0.31.0 openwebui setup|check|undo` from a work folder, the gateway's compose pulling `@aimarket/warden@0.31.0` from the registry | setup and check 8 / 8, native 10 / 10, legacy 4 / 4, OpenAPI 7 / 7, undo; npm dist.shasum `e7205556…` = this tarball | `openwebui-turnkey-npm.log` |
 
 ## MOMUS release gate
 
