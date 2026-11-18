@@ -1,4 +1,4 @@
-# WARDEN 0.31.0 — prepared 2026-11-18
+# WARDEN 0.31.0 — prepared 2026-11-18, MOMUS gate passed, live on HISTOR
 
 Built from a clean export of aicom `3fa99ee26` (`git archive … warden`; `npm ci --ignore-scripts`, `npm run build`,
 then `npm pack`, whose `prepare` builds again; `dist/` was the same before and after the pack), Node 22.22.1,
@@ -51,16 +51,25 @@ unreachable OpenWebUI was reported as a bare "fetch failed". `3fa99ee26` names t
 | Expires | 2026-11-20 14:58:27Z |
 | `authorize` | done 2026-11-18 15:06:28Z |
 
-## Production HISTOR (owner's step)
+## Production HISTOR (owner's yes, 2026-11-18)
 
-Not switched yet. The candidate image is on admin-vps; production HISTOR still runs `d75d0fe1…` (0.30.0). The switch
-needs the owner's yes and the HISTOR host, which this session could not reach. `quality/switch.sh` and
-`quality/wait-and-switch.sh` are the 0.30.0 scripts with the images moved one release on (forward: 0.30.0 → 0.31.0
-only when no crawl runs; rollback: `./switch.sh rollback`, then `skopos-warden-quality rebind sha256:d75d0fe1…` on
-admin-vps). Steps: `docs/distribution/colleague-tasks.md` §133. After the switch: `skopos-warden-quality live
-sha256:2604a2f6…` on admin-vps, then this tarball's `check-quality-gate.mjs` must pass before `npm publish`.
+- The owner allowed ssh to the HISTOR host («I'll allow your ssh»). 15:17Z: production on `d75d0fe1…` (0.30.0),
+  healthy; no crawl running (the last ended 07:04:47Z); no open alert for HISTOR.
+- The candidate image went from admin-vps to the HISTOR host with `docker save | docker load` through the Mac: same
+  ID `sha256:2604a2f6…`. `quality/switch.sh` and `quality/wait-and-switch.sh` (sha256 `3a46da84…`, `c728ab04…`, the
+  same on the host) in `/root/wd031-prod-20261118`.
+- 15:19:08Z `wait-and-switch.sh` as the transient unit `histor-warden031-switch`: no crawl, switched; 15:19:40Z
+  `histor-histor-1` healthy on `sha256:2604a2f6…`. Only the image line of `docker-compose.warden-image.yml` changed.
+  Rollback: `./switch.sh rollback` → `warden-0.30.0-prod`, then `skopos-warden-quality rebind sha256:d75d0fe1…` on
+  admin-vps.
+- After the switch: the landing page, `/api/v1/check` and `/security-quality/latest.json` answer 200, no error lines
+  in the container log, the vendored WARDEN inside the container is 0.31.0.
+- 15:20:08Z `skopos-warden-quality live sha256:2604a2f6…` on admin-vps. The public receipt
+  (`quality/latest-signed-after.json`) is phase `live` for build `eac16bef…`, run `20261118T145827`, and this tarball's
+  own `check-quality-gate.mjs` passes (`quality/check-quality-after.log`). The gate accepts the receipt for 48 h from
+  the evaluation (until 2026-11-20 14:58Z) unless a later daily run renews it.
+- The HISTOR scanner in main now vendors this tarball (`histor/scanner/vendor/`, `check:build` verifies
+  `eac16bef…`, its tests 5 / 5), so an ordinary build from main does not roll production back to 0.30.0.
 
-Publication needs the live receipt for this build: `prepublishOnly` runs `check:quality`, which accepts only a passing,
-fresh receipt whose build digest is this tarball's, and that receipt becomes `live` only after HISTOR production runs
-the candidate image (`skopos-warden-quality live`). Until then npm keeps 0.30.0 as `latest`.
+Publication: the live receipt for this build is in place, so the owner can publish this tarball (colleague-tasks §133 step 2).
 
