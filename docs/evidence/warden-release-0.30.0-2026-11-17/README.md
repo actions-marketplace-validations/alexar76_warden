@@ -42,6 +42,8 @@ keyboard input after outside text (0.29.0 and 0.30.0 treat them as keyboard inpu
 
 ## Before `npm publish`
 
+**HARD STOP (owner 2026-11-18):** do **not** `npm publish` `@aimarket/warden@0.30.0` (no republish) until the colleague hold is lifted. Public quickstart/docs stay pinned to live npm **0.29.0**.
+
 1. MOMUS: build the candidate from the running HISTOR production image with this tarball vendored, run
    `skopos-warden-quality candidate`, `authorize`; after the owner's yes, switch HISTOR and mark it `live`. Then
    `npm run check:quality` passes for build `73c618fb…`.
