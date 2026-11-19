@@ -153,7 +153,8 @@ All routes take JSON with `chat_id` and `user_id`, and need `Authorization: Bear
 | `POST /v1/approve` | `code`, `approved`, `peek` | records the person's answer (`peek: true` only returns the tool and preview); needs the approve token when one is configured |
 
 The modes are the flow policy's: `audit` lets every call run and logs what `deny` would refuse, `ask` refuses with a
-code, `deny` refuses without one, `off`. Start in `audit`.
+code, `deny` refuses without one, `off`. Start in `audit`. In `audit` the answer of `/v1/pre` also carries
+`wouldRefuse` with the reason `deny` would give (since 0.31.0), and so does the log line.
 
 ## Logs and labels
 

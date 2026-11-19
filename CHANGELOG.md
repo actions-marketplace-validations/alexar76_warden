@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.31.0 — 2026-11-18 (OpenWebUI in one command)
+
+A minor release: `warden-mcp openwebui setup|check|undo` puts an OpenWebUI that already runs behind the 0.30.0 gateway
+in one command, and the gateway's `audit` answers name the refusal they would have given. Rulesets are unchanged (23),
+the malware list is 0.30.0's, and no verdict changes: the flow guard, the gates and the scan are as in 0.30.0.
+
+- **OpenWebUI in one command: `warden-mcp openwebui setup`.** For an OpenWebUI that already runs: it finds the
+  OpenWebUI container and its Docker network, moves each tool server connection's key into the gateway's `.env`,
+  starts the gateway next to OpenWebUI, has OpenWebUI itself verify every server through the gateway, installs the
+  WARDEN Filter (active, global, valves set), and only then switches the connections over, with the chat and user
+  headers OpenWebUI fills per call (`{{CHAT_ID}}`, `{{USER_ID}}`), so OpenWebUI needs no restart and no new
+  environment variable. Connections it cannot carry (per-user OAuth or session auth, header templates, forwarded
+  cookies, `localhost` inside the OpenWebUI container) stay direct and are named. The policy starts in `audit`.
+  `warden-mcp openwebui check` proves the result: gateway health, Filter, every connection reached through the
+  gateway, a refused injection and an allowed own request judged by the running gateway, Python tools without
+  `@warden_guard`. `warden-mcp openwebui undo` restores the original connections, switches the Filter off and stops the
+  gateway. Without Docker (`--local`) the gateway runs as a local process. Checked on a fresh OpenWebUI v0.11.4 with
+  direct connections (`scripts/openwebui-turnkey-check.sh`).
+- **Gateway: audit answers say what would have been refused.** In `audit` a call the flow guard would refuse is still
+  allowed, and `/v1/pre` now also returns `wouldRefuse` with the reason (also in the gateway's log line), so a pilot
+  and `openwebui check` can see the rule fire before `deny` is switched on.
+
 ## 0.30.0 — 2026-11-17 (gateway for OpenWebUI, launch package checks)
 
 A minor release: `warden-mcp gateway`, a new command that brings WARDEN to platforms without agent hooks (OpenWebUI

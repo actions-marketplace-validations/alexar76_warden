@@ -44,6 +44,8 @@ export interface PreAnswer {
   preview?: string;
   /** `approved` when a grant was consumed; `audit` when audit mode let a refused call through. */
   resolution?: 'approved' | 'policy' | 'audit';
+  /** Audit mode only: the reason code the call would have been refused with in `ask` or `deny`. */
+  wouldRefuse?: string;
   mode: string;
 }
 
@@ -333,8 +335,10 @@ export class Decider {
     }
     const mode = this.mode();
     if (!d) {
-      this.note(session, who, { tool: safeToolName(name), decision: 'allow', ...(mode === 'audit' ? { resolution: 'audit' } : {}) });
-      return { decision: 'allow', mode, ...(mode === 'audit' ? { resolution: 'audit' as const } : {}) };
+      // In audit the flow guard still names the rule that would have refused the call: say so, the pilot counts these.
+      const would = mode === 'audit' && detail.reason ? { wouldRefuse: detail.reason } : {};
+      this.note(session, who, { tool: safeToolName(name), decision: 'allow', ...(mode === 'audit' ? { resolution: 'audit' } : {}), ...would });
+      return { decision: 'allow', mode, ...(mode === 'audit' ? { resolution: 'audit' as const } : {}), ...would };
     }
     const reason = detail.reason;
     if (d.permissionDecision === 'deny') {

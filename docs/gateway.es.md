@@ -158,7 +158,8 @@ Todas las rutas reciben JSON con `chat_id` y `user_id`, y exigen `Authorization:
 | `POST /v1/approve` | `code`, `approved`, `peek` | registra la respuesta de la persona (`peek: true` solo devuelve la herramienta y la vista previa); exige el token de aprobación si está configurado |
 
 Los modos son los de la política del guardián: `audit` deja pasar todo y registra lo que `deny` rechazaría, `ask`
-rechaza con un código, `deny` rechaza sin él, `off`. Empiece en `audit`.
+rechaza con un código, `deny` rechaza sin él, `off`. Empiece en `audit`. En `audit` la respuesta de `/v1/pre` incluye
+además `wouldRefuse` con el motivo que daría `deny` (desde 0.31.0), y la línea del registro también.
 
 ## Registros y etiquetas
 

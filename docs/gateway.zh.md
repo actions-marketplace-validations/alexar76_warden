@@ -139,7 +139,8 @@ stateDiagram-v2
 | `POST /v1/approve` | `code`、`approved`、`peek` | 记录本人的回答（`peek: true` 只返回工具和预览）；配置了批准令牌时需要该令牌 |
 
 模式即流向守卫策略的模式：`audit` 让所有调用运行并记录 `deny` 会拒绝什么，`ask` 带批准码拒绝，`deny` 不带批准码拒绝，
-`off` 关闭。请从 `audit` 开始。
+`off` 关闭。请从 `audit` 开始。在 `audit` 下，`/v1/pre` 的回答还带有 `wouldRefuse`，即 `deny` 会给出的原因（自 0.31.0 起），日志行中
+也有。
 
 ## 日志与标签
 

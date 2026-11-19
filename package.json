@@ -1,6 +1,6 @@
 {
   "name": "@aimarket/warden",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "description": "WARDEN \u2014 MCP security firewall. Stdio wrap proxy, inspection tools and library. Vets definitions before model exposure. Zero runtime dependencies.",
   "type": "module",
   "license": "MIT",
@@ -80,6 +80,7 @@
     "integrations/openwebui/warden_guard.py",
     "integrations/openwebui/example_tool.py",
     "scripts/openwebui-live-check.sh",
+    "scripts/openwebui-turnkey-check.sh",
     "scripts/openwebui-live/*",
     "scripts/openwebui-local-deploy.sh",
     "examples/openwebui/docker-compose.yml"

@@ -1,19 +1,17 @@
-claude-plugin/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-codex.mjs, flow-guard-constraints.mjs, flow-guard-decode.mjs, flow-guard-destinations.mjs, flow-guard-fingerprints.mjs, flow-guard-fragments.mjs, flow-guard-instructions.mjs, flow-guard-labels.mjs, flow-guard-leak.mjs, flow-guard-paths.mjs, flow-guard-policy.mjs, flow-guard-post.mjs, flow-guard-pre.mjs, flow-guard-screen.mjs, flow-guard-state.mjs, flow-guard-text.mjs, flow-guard-types.mjs, flow-guard-unattended.mjs, flow-guard.mjs updated
-codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-codex.mjs, flow-guard-constraints.mjs, flow-guard-decode.mjs, flow-guard-destinations.mjs, flow-guard-fingerprints.mjs, flow-guard-fragments.mjs, flow-guard-instructions.mjs, flow-guard-labels.mjs, flow-guard-leak.mjs, flow-guard-paths.mjs, flow-guard-policy.mjs, flow-guard-post.mjs, flow-guard-pre.mjs, flow-guard-screen.mjs, flow-guard-state.mjs, flow-guard-text.mjs, flow-guard-types.mjs, flow-guard-unattended.mjs, flow-guard.mjs updated
 [
   {
-    "id": "@aimarket/warden@0.29.0",
+    "id": "@aimarket/warden@0.31.0",
     "name": "@aimarket/warden",
-    "version": "0.29.0",
-    "size": 3563995,
-    "unpackedSize": 6341135,
-    "shasum": "d5134865885b91083ce97aefc1a1c2973361f63e",
-    "integrity": "sha512-p+6Rvoht8Seb1pMMOAUFgYEvNhiIcl0TZcvw7sCnizvPz3iCN5CQmV99LGYD/KLlnKK7bYUAtlW531GeNmyPlw==",
-    "filename": "aimarket-warden-0.29.0.tgz",
+    "version": "0.31.0",
+    "size": 3760663,
+    "unpackedSize": 7043669,
+    "shasum": "e72055562cd9632012d74f7b88442b3fca3d6439",
+    "integrity": "sha512-9Yxwyx2ndkEVOG7JKakqftbL7AjYrcuOsJZae51ES+ceVDfjKeB+XJ3rtooZ9dP2Ro+VYnuwXUqky4/ybO/8hQ==",
+    "filename": "aimarket-warden-0.31.0.tgz",
     "files": [
       {
         "path": "CHANGELOG.md",
-        "size": 120414,
+        "size": 128028,
         "mode": 420
       },
       {
@@ -23,27 +21,27 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       },
       {
         "path": "README-es.md",
-        "size": 33109,
+        "size": 34682,
         "mode": 420
       },
       {
         "path": "README-fr.md",
-        "size": 33964,
+        "size": 35582,
         "mode": 420
       },
       {
         "path": "README-ru.md",
-        "size": 48061,
+        "size": 50700,
         "mode": 420
       },
       {
         "path": "README-zh.md",
-        "size": 30534,
+        "size": 31954,
         "mode": 420
       },
       {
         "path": "README.md",
-        "size": 33810,
+        "size": 35326,
         "mode": 420
       },
       {
@@ -138,7 +136,7 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       },
       {
         "path": "codex-hooks/scripts/flow-guard-screen.mjs",
-        "size": 34567,
+        "size": 36221,
         "mode": 420
       },
       {
@@ -618,12 +616,12 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       },
       {
         "path": "dist/flow-guard-screen.js",
-        "size": 34503,
+        "size": 36157,
         "mode": 420
       },
       {
         "path": "dist/flow-guard-screen.js.map",
-        "size": 39152,
+        "size": 39524,
         "mode": 420
       },
       {
@@ -744,6 +742,106 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       {
         "path": "dist/fold.js.map",
         "size": 3265,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-config.d.ts",
+        "size": 2781,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-config.d.ts.map",
+        "size": 1529,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-config.js",
+        "size": 8452,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-config.js.map",
+        "size": 8725,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-decide.d.ts",
+        "size": 6511,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-decide.d.ts.map",
+        "size": 3248,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-decide.js",
+        "size": 26781,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-decide.js.map",
+        "size": 25025,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-mcp.d.ts",
+        "size": 3314,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-mcp.d.ts.map",
+        "size": 1395,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-mcp.js",
+        "size": 24844,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-mcp.js.map",
+        "size": 26119,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-openapi.d.ts",
+        "size": 2342,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-openapi.d.ts.map",
+        "size": 1470,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-openapi.js",
+        "size": 14839,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway-openapi.js.map",
+        "size": 16598,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.d.ts",
+        "size": 1335,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.d.ts.map",
+        "size": 689,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.js",
+        "size": 9639,
+        "mode": 420
+      },
+      {
+        "path": "dist/gateway.js.map",
+        "size": 10375,
         "mode": 420
       },
       {
@@ -878,12 +976,12 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       },
       {
         "path": "dist/launch-package.js",
-        "size": 8350,
+        "size": 8421,
         "mode": 420
       },
       {
         "path": "dist/launch-package.js.map",
-        "size": 8537,
+        "size": 8628,
         "mode": 420
       },
       {
@@ -1003,12 +1101,12 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       },
       {
         "path": "dist/mcp-server.js",
-        "size": 6578,
+        "size": 7146,
         "mode": 420
       },
       {
         "path": "dist/mcp-server.js.map",
-        "size": 5738,
+        "size": 6166,
         "mode": 420
       },
       {
@@ -1069,6 +1167,26 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       {
         "path": "dist/opencode-plugin.js.map",
         "size": 12139,
+        "mode": 420
+      },
+      {
+        "path": "dist/openwebui-setup.d.ts",
+        "size": 4705,
+        "mode": 420
+      },
+      {
+        "path": "dist/openwebui-setup.d.ts.map",
+        "size": 4569,
+        "mode": 420
+      },
+      {
+        "path": "dist/openwebui-setup.js",
+        "size": 41687,
+        "mode": 420
+      },
+      {
+        "path": "dist/openwebui-setup.js.map",
+        "size": 40739,
         "mode": 420
       },
       {
@@ -1977,8 +2095,58 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
         "mode": 420
       },
       {
+        "path": "docs/gateway.es.md",
+        "size": 14462,
+        "mode": 420
+      },
+      {
+        "path": "docs/gateway.fr.md",
+        "size": 15042,
+        "mode": 420
+      },
+      {
+        "path": "docs/gateway.md",
+        "size": 12957,
+        "mode": 420
+      },
+      {
+        "path": "docs/gateway.ru.md",
+        "size": 20432,
+        "mode": 420
+      },
+      {
+        "path": "docs/gateway.zh.md",
+        "size": 12836,
+        "mode": 420
+      },
+      {
         "path": "docs/opencode.md",
         "size": 11690,
+        "mode": 420
+      },
+      {
+        "path": "docs/openwebui.es.md",
+        "size": 38571,
+        "mode": 420
+      },
+      {
+        "path": "docs/openwebui.fr.md",
+        "size": 40654,
+        "mode": 420
+      },
+      {
+        "path": "docs/openwebui.md",
+        "size": 34411,
+        "mode": 420
+      },
+      {
+        "path": "docs/openwebui.ru.md",
+        "size": 53577,
+        "mode": 420
+      },
+      {
+        "path": "docs/openwebui.zh.md",
+        "size": 34896,
         "mode": 420
       },
       {
@@ -2097,8 +2265,28 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
         "mode": 420
       },
       {
+        "path": "examples/openwebui/docker-compose.yml",
+        "size": 3899,
+        "mode": 420
+      },
+      {
         "path": "examples/policies/multica.flow-policy.json",
         "size": 246,
+        "mode": 420
+      },
+      {
+        "path": "integrations/openwebui/example_tool.py",
+        "size": 1602,
+        "mode": 420
+      },
+      {
+        "path": "integrations/openwebui/warden_filter.py",
+        "size": 19636,
+        "mode": 420
+      },
+      {
+        "path": "integrations/openwebui/warden_guard.py",
+        "size": 6791,
         "mode": 420
       },
       {
@@ -2128,7 +2316,7 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
       },
       {
         "path": "package.json",
-        "size": 3734,
+        "size": 4122,
         "mode": 420
       },
       {
@@ -2152,12 +2340,52 @@ codex-hooks/scripts: flow-guard-answer.mjs, flow-guard-classify.mjs, flow-guard-
         "mode": 420
       },
       {
+        "path": "scripts/openwebui-live-check.sh",
+        "size": 1594,
+        "mode": 493
+      },
+      {
+        "path": "scripts/openwebui-live/browser.py",
+        "size": 15373,
+        "mode": 420
+      },
+      {
+        "path": "scripts/openwebui-live/client-cdp.mjs",
+        "size": 5717,
+        "mode": 420
+      },
+      {
+        "path": "scripts/openwebui-live/drive.py",
+        "size": 27602,
+        "mode": 420
+      },
+      {
+        "path": "scripts/openwebui-live/fixtures.mjs",
+        "size": 17532,
+        "mode": 420
+      },
+      {
+        "path": "scripts/openwebui-live/mail_tool.py",
+        "size": 1707,
+        "mode": 420
+      },
+      {
+        "path": "scripts/openwebui-local-deploy.sh",
+        "size": 6203,
+        "mode": 493
+      },
+      {
+        "path": "scripts/openwebui-turnkey-check.sh",
+        "size": 7723,
+        "mode": 493
+      },
+      {
         "path": "scripts/quality-public-key.pem",
         "size": 113,
         "mode": 420
       }
     ],
-    "entryCount": 429,
+    "entryCount": 475,
     "bundled": []
   }
 ]

@@ -1,0 +1,16 @@
+# WARDEN 0.31.0 for HISTOR: the running production image (histor-histor:warden-0.30.0-prod = sha256:d75d0fe1ff10…,
+# WARDEN 0.30.0, MOMUS live since 2026-11-18 08:02Z) with its vendored WARDEN replaced by the release archive of
+# 3fa99ee26 (4927bf1825cc6409) and the WARDEN source of the same commit where the trusted recipe puts it. Nothing of
+# HISTOR's own code changes. Built on admin-vps from the same image ID, as the live receipt names it.
+FROM histor-histor:warden-0.30.0-prod
+USER 0:0
+RUN rm -rf /app/scanner/node_modules/@aimarket/warden /opt/warden-source/src
+COPY package/ /app/scanner/node_modules/@aimarket/warden/
+COPY src/ /opt/warden-source/src/
+LABEL skopos.source.commit="3fa99ee26a07839b2f3d23b68f4e3e7a859dd295" \
+      aicom.histor.overlay="warden-031-prod-20261118" \
+      org.aimarket.release.candidate="warden-0.31.0" \
+      org.aimarket.release.tarball-sha256="4927bf1825cc6409a63aa8640b67d281d7d91c3bfa7745ec79a12602c8c59b67" \
+      org.aimarket.release.warden-build="eac16bef321d47847fdaf24d1d160db16fc70bf8e1f666967b50dd38a939001b"
+USER 65532:65532
+RUN node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('/app/scanner/node_modules/@aimarket/warden/package.json','utf8')); if(p.name!=='@aimarket/warden'||p.version!=='0.31.0') process.exit(1)"
