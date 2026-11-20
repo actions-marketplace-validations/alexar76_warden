@@ -1,0 +1,10 @@
+tarball sha256 112c01a81276276f94d308696583640bd8b3d5e1852ebe51d04c9db57b7f443d
+install=0 (npm i --ignore-scripts into an empty project)
+exports: Warden function | codex.codexPre function | opencode.createWardenPlugin function
+package version 0.32.0
+cli: warden-mcp: Usage: warden-mcp wrap [--flow NAME] [flags] -- command [args] | pins status|approve|revoke --id ID
+agents replay on the installed package (dist/):
+work:pass work:pass work:pass work:pass work:pass work:pass attack:deny attack:deny attack:deny attack:deny attack:deny
+environment sends on the installed package (11 sends, then gh api, tg-send, curl with Bearer $GH_TOKEN):
+  12 deny
+   2 pass

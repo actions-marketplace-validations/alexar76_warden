@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { displaySafe } from './sanitize.js';
+import { describeHintMoves } from './review-diff.js';
 import { malwareListLabel } from './malware-list.js';
 import type { ScanReport, ScanServerResult } from './scan.js';
 import type { Severity, ToolDef, WardenFinding } from './types.js';
@@ -246,6 +247,13 @@ export function toMarkdown(report: ScanReport, cwd: string): string {
     out.push('');
     out.push(`<details${s.lock!.state === 'drift' || s.lock!.state === 'missing' ? ' open' : ''}><summary>${s.lock!.state === 'missing' ? 'New server' : 'Changed tool definitions'}: ${mdCode(s.key, 60)} (${s.lock!.changes!.length} tool${s.lock!.changes!.length === 1 ? '' : 's'})</summary>`);
     out.push('');
+    const moved = s.lock!.changes!.filter(ch => ch.hints?.length);
+    if (moved.length) {
+      out.push(`**Read first: behaviour hints moved** (the server's word, not proof):`);
+      out.push('');
+      for (const ch of moved.slice(0, 40)) out.push(`- ${mdCode(ch.tool, 80)}: ${describeHintMoves('', ch.hints!).slice(2)}`);
+      out.push('');
+    }
     const diff: string[] = [];
     for (const ch of s.lock!.changes!.slice(0, 40)) {
       diff.push(`@@ ${ch.kind} ${displaySafe(ch.tool, 120)} @@`);

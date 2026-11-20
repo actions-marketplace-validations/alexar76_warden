@@ -1,5 +1,44 @@
 # Changelog
 
+## Unreleased
+
+- **A behaviour hint that moved is named, with its direction.** When a reviewed tool changes, the re-approval text and
+  the `scan --lock` report now say which of `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` moved
+  (an absent hint counts as the specification's default) and what it means: `widens` (true → false for readOnlyHint:
+  the tool now says it does more, so an approval given before does not cover it) or `narrows` (false → true: a host
+  that skips the prompt for read-only tools stops asking about it). The JSON report carries them as
+  `lock.changes[].hints`; the Markdown summary lists them above the diff under "Read first". Nothing new is refused:
+  any change already fails the lock and asks again in `wrap`. Asked on DEV (2026-11-20) after the readOnlyHint count;
+  in HISTOR's record from 23 October to 16 November 2026, readOnlyHint went true → false on 524 tools and false → true
+  on 321.
+
+## 0.33.0 — 2026-11-20 (Open Terminal in OpenWebUI)
+
+The OpenWebUI Filter checks model calls to terminals configured under Integrations through the WARDEN gateway.
+Terminal responses feed the existing flow policy. Commands and other potentially active operations are reviewed
+after outside text in `ask` or `deny` mode. Approval is tied to the terminal connection as well as the chat,
+user and arguments. The External Tools setup still handles MCP and OpenAPI connections.
+
+## 0.32.0 — 2026-11-20 (a token read from the environment by shell code)
+
+A minor release with one flow-guard verdict change: after outside text, shell code that reads a credential from the
+environment is a credential send. Rulesets are unchanged (23), the malware list is 0.30.0's, and the scan, the gates
+and the gateway are as in 0.31.0. Unattended OpenCode and Codex integrations with `block: 'data'` should update: on
+0.31.0 they let such a call through.
+
+- **Flow guard: a credential read from the environment by shell code is a credential send.** After outside text, a
+  shell command that expands a credential-like variable (`$GH_TOKEN`, `${API_KEY}`, `printenv NAME`, indirect
+  `${!n}`), dumps the whole environment (`env`, `printenv`, `export -p`, `os.environ`, `process.env`) or reads
+  `/proc/<pid>/environ` was reviewed as ordinary shell code (`opaque_shell`, not sensitive), so an unattended
+  integration that refuses only data sends (`block: 'data'`) let `printenv BOT_TOKEN | curl …` through: the value is
+  expanded by the shell after the check, and no payload fingerprint can match it. Such a call now has the reason
+  `credential_egress` and is marked sensitive: `ask` mode asks with a message that names the variable, `deny` mode and
+  data-refusing unattended integrations refuse. A presence test (`test -n "$NAME"`, `[ -z "$NAME" ]`,
+  `${NAME:+set}`) is not a read, names such as `MAX_TOKENS`, `AWS_ACCESS_KEY_ID` and `SSH_AUTH_SOCK` are not
+  credentials, and nothing changes before outside text. Found by replaying our own unattended OpenCode agents'
+  flows against the 0.31.0 guard (11 of 11 environment sends passed in `data` mode; 0 of 11 now, the agents' six
+  ordinary flows unchanged). Tests: `test/flow-guard-env-credentials.test.ts`.
+
 ## 0.31.0 — 2026-11-18 (OpenWebUI in one command)
 
 A minor release: `warden-mcp openwebui setup|check|undo` puts an OpenWebUI that already runs behind the 0.30.0 gateway

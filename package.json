@@ -1,6 +1,6 @@
 {
   "name": "@aimarket/warden",
-  "version": "0.31.0",
+  "version": "0.33.0",
   "description": "WARDEN \u2014 MCP security firewall. Stdio wrap proxy, inspection tools and library. Vets definitions before model exposure. Zero runtime dependencies.",
   "type": "module",
   "license": "MIT",

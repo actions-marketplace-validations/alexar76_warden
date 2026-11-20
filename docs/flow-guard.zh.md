@@ -302,6 +302,7 @@ Wrap 提问前读取基线，批准后重新验证工具定义并再次读取。
 守卫在会话接收外部文本后检查工具调用。它是额外的防护层，不是沙箱，也不是绝对安全保证；工具标签及支持的参数仍属于信任边界。
 
 - 外部文本进入后，除少量字面只读命令外，shell 需要确认；`deny` 模式拒绝。提及或允许某个主机不再授权脚本、Git hooks、重定向或文件上传。识别出的凭据文件引用会被拒绝。检查可执行文件路径及 PATH 替换。
+- 读到外部文本之后，从环境中读取凭据的 shell 代码按凭据外发处理，而不是普通的 shell 审查：名称像凭据的变量（`$GH_TOKEN`、`${API_KEY}`、`printenv NAME`、间接的 `${!n}`）、整个环境的输出（`env`、`printenv`、`export -p`、`os.environ`）或 `/proc/<pid>/environ`。值由 shell 在检查之后展开，指纹无法匹配；原因是 `credential_egress`，拒绝数据外发的无人值守集成会拒绝它。存在性测试（`test -n "$NAME"`、`${NAME:+set}`）不算读取。读到外部文本之前没有变化。
 - 保护识别出的守卫策略/状态、Claude hooks、Git hooks/config 写入，包括路径变量及符号链接。这不能替代操作系统权限。
 - 使用 URL 解析器检查实际主机及所有目标。邮件正文中的链接不能授权另一个收件人；策略中的邮箱必须完整匹配，域名不授权该域下所有邮箱。用户提及目标也不等于授权任意操作和数据。
 - 联系人解析必须显式配置 `contactTools` 和 `private` 标签，只接受结构化 `name`/`email` 记录，并要求用户提及完整显示名。同名不同地址需要确认。本地文件、普通文本、YAML 和旧版本缓存都不能建立这种信任。只信任代理和第三方无法修改的通讯录。
@@ -313,7 +314,7 @@ Wrap 提问前读取基线，批准后重新验证工具定义并再次读取。
 - 只改变回答的注入不会发出可拒绝的调用。自 2026-10-22 起，插件的 Stop 钩子会在本轮读过外部文本的回答下方加一行，列出这些来源；若其中有文本以指令口吻对助手说话，也会注明。如果回答连续重复了外部文本中对助手下指令那几句话里的 12 个规范化字符，钩子还会把回答退回给模型一次（`decision: block`），在用户读到之前对照用户的请求检查；用户只损失这次检查的时间。`answerNote`：`always`（默认）、`instruction`（只在这种情况下）或 `off`；插件之外请注册 `warden-mcp hook stop`。
 - 代理也记录 JSON-RPC 和工具错误；记录失败时不转发响应，现有会话状态损坏时阻止检查中的调用。
 
-已在 npm `0.17.0` 发布：`npx -y @aimarket/warden@0.31.0 hook pre-tool-use`；或从源码在 WARDEN 目录运行 `npm ci && npm run build`，然后使用 `node dist/mcp-server.js hook pre-tool-use`，并注册 prompt/post hooks。策略为 `~/.local/state/warden/flow-policy.json` 或 `WARDEN_FLOW_POLICY`；模式为 `ask`、`deny`、`audit`、`off`。当前配置示例见[英文页](flow-guard.md)。
+已在 npm `0.17.0` 发布：`npx -y @aimarket/warden@0.33.0 hook pre-tool-use`；或从源码在 WARDEN 目录运行 `npm ci && npm run build`，然后使用 `node dist/mcp-server.js hook pre-tool-use`，并注册 prompt/post hooks。策略为 `~/.local/state/warden/flow-policy.json` 或 `WARDEN_FLOW_POLICY`；模式为 `ask`、`deny`、`audit`、`off`。当前配置示例见[英文页](flow-guard.md)。
 
 代理命令：`node dist/mcp-server.js wrap --flow mail -- node mail-server.js`。同一会话的代理应共享一个新的 `WARDEN_FLOW_SESSION`。默认父进程 PID 不能关联不同启动器。代理看不到用户提示或客户端内置工具。需要确认的调用会在客户端提供 MCP elicitation 表单时通过表单询问（回答记入日志的 `approvalOutcome`），否则或使用 `--ask refuse` 时被拒绝。`trustedSources` 仅用于 WebFetch URL，不用于 MCP 参数中的任意链接。
 

@@ -37,7 +37,7 @@ Each repository keeps `warden.lock.json`: the tool definitions someone reviewed.
 from the repository's own configs only:
 
 ```bash
-npx -y @aimarket/warden@0.31.0 scan --project --lock warden.lock.json --update-lock
+npx -y @aimarket/warden@0.33.0 scan --project --lock warden.lock.json --update-lock
 git add warden.lock.json && git commit -m "Reviewed MCP tool definitions"
 ```
 

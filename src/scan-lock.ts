@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { pinToolsHash, serverIdentityHash } from './pinning.js';
+import { hintMoves, type HintMove } from './review-diff.js';
 import { displaySafe } from './sanitize.js';
 import type { McpServerRef, PinStore, PinnedServer, RulesetRef, ToolDef } from './types.js';
 
@@ -101,7 +102,7 @@ export async function writeLock(path: string, lock: LockFile): Promise<void> {
   finally { await unlink(temp).catch(() => {}); }
 }
 
-export interface ToolChange { tool: string; kind: 'added' | 'removed' | 'changed'; before?: ToolDef; after?: ToolDef }
+export interface ToolChange { tool: string; kind: 'added' | 'removed' | 'changed'; before?: ToolDef; after?: ToolDef; hints?: HintMove[] }
 
 /** What changed between the reviewed tools and the ones served now, tool by tool. */
 export function diffTools(before: readonly ToolDef[] | undefined, after: readonly ToolDef[]): ToolChange[] {
@@ -112,7 +113,10 @@ export function diffTools(before: readonly ToolDef[] | undefined, after: readonl
     const a = old.get(name), b = now.get(name);
     if (!a && b) changes.push({ tool: name, kind: 'added', after: b });
     else if (a && !b) changes.push({ tool: name, kind: 'removed', before: a });
-    else if (a && b && pinToolsHash([a]) !== pinToolsHash([b])) changes.push({ tool: name, kind: 'changed', before: a, after: b });
+    else if (a && b && pinToolsHash([a]) !== pinToolsHash([b])) {
+      const hints = hintMoves(a, b);
+      changes.push({ tool: name, kind: 'changed', before: a, after: b, ...(hints.length ? { hints } : {}) });
+    }
   }
   return changes;
 }

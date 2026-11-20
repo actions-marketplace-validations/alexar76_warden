@@ -39,7 +39,9 @@ export function flowPost(input, env = process.env) {
     const view = toolName.startsWith('mcp__') && !resultError ? screenFromResult(toolName, input.tool_response, text, toolInput) : undefined;
     const screenSecret = screenSecretRead(toolName, toolInput, view);
     const screenControl = screenCall(toolName, toolInput, EMPTY);
-    if (!t.untrusted && !t.private && !view && !screenSecret && !screenControl)
+    // A shell call that read a credential from the environment: its value may be in no recognised token format.
+    const envRead = toolName === 'Bash' && !!c.envCredential && !resultError;
+    if (!t.untrusted && !t.private && !view && !screenSecret && !screenControl && !envRead)
         return undefined;
     const values = t.private && text ? secretValues(text, c.secret) : [];
     const tokens = [...new Set(values.map(alnum))];
@@ -55,7 +57,7 @@ export function flowPost(input, env = process.env) {
     let firstTaint = false;
     updateFlowState(paths.state, s => {
         let stored = true;
-        if (screenSecret || t.private && (c.secret || values.length > 0))
+        if (screenSecret || envRead || t.private && (c.secret || values.length > 0))
             s.credentialRead = true;
         if (t.private && text) {
             // Fingerprints and fragment metadata are committed under the same lock as outbound observations.

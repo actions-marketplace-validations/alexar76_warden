@@ -1,0 +1,30 @@
+files prod 11066 candidate 11066
+outside WARDEN: only prod [] only candidate [] differ []
+candidate warden 0.32.0 dist js 80 buildDigest 0a046db5462f7a4112e3a879915cb964d60804f54f87c2b93e4a40f5dd29bb4d
+source files 80
+--- build.log (tail)
+
+#6 [2/5] RUN rm -rf /app/scanner/node_modules/@aimarket/warden /opt/warden-source/src
+#6 DONE 0.6s
+
+#7 [3/5] COPY package/ /app/scanner/node_modules/@aimarket/warden/
+#7 DONE 0.2s
+
+#8 [4/5] COPY src/ /opt/warden-source/src/
+#8 DONE 0.2s
+
+#9 [5/5] RUN node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('/app/scanner/node_modules/@aimarket/warden/package.json','utf8')); if(p.name!=='@aimarket/warden'||p.version!=='0.32.0') process.exit(1)"
+#9 DONE 0.5s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 0.8s done
+#10 exporting manifest sha256:a6f9c1ad320d36a94c2cef77dba5cea1545d880b19737289b021136dc0ad6b76 0.0s done
+#10 exporting config sha256:dbeeda5173337a693065643dd54cc402a0fdf36cd496a958e59118af005faad9 0.1s done
+#10 exporting attestation manifest sha256:7d437ac891cabb28f487d74ea1c38ef9cc565fa874ca39b0b41f1cff5782df9d 0.1s done
+#10 exporting manifest list sha256:7fa51dbf5dea26df1adedf90c2324ce371f81d4d803eb198553bae965c5d6c54
+#10 exporting manifest list sha256:7fa51dbf5dea26df1adedf90c2324ce371f81d4d803eb198553bae965c5d6c54 0.0s done
+#10 naming to docker.io/library/histor-histor:warden-0.32.0-prod done
+#10 unpacking to docker.io/library/histor-histor:warden-0.32.0-prod
+#10 unpacking to docker.io/library/histor-histor:warden-0.32.0-prod 0.3s done
+#10 DONE 1.5s

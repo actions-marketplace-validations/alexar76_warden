@@ -321,6 +321,29 @@ describe('gateway: flow guard and approval codes', () => {
     expect(logs).toContain('"user_id":"u5"');
   });
 
+  it.each(['audit', 'deny', 'ask'] as const)('applies %s policy to native Open WebUI terminal calls', async mode => {
+    const { g } = setup([], {}, { mode });
+    const base = await start(g);
+    const who = { chat_id: 'terminal-chat', user_id: 'u1' };
+    const terminal = 'terminal:0123456789abcdef01234567';
+    const call = (tool: string, input: Record<string, unknown>) =>
+      v1(base, 'pre', { ...who, server: 'builtin', tool_name: `${terminal}:${tool}`, tool_input: input });
+    await v1(base, 'prompt', { ...who, prompt: 'List the workspace files' });
+    expect((await call('list_files', { path: '.' })).body.decision).toBe('allow');
+    await v1(base, 'post', { ...who, server: 'builtin', tool_name: `${terminal}:list_files`,
+      tool_input: { path: '.' }, tool_response: { files: ['notes.txt'] } });
+
+    const response = (await call('run_command', { command: 'pwd' })).body;
+    expect(response.decision).toBe(mode === 'audit' ? 'allow' : mode);
+    if (mode === 'audit') expect(response.wouldRefuse).toBeDefined();
+    if (mode === 'ask') {
+      expect(response.code).toBeTruthy();
+      expect((await v1(base, 'approve', { ...who, code: response.code, approved: true }, APPROVE)).body.ok).toBe(true);
+      expect((await call('run_command', { command: 'pwd' })).body).toMatchObject({ decision: 'allow', resolution: 'approved' });
+      expect((await call('run_command', { command: 'pwd' })).body.decision).toBe('ask');
+    }
+  });
+
   it('removes chat state older than the retention period', async () => {
     const { g, dir } = setup([], { retentionDays: 1 });
     g.decider.source({ chat: 'old', user: 'u' }, { kind: 'web_search', query: 'q' });

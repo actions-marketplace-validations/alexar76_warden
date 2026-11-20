@@ -4,7 +4,7 @@
 **Vérifiez tous les serveurs MCP de votre machine.** Pas de compte, pas de clé d’API, pas de modèle. Le seul trafic réseau va vers les serveurs de votre configuration.
 
 ```bash
-npx -y @aimarket/warden@0.31.0 scan
+npx -y @aimarket/warden@0.33.0 scan
 ```
 
 ```text
@@ -97,14 +97,14 @@ Opérations limitées sur activation explicite : `node dist/mcp-server.js task`.
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@aimarket/warden@0.31.0", "wrap", "--id", "filesystem", "--",
+      "args": ["-y", "@aimarket/warden@0.33.0", "wrap", "--id", "filesystem", "--",
                "npx", "-y", "@modelcontextprotocol/server-filesystem", "/Users/me/docs"]
     }
   }
 }
 ```
 
-Spécifiez toujours `--id` : sans cet identifiant, modifier les arguments crée une nouvelle identité et un premier contact. Un ID stable transforme un changement de commande ou de chemin en `SERVER_IDENTITY_DRIFT`. Le processus enfant hérite de l’environnement, exclu de l’identité. `npm install -g @aimarket/warden@0.31.0` puis `warden-mcp` évitent les démarrages à froid répétés de `npx`.
+Spécifiez toujours `--id` : sans cet identifiant, modifier les arguments crée une nouvelle identité et un premier contact. Un ID stable transforme un changement de commande ou de chemin en `SERVER_IDENTITY_DRIFT`. Le processus enfant hérite de l’environnement, exclu de l’identité. `npm install -g @aimarket/warden@0.33.0` puis `warden-mcp` évitent les démarrages à froid répétés de `npx`.
 
 **Outils sensibles.** `sensitiveToolPatterns` dans un fichier de politique (`--policy policy.json` avec `{"sensitiveToolPatterns": ["*delete*", "*transfer*"]}`, motifs `*` insensibles à la casse) fait attendre une personne à chaque appel d’un outil correspondant : `wrap` demande par le formulaire du client lui-même (elicitation MCP), avec l’outil, le serveur et les arguments, et seule une réponse acceptée, case cochée, laisse passer cet appel-là. La case est décochée au départ : un client qui accepte les formulaires avec leurs valeurs par défaut n’approuve rien. Un client sans formulaire d’elicitation reçoit un refus et le serveur ne reçoit jamais l’appel ; `--ask refuse` refuse sans demander. Si le client annule l’appel pendant que la personne décide, ou si les définitions changent entre-temps, il n’est pas envoyé. Avant 0.20.0, `wrap` acceptait ces motifs sans les appliquer. Avec `--flow`, un envoi pour lequel la garde de flux demanderait est demandé de la même façon.
 
@@ -153,13 +153,13 @@ navigateur, application de bureau, Qwen et MiniMax via OpenRouter) : tous les sc
 
 Depuis la 0.31.0, une seule commande place WARDEN devant un OpenWebUI déjà en service : elle fait passer
 les connexions des serveurs d’outils par la passerelle, installe le Filter et vérifie le résultat :
-`npx -y @aimarket/warden@0.31.0 openwebui setup --url http://localhost:3000 --email admin@example.com`
+`npx -y @aimarket/warden@0.33.0 openwebui setup --url http://localhost:3000 --email admin@example.com`
 ([détails](docs/openwebui.fr.md#installation-en-une-commande)).
 
 ## Analyser tous les serveurs que démarrent vos clients
 
 ```bash
-npx -y @aimarket/warden@0.31.0 scan
+npx -y @aimarket/warden@0.33.0 scan
 ```
 
 Lit les configurations MCP de Claude Code, Claude Desktop, Cursor, VS Code et Windsurf, se connecte à chaque serveur qu’elles démarrent et vérifie les définitions d’outils avant qu’un modèle ne les voie. Affiche un tableau, du JSON, du SARIF ou du Markdown, et sort avec 1 quand un serveur est bloqué ; `--no-launch` ne démarre rien. Dans un dépôt, `warden.lock.json` transforme un changement de définitions en diff relisible, et la CI échoue sur un serveur nouveau ou modifié. Existe aussi en GitHub Action (`uses: alexar76/warden@v0.31.0`), en hooks pre-commit et en plugin Claude Code (`/plugin marketplace add alexar76/warden`). `--histor` demande au journal public HISTOR si un serveur vous sert ce qu’il sert à tout le monde ; pour un serveur distant il envoie l’endpoint et un condensé, pour un serveur stdio lancé depuis npm ou PyPI le nom du paquet (`npm:<nom>`, `pypi:<nom>`, qu’HISTOR exécute dans un bac à sable gVisor) et un condensé — jamais le texte des outils. Un classificateur optionnel (`--classifier-url`, `--classifier-model`) ajoute la lecture d'un modèle que vous choisissez, local ou hébergé, pour ce qu'aucune règle ne nomme. Voir le [guide de scan](docs/scan.fr.md). Comment il se compare à deux autres scanners sur les mêmes serveurs : [comparaison de scanners](docs/scanner-comparison.fr.md).
@@ -169,14 +169,14 @@ Lit les configurations MCP de Claude Code, Claude Desktop, Cursor, VS Code et Wi
 `package-lock.json` consigne les paquets que vous installez. `warden.lock.json` consigne ce que vos serveurs MCP disent à votre modèle : le nom, la description et le schéma de chaque outil, tels que vous les avez relus.
 
 ```bash
-npx -y @aimarket/warden@0.31.0 scan --project --lock warden.lock.json --update-lock   # l’écrire, après avoir lu les définitions
+npx -y @aimarket/warden@0.33.0 scan --project --lock warden.lock.json --update-lock   # l’écrire, après avoir lu les définitions
 git add warden.lock.json
-npx -y @aimarket/warden@0.31.0 scan --project --lock warden.lock.json                 # code 1 : un serveur est nouveau, démarre autrement ou liste d’autres outils
+npx -y @aimarket/warden@0.33.0 scan --project --lock warden.lock.json                 # code 1 : un serveur est nouveau, démarre autrement ou liste d’autres outils
 ```
 
 En CI, la GitHub Action exécute la seconde commande à chaque pull request et, de façon planifiée, signale qu’un serveur a changé en amont ([le fichier lock](docs/scan.fr.md) · [pour les équipes](docs/teams.md)). Chaque entrée contient aussi le digest de contrat de `mcp-tool-set-digest/1`, que d’autres outils calculent de la même façon : ce que vous avez verrouillé peut être comparé à un registre public comme HISTOR sans envoyer de texte d’outil. Une passerelle ou un client qui parle l’extension d’intercepteurs de MCP peut poser la même question à chaque `tools/list` : [`warden-mcp interceptor`](docs/interceptor.md) (expérimental).
 
-**Pour l’éditeur d’un serveur.** Si votre serveur liste d’autres outils là où est installé ce que le bac à sable d’HISTOR n’a pas — le runner d’un lanceur, un par système —, `npx -y @aimarket/warden@0.31.0 declare --out mcp-tool-sets.json -- <votre serveur>` écrit ces ensembles dans un fichier que vous publiez sur votre propre domaine, et ceux qui les reçoivent voient la déclaration de l’éditeur au lieu d’un ensemble inconnu. Voir le [guide de scan](docs/scan.fr.md).
+**Pour l’éditeur d’un serveur.** Si votre serveur liste d’autres outils là où est installé ce que le bac à sable d’HISTOR n’a pas — le runner d’un lanceur, un par système —, `npx -y @aimarket/warden@0.33.0 declare --out mcp-tool-sets.json -- <votre serveur>` écrit ces ensembles dans un fichier que vous publiez sur votre propre domaine, et ceux qui les reçoivent voient la déclaration de l’éditeur au lieu d’un ensemble inconnu. Voir le [guide de scan](docs/scan.fr.md).
 
 ## Ce que WARDEN ne fait pas
 

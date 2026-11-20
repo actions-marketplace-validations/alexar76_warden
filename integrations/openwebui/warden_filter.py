@@ -14,12 +14,9 @@ requirements:
 #   user's own words (/v1/prompt); records outside text this turn will read (/v1/source): web search, attached files,
 #   knowledge collections, fetched pages.
 # - outlet: records the sources the answer was built from (web pages it cites).
-# - guard_builtin_tools (default on): OpenWebUI's own tools in native function calling (search_web, fetch_url, memory,
-#   notes, code execution, calendar, …) run inside OpenWebUI, out of any proxy's sight. When this module loads, it wraps
-#   them the way @warden_guard wraps a Python tool: /v1/pre before (a confirmation dialog for `ask`), /v1/post after.
-#   It replaces `get_builtin_tools` in OpenWebUI's middleware by a wrapper around the same function; nothing else in
-#   OpenWebUI changes. If that function is not where this version expects it, nothing is wrapped and the chat is
-#   marked at inlet instead.
+# - guard_builtin_tools (default on): wraps OpenWebUI's built-in and integrated terminal tools in the chat middleware.
+#   Like @warden_guard for a Python tool, it calls /v1/pre before execution (a confirmation dialog for `ask`) and
+#   /v1/post before returning the result. If get_builtin_tools is unavailable, the inlet still reports web search.
 # An approval code is taken ONLY from the last message with role "user", never from model output or a document.
 
 import asyncio
@@ -27,6 +24,8 @@ import json
 import re
 import urllib.error
 import urllib.request
+from functools import wraps
+from hashlib import sha256
 from typing import Any, Optional
 
 try:  # OpenWebUI ships pydantic; the fallback keeps the file importable in plain tests.
@@ -67,7 +66,10 @@ def _jsonable(v: Any) -> Any:
         return str(v)
 
 
-def _wrap_builtin(name: str, fn, extra_params: dict):
+def _wrap_tool(name: str, fn, extra_params: dict, policy_name: str):
+    # Preserve the callable's signature without copying OpenWebUI's __function__ / __extra_params__.
+    # The middleware would otherwise rebuild the callable from those fields and drop the guard.
+    @wraps(fn, updated=())
     async def guarded(*args, **kwargs):
         f = _STATE["filter"]
         if f is None or not f.valves.guard_builtin_tools:
@@ -75,7 +77,7 @@ def _wrap_builtin(name: str, fn, extra_params: dict):
         meta = (extra_params or {}).get("__metadata__") or {}
         user = (extra_params or {}).get("__user__") or {}
         who = {"chat_id": str(meta.get("chat_id") or (extra_params or {}).get("__chat_id__") or ""), "user_id": str(user.get("id") or "")}
-        call = {**who, "server": "builtin", "tool_name": name, "tool_input": {k: _jsonable(v) for k, v in kwargs.items() if not k.startswith("__")}}
+        call = {**who, "server": "builtin", "tool_name": policy_name, "tool_input": {k: _jsonable(v) for k, v in kwargs.items() if not k.startswith("__")}}
         event_call = (extra_params or {}).get("__event_call__")
         emitter = (extra_params or {}).get("__event_emitter__")
         try:
@@ -95,8 +97,9 @@ def _wrap_builtin(name: str, fn, extra_params: dict):
         except GatewayRefused as e:
             return f"Refused by WARDEN ({e}): {name} was not run."
         except GatewayUnavailable as e:
-            await f._warn(emitter, f"WARDEN недоступен ({e}): {name} {'выполнен без проверки' if name in SAFE_BUILTIN else 'не выполнен'}")
-            if name not in SAFE_BUILTIN:
+            safe = policy_name in SAFE_BUILTIN
+            await f._warn(emitter, f"WARDEN недоступен ({e}): {name} {'выполнен без проверки' if safe else 'не выполнен'}")
+            if not safe:
                 return f"Refused: the WARDEN gateway is unavailable ({e}), so {name} cannot be checked."
             return await fn(*args, **kwargs)
         error = False
@@ -122,28 +125,47 @@ def _wrap_builtin(name: str, fn, extra_params: dict):
     return guarded
 
 
+def _guard_tools(tools, extra_params: dict, prefix: str = "") -> None:
+    for name, tool in (tools or {}).items():
+        if isinstance(tool, dict) and callable(tool.get("callable")) and not getattr(tool["callable"], "__warden_guarded__", False):
+            tool["callable"] = _wrap_tool(name, tool["callable"], extra_params, prefix + name)
+
+
 def install_builtin_guard() -> bool:
-    """Wrap OpenWebUI's built-in tools (idempotent; a reloaded module re-wraps the original, never a wrapper)."""
+    """Wrap the middleware's tool factories, including on versions with integrated terminals."""
     try:
         import open_webui.utils.middleware as mw  # noqa: PLC0415 - only inside OpenWebUI
     except Exception:
         return False
-    current = getattr(mw, "get_builtin_tools", None)
-    if current is None or not callable(current):
-        return False
-    original = getattr(current, "__warden_original__", current)
+    builtin = getattr(mw, "get_builtin_tools", None)
+    if callable(builtin):
+        original_builtin = getattr(builtin, "__warden_original__", builtin)
 
-    async def get_builtin_tools(request, extra_params, *args, **kwargs):
-        tools = await original(request, extra_params, *args, **kwargs)
-        for name, tool in list((tools or {}).items()):
-            if isinstance(tool, dict) and callable(tool.get("callable")) and not getattr(tool["callable"], "__warden_guarded__", False):
-                tool["callable"] = _wrap_builtin(name, tool["callable"], extra_params)
-        return tools
+        async def get_builtin_tools(request, extra_params, *args, **kwargs):
+            tools = await original_builtin(request, extra_params, *args, **kwargs)
+            _guard_tools(tools, extra_params)
+            return tools
 
-    get_builtin_tools.__warden_original__ = original
-    mw.get_builtin_tools = get_builtin_tools
-    _STATE["builtin_guard"] = True
-    return True
+        get_builtin_tools.__warden_original__ = original_builtin
+        mw.get_builtin_tools = get_builtin_tools
+
+    terminal = getattr(mw, "get_terminal_tools", None)
+    if callable(terminal):
+        original_terminal = getattr(terminal, "__warden_original__", terminal)
+
+        async def get_terminal_tools(request, terminal_id, user, extra_params, *args, **kwargs):
+            result = await original_terminal(request, terminal_id, user, extra_params, *args, **kwargs)
+            tools = result[0] if isinstance(result, tuple) else result
+            # Include the connection in the tool identity so approval for one terminal cannot authorize another.
+            connection = sha256(terminal_id.encode()).hexdigest()[:24]
+            context = {**extra_params, "__user__": {"id": user.id}}
+            _guard_tools(tools, context, f"terminal:{connection}:")
+            return result
+
+        get_terminal_tools.__warden_original__ = original_terminal
+        mw.get_terminal_tools = get_terminal_tools
+    _STATE["builtin_guard"] = callable(builtin)
+    return _STATE["builtin_guard"]
 
 
 def _post(url: str, token: str, body: dict, timeout: float) -> dict:
@@ -227,7 +249,7 @@ class Filter:
         token: str = Field(default="", description="Gateway bearer token (WARDEN_GATEWAY_TOKEN)")
         approve_token: str = Field(default="", description="Token for /v1/approve if the gateway sets approveTokenEnv; else leave empty")
         approve_phrases: str = Field(default="подтверждаю,approve", description="Words the user types before an approval code")
-        guard_builtin_tools: bool = Field(default=True, description="Check OpenWebUI's own built-in tools (web search, fetch, memory, notes, code, …) with WARDEN before and after each call")
+        guard_builtin_tools: bool = Field(default=True, description="Check OpenWebUI's built-in and integrated terminal tools with WARDEN before and after each chat tool call")
         native_tools_read_outside_text: bool = Field(default=False, description="Treat every chat whose model may call OpenWebUI's built-in web/knowledge tools as having read outside text (only needed when guard_builtin_tools is off)")
         timeout_seconds: float = Field(default=5.0, description="Per request to the gateway")
         priority: int = Field(default=-100, description="Run before other filters")

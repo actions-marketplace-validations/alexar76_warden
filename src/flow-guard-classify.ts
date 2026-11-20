@@ -166,6 +166,58 @@ const COMMIT_ACTION = /^(?:(?:git|github|repo)_)?commit(?:_|$)|^create_commit(?:
 const INBOUND_WORDS = /(^|_|-)(fetch|browse|navigate|scrape|crawl|search|web|url|read_?(email|mail|issue|issues|message|messages|comments?|page)|get_?(issue|issues|email|emails|messages?|comments?|page|url)|list_?(issues|emails|messages|comments)|inbox|feed|rss|snapshot|screenshot)(_|-|$)/i;
 const DESTROY_WORDS = /(^|_|-)(delete|remove|drop|destroy|truncate|purge|wipe|reset|kill|terminate|force_?push|overwrite)(_|-|$)/i;
 
+const ENV_CREDENTIAL_PART = /^(?:AUTH|AUTHORIZATION|BEARER|COOKIE|COOKIES|PASS|PAT|KEY|KEYS|DSN)$/;
+const ENV_CREDENTIAL_WORD = /TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|APIKEY|PRIVATEKEY|PASSPHRASE/;
+// Names that carry one of the words above and hold no credential.
+const ENV_NOT_CREDENTIAL = /^(?:PWD|OLDPWD|GIT_AUTHOR_\w+|GIT_COMMITTER_\w+|SSH_AUTH_SOCK|GPG_AGENT_INFO|KEYBOARD\w*|XAUTHORITY|\w*_KEY_?ID|\w*KEYWORDS?|\w*MAX_\w*TOKENS?|\w*TOKENS?_(?:TTL|COUNT|LIMIT|LEN|LENGTH|BUDGET|MAX|MIN))$/;
+
+/** A credential-like environment variable name: what an operator puts a token in. */
+export function credentialEnvName(name: string): boolean {
+  const upper = name.toUpperCase();
+  if (ENV_NOT_CREDENTIAL.test(upper)) return false;
+  if (ENV_CREDENTIAL_WORD.test(upper)) return true;
+  return upper.split('_').some(part => ENV_CREDENTIAL_PART.test(part));
+}
+
+/** What credential the shell would expand from its environment: `$GH_TOKEN`, `${API_KEY:-x}`, `printenv NAME`,
+ *  indirect `${!NAME}`, a whole-environment dump (`env`, `printenv`, `export -p`, `declare -x`, `set`), or the
+ *  process environment file. Quoting does not matter here: single quotes around a name still leave it one `eval`
+ *  or `sh -c` away from expansion, and the caller only uses this for shell code it already cannot follow. */
+export function envCredentialRef(command: string): string | undefined {
+  if (command.length > 200_000) return 'shell code too long to check for environment credentials';
+  // Presence tests give one bit, never the value: ${NAME:+word}, ${NAME+word}, test -n "$NAME", [ -z "${NAME}" ].
+  const valued = command
+    .replace(/\$\{[A-Za-z_][A-Za-z0-9_]*:?\+[^${}`]*\}/g, ' ')
+    .replace(/(?:\btest|\[\[?)\s+-[nz]\s+(?:"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?"|\$\{?[A-Za-z_][A-Za-z0-9_]*\}?)(?=\s*(?:\]\]?|[;&|)\n]|$))/g, ' ');
+  for (const m of valued.matchAll(/\$\{?[!#]?([A-Za-z_][A-Za-z0-9_]*)/g)) {
+    if (credentialEnvName(m[1]!)) return `environment variable ${m[1]!.slice(0, 80)}`;
+  }
+  for (const m of command.matchAll(/(?:^|[^\w.])(?:printenv|getenv|os\.environ\.get|os\.getenv|process\.env\.|os\.environ\[|ENV\[|env\[)[\s('"]*([A-Za-z_][A-Za-z0-9_]*)/g)) {
+    if (credentialEnvName(m[1]!)) return `environment variable ${m[1]!.slice(0, 80)}`;
+  }
+  // Indirect expansion takes the name from a plain word: n=GH_TOKEN; echo ${!n}, eval "echo \\$$n", declare -n.
+  if (/\$\{!|\beval\b|\b(?:declare|typeset|local)\s+-\w*n|\bgetenv\b|\benviron\b|\bprintenv\b/.test(command)) {
+    for (const m of command.matchAll(/(?<![A-Za-z0-9_$])[A-Z][A-Z0-9_]{2,}(?![A-Za-z0-9_])/g)) {
+      if (credentialEnvName(m[0])) return `environment variable ${m[0].slice(0, 80)}`;
+    }
+  }
+  if (/\/proc\/(?:self|thread-self|\d+|\$\$|\$PPID)\/(?:task\/[^/\s]+\/)?environ\b/.test(command)) return 'the process environment file';
+  // A bare dump: the command word alone, before a separator or the end. `env NAME=x cmd` runs a program instead.
+  const segments = command.split(/[|;&\n()`]+|\$\(/).map(s => s.trim());
+  for (const segment of segments) {
+    const words = segment.replace(/\d*[<>]+&?\s*\S*/g, ' ').trim().split(/\s+/).filter(Boolean);
+    const head = words[0]?.replace(/^.*\//, '');
+    if (!head) continue;
+    if ((head === 'printenv' || head === 'env') && words.slice(1).every(w => /^-[0u]?$/.test(w) || w === '--null')) return 'the whole environment';
+    if (head === 'export' && (words.length === 1 || words[1] === '-p')) return 'the whole environment';
+    if ((head === 'declare' || head === 'typeset') && words.length <= 2 && (words.length === 1 || /^-[xp]+$/.test(words[1]!))) return 'the whole environment';
+    if (head === 'set' && words.length === 1) return 'the whole environment';
+    if (head === 'compgen' && words.includes('-v') === false && words.includes('-e')) return 'the whole environment';
+  }
+  if (/\bos\.environ\b(?!\s*(?:\.get\(|\[))|\bprocess\.env\b(?!\s*[.[])|\bENV\.to_h\b/.test(command)) return 'the whole environment';
+  return undefined;
+}
+
 export function classifyCall(toolName: string, input: Record<string, unknown>, cwd: string, policy: FlowPolicy, env: NodeJS.ProcessEnv = process.env): Classified {
   const texts = strings(input);
   const result: Classified = { labels: new Set(), hosts: [], src: toolName, secret: false, protectedTouch: false };
@@ -177,6 +229,19 @@ export function classifyCall(toolName: string, input: Record<string, unknown>, c
   if (operator && !['Bash', 'BashOutput', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit'].includes(toolName)) {
     for (const l of operator[1]) result.labels.add(l);
     result.hosts = hostsIn(texts);
+    return result;
+  }
+  if (toolName.startsWith('mcp__owui__terminal:')) {
+    result.labels.add('untrusted');
+    result.labels.add('private');
+    // The terminal runs on another host. Its commands can write files or reach the network,
+    // and inspecting the gateway's own filesystem would say nothing about their effects.
+    if (!/^mcp__owui__terminal:[\da-f]{24}:list_files$/.test(toolName)) {
+      result.labels.add('outbound');
+      result.labels.add('destructive');
+      result.hosts = hostsIn(texts);
+    }
+    result.src = 'Open WebUI terminal';
     return result;
   }
   switch (toolName) {
@@ -204,6 +269,8 @@ export function classifyCall(toolName: string, input: Record<string, unknown>, c
       if (result.opaqueShell) result.labels.add('outbound');
       result.hosts = shell.hosts;
       result.src = shell.hosts[0] ? `${shell.hosts[0]} (shell)` : 'shell output';
+      result.envCredential = envCredentialRef(command);
+      result.envCredentialPrinted = !!result.envCredential && /^\s*(?:env|printenv(?:\s+[A-Za-z_][A-Za-z0-9_]*)?|echo\s+(?:"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?"|\$\{?[A-Za-z_][A-Za-z0-9_]*\}?))\s*$/.test(command);
       // Separators also delimit a literal credential operand in stdin redirections, pipes and curl form metadata.
       for (const t of command.split(/[\s|;&<>]+/)) {
         const cleaned = t.replace(/^['"]|['"]$/g, '');

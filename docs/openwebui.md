@@ -112,6 +112,7 @@ The gateway is on both networks; OpenWebUI is only on `front`, so it reaches a t
 | Tools on external MCP or OpenAPI servers (`mcpo` included) | the gateway's proxy |
 | OpenWebUI Python tools (Workspace → Tools) | `@warden_guard` around each method |
 | OpenWebUI's own tools in native function calling (`search_web`, `fetch_url`, notes, memory, code, calendar, …) | the Filter's `guard_builtin_tools`: each call through `/v1/pre` and `/v1/post` |
+| Terminal tools called from a chat (Integrations → Open Terminal) | the Filter's `guard_builtin_tools`: each call through `/v1/pre` and `/v1/post` |
 | Legacy web search, knowledge, attached files, pages | the Filter: `inlet` reports them before the model runs |
 | The person's message, approval codes | the Filter: `inlet` |
 | Sources cited in the answer | the Filter: `outlet` |
@@ -132,6 +133,13 @@ wrapped, and the Filter marks the chat at `inlet` instead (as with the valve off
 the flow guard as `WebSearch` and `WebFetch`, so `trustedSources` and the URL leak check apply as in Claude Code; the
 other built-ins are `mcp__owui__<tool>` (labels in the policy example below).
 
+For an Open Terminal configured under Integrations, the Filter wraps `get_terminal_tools` in the chat middleware.
+Terminal tools appear in audit logs and policy as `mcp__owui__terminal:<connection hash>:<tool>`. The flow guard treats
+terminal responses as outside text and terminal actions other than `list_files` as potentially destructive and
+outbound. The External Tools count in `setup --dry-run` reports MCP and OpenAPI connections. To verify the terminal
+path, call a terminal tool from a test chat and check the gateway log. This guard covers model tool calls resolved
+by the chat middleware. The interactive terminal panel uses its own connection.
+
 ## Set up in one command
 
 For an OpenWebUI that already runs, with its tool servers connected the usual way (Admin Panel → Settings → External
@@ -141,7 +149,7 @@ You need an OpenWebUI admin account and Node.js 22 on the machine that runs Open
 `--local` below).
 
 ```bash
-npx -y @aimarket/warden@0.31.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.33.0 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 It asks for the password (or reads `OPENWEBUI_PASSWORD`); an admin API key or JWT in `OPENWEBUI_TOKEN` works instead.
@@ -201,12 +209,12 @@ brought in a page that asks to send the chat out, one where the person asks for 
 
 Afterwards:
 
-- `npx -y @aimarket/warden@0.31.0 openwebui check` runs the same check at any time (exit 0 when nothing is open);
-- labels: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.31.0 warden-mcp gateway labels --config
+- `npx -y @aimarket/warden@0.33.0 openwebui check` runs the same check at any time (exit 0 when nothing is open);
+- labels: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.33.0 warden-mcp gateway labels --config
   /etc/warden/gateway.json` lists the tools chats used without a label; add them to
   `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`), read on every call;
 - after the pilot, `"mode": "deny"` in the same file;
-- `npx -y @aimarket/warden@0.31.0 openwebui undo` puts the original connections back, switches the Filter off and stops the
+- `npx -y @aimarket/warden@0.33.0 openwebui undo` puts the original connections back, switches the Filter off and stops the
   gateway; the files stay.
 
 What it leaves to you:
@@ -251,7 +259,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.31.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.33.0", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}
