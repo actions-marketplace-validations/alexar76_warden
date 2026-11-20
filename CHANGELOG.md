@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.33.0 — 2026-11-20 (Open Terminal in OpenWebUI)
+
+The OpenWebUI Filter checks model calls to terminals configured under Integrations through the WARDEN gateway.
+Terminal responses feed the existing flow policy. Commands and other potentially active operations are reviewed
+after outside text in `ask` or `deny` mode. Approval is tied to the terminal connection as well as the chat,
+user and arguments. The External Tools setup still handles MCP and OpenAPI connections.
+
 ## 0.32.0 — 2026-11-20 (a token read from the environment by shell code)
 
 A minor release with one flow-guard verdict change: after outside text, shell code that reads a credential from the

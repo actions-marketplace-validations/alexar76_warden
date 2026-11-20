@@ -1,11 +1,13 @@
 """Unit tests of the OpenWebUI adapter against a stand-in gateway. Standard library only: python3 -m unittest."""
 import asyncio
+import inspect
 import json
 import os
 import sys
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from types import SimpleNamespace
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import warden_filter  # noqa: E402
@@ -325,12 +327,25 @@ class BuiltinGuardTest(unittest.TestCase):
             return {"search_web": {"callable": search_web, "spec": {}, "type": "builtin"},
                     "add_memory": {"callable": add_memory, "spec": {}, "type": "builtin"}}
 
+        async def run_command(command: str):
+            ran.append(("run_command", command))
+            return {"output": "finished"}
+
+        run_command.__function__ = run_command
+        run_command.__extra_params__ = {}
+
+        async def get_terminal_tools(request, terminal_id, user, extra_params):
+            return {"run_command": {"callable": run_command, "spec": {"name": "run_command"},
+                                    "type": "terminal", "tool_id": f"terminal:{terminal_id}"}}, "terminal prompt"
+
         pkg = types.ModuleType("open_webui"); utils = types.ModuleType("open_webui.utils")
         mw = types.ModuleType("open_webui.utils.middleware"); mw.get_builtin_tools = get_builtin_tools
+        mw.get_terminal_tools = get_terminal_tools
         pkg.utils = utils; utils.middleware = mw
         self.saved = {k: sys.modules.get(k) for k in ("open_webui", "open_webui.utils", "open_webui.utils.middleware")}
         sys.modules.update({"open_webui": pkg, "open_webui.utils": utils, "open_webui.utils.middleware": mw})
         self.mw, self.original = mw, get_builtin_tools
+        self.original_terminal = get_terminal_tools
         warden_filter._STATE.update({"filter": None, "builtin_guard": False})
         self.f = warden_filter.Filter()
         self.f.valves.gateway_url, self.f.valves.token, self.f.valves.approve_token = self.gw.url, "main-token", "approve-token"
@@ -351,6 +366,35 @@ class BuiltinGuardTest(unittest.TestCase):
         self.assertIsNot(self.mw.get_builtin_tools, self.original)
         warden_filter.Filter()  # OpenWebUI re-creates the instance on a valves update
         self.assertIs(self.mw.get_builtin_tools.__warden_original__, self.original)
+        self.assertIs(self.mw.get_terminal_tools.__warden_original__, self.original_terminal)
+
+    def terminal(self, terminal_id="local", extra=None):
+        return run(self.mw.get_terminal_tools(None, terminal_id, SimpleNamespace(id="u1"), extra or self.extra))
+
+    def test_terminal_uses_the_authenticated_user_and_keeps_the_tool_contract(self):
+        self.gw.replies["/v1/pre"] = {"decision": "allow"}
+        tools, prompt = self.terminal(extra={**self.extra, "__user__": {"id": "another-user"}})
+        tool = tools["run_command"]
+        self.assertEqual((prompt, tool["type"], tool["tool_id"], tool["spec"]["name"]),
+                         ("terminal prompt", "terminal", "terminal:local", "run_command"))
+        fn = tool["callable"]
+        self.assertEqual(list(inspect.signature(fn).parameters), ["command"])
+        self.assertFalse(hasattr(fn, "__function__"))
+        self.assertEqual(run(fn(command="pwd")), {"output": "finished"})
+        self.assertEqual(self.gw.paths(), ["/v1/pre", "/v1/post"])
+        _, pre, _ = self.gw.requests[0]
+        self.assertRegex(pre["tool_name"], "^terminal:[a-f0-9]{24}:run_command$")
+        self.assertEqual((pre["user_id"], pre["chat_id"], pre["tool_input"]), ("u1", "c1", {"command": "pwd"}))
+        self.assertEqual(self.gw.requests[1][1]["tool_response"], {"output": "finished"})
+
+    def test_terminal_refusal_stops_the_call_and_uses_a_distinct_identity_per_connection(self):
+        self.gw.replies["/v1/pre"] = {"decision": "deny", "refusal": "denied"}
+        for terminal_id in ("first", "second"):
+            tools, _ = self.terminal(terminal_id)
+            self.assertEqual(run(tools["run_command"]["callable"](command="pwd")), "denied")
+        self.assertEqual(self.ran, [])
+        self.assertEqual(self.gw.paths(), ["/v1/pre", "/v1/pre"])
+        self.assertNotEqual(self.gw.requests[0][1]["tool_name"], self.gw.requests[1][1]["tool_name"])
 
     def test_search_result_is_recorded_and_annotated(self):
         self.gw.replies["/v1/pre"] = {"decision": "allow"}

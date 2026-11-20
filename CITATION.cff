@@ -9,7 +9,7 @@ authors:
 repository-code: "https://github.com/alexar76/warden"
 url: "https://warden.modelmarket.dev/"
 license: MIT
-version: 0.32.0
+version: 0.33.0
 date-released: 2026-11-20
 keywords:
   - model-context-protocol

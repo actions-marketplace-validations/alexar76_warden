@@ -257,6 +257,19 @@ export function classifyCall(toolName, input, cwd, policy, env = process.env) {
         result.hosts = hostsIn(texts);
         return result;
     }
+    if (toolName.startsWith('mcp__owui__terminal:')) {
+        result.labels.add('untrusted');
+        result.labels.add('private');
+        // The terminal runs on another host. Its commands can write files or reach the network,
+        // and inspecting the gateway's own filesystem would say nothing about their effects.
+        if (!/^mcp__owui__terminal:[\da-f]{24}:list_files$/.test(toolName)) {
+            result.labels.add('outbound');
+            result.labels.add('destructive');
+            result.hosts = hostsIn(texts);
+        }
+        result.src = 'Open WebUI terminal';
+        return result;
+    }
     switch (toolName) {
         case 'Read':
         case 'NotebookRead':
