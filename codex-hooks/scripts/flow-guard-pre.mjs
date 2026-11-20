@@ -240,6 +240,12 @@ export function flowPre(input, env = process.env, presentation = 'hook', detail)
             reason = 'secret_tracking';
             decision = { permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: 'WARDEN flow guard: short-secret tracking is incomplete or at capacity. This call after outside text requires review even for a named or allowed destination. Start a new session and reread private sources to restore tracking.' };
         }
+        else if (c.opaqueShell && c.envCredential && !c.envCredentialPrinted) {
+            // The shell expands the value after this check, so no payload fingerprint can match it.
+            reason = 'credential_egress';
+            sensitivePayload = true;
+            decision = { permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: `WARDEN flow guard: after outside text (${sourcesText(state, defTaint)}), this shell code reads ${c.envCredential}. The value is expanded by the shell, not written in the command, so the guard cannot check where it goes. Named or allowed hosts do not authorize it.` };
+        }
         else if (c.opaqueShell) {
             reason = 'opaque_shell';
             decision = { permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: 'WARDEN flow guard: after outside text, shell code outside the literal read-only subset requires approval. Named or allowed hosts do not authorize shell programs, hooks, redirections or file uploads.' };

@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 /private/tmp/claude-501/-Users-alex-Desktop-ai-tests-aicompany-aicom--claude-worktrees-ecosystem-onboarding-analysis-158bfd/73b997f7-26ea-4589-a669-0abe7679409f/scratchpad/rel032/src/warden
+
+
+ Test Files  84 passed (84)
+      Tests  2120 passed (2120)
+   Start at  05:50:51
+   Duration  44.10s (tests 95%, import 2%, transform 1%, setup 1%)
+

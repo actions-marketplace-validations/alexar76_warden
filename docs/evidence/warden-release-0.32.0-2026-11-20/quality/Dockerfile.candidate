@@ -1,0 +1,17 @@
+# WARDEN 0.32.0 for HISTOR: histor-histor:signed-fingerprints-20261119 (= sha256:d81ba087c9b3…, the image HISTOR
+# production moves to on 2026-11-20 after the crawl: warden-0.31.0-prod plus signed publisher statements and the
+# fingerprints route) with its vendored WARDEN replaced by the release archive of cfa591b38 (112c01a81276276f) and the
+# WARDEN source of the same commit where the trusted recipe puts it. Nothing of HISTOR's own code changes.
+# Built on admin-vps from the same image ID.
+FROM histor-histor:signed-fingerprints-20261119
+USER 0:0
+RUN rm -rf /app/scanner/node_modules/@aimarket/warden /opt/warden-source/src
+COPY package/ /app/scanner/node_modules/@aimarket/warden/
+COPY src/ /opt/warden-source/src/
+LABEL skopos.source.commit="cfa591b38c2b5d667dc3866367b6ba3f84a8429d" \
+      aicom.histor.overlay="warden-032-prod-20261120" \
+      org.aimarket.release.candidate="warden-0.32.0" \
+      org.aimarket.release.tarball-sha256="112c01a81276276f94d308696583640bd8b3d5e1852ebe51d04c9db57b7f443d" \
+      org.aimarket.release.warden-build="0a046db5462f7a4112e3a879915cb964d60804f54f87c2b93e4a40f5dd29bb4d"
+USER 65532:65532
+RUN node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('/app/scanner/node_modules/@aimarket/warden/package.json','utf8')); if(p.name!=='@aimarket/warden'||p.version!=='0.32.0') process.exit(1)"

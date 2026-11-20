@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.32.0 — 2026-11-20 (a token read from the environment by shell code)
+
+A minor release with one flow-guard verdict change: after outside text, shell code that reads a credential from the
+environment is a credential send. Rulesets are unchanged (23), the malware list is 0.30.0's, and the scan, the gates
+and the gateway are as in 0.31.0. Unattended OpenCode and Codex integrations with `block: 'data'` should update: on
+0.31.0 they let such a call through.
+
+- **Flow guard: a credential read from the environment by shell code is a credential send.** After outside text, a
+  shell command that expands a credential-like variable (`$GH_TOKEN`, `${API_KEY}`, `printenv NAME`, indirect
+  `${!n}`), dumps the whole environment (`env`, `printenv`, `export -p`, `os.environ`, `process.env`) or reads
+  `/proc/<pid>/environ` was reviewed as ordinary shell code (`opaque_shell`, not sensitive), so an unattended
+  integration that refuses only data sends (`block: 'data'`) let `printenv BOT_TOKEN | curl …` through: the value is
+  expanded by the shell after the check, and no payload fingerprint can match it. Such a call now has the reason
+  `credential_egress` and is marked sensitive: `ask` mode asks with a message that names the variable, `deny` mode and
+  data-refusing unattended integrations refuse. A presence test (`test -n "$NAME"`, `[ -z "$NAME" ]`,
+  `${NAME:+set}`) is not a read, names such as `MAX_TOKENS`, `AWS_ACCESS_KEY_ID` and `SSH_AUTH_SOCK` are not
+  credentials, and nothing changes before outside text. Found by replaying our own unattended OpenCode agents'
+  flows against the 0.31.0 guard (11 of 11 environment sends passed in `data` mode; 0 of 11 now, the agents' six
+  ordinary flows unchanged). Tests: `test/flow-guard-env-credentials.test.ts`.
+
 ## 0.31.0 — 2026-11-18 (OpenWebUI in one command)
 
 A minor release: `warden-mcp openwebui setup|check|undo` puts an OpenWebUI that already runs behind the 0.30.0 gateway

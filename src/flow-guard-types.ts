@@ -126,6 +126,12 @@ export interface Classified {
   opaqueShell?: boolean;
   /** An MCP tool without an operator label: its labels are the guard's guess. */
   guessed?: boolean;
+  /** Shell code names a credential-like environment variable, or dumps the whole environment. The value is
+   *  never in the arguments, so payload checks cannot see it; this says what the shell would expand. */
+  envCredential?: string;
+  /** The whole command only prints that value to its own output (`env`, `printenv NAME`, `echo "$NAME"`): the
+   *  result hook sees it and records a credential read, so the call itself sends nothing. */
+  envCredentialPrinted?: boolean;
 }
 
 export interface FlowDecision { permissionDecision: 'ask' | 'deny'; permissionDecisionReason: string }
