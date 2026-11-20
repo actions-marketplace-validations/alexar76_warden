@@ -63,6 +63,13 @@ MOMUS rebind to `c82f2e7f` (unit `histor-cosigned-rebind` on admin-vps), and wit
 skopos-warden-quality live sha256:ef3e5cb4b31278cc91d1d88c72fa3f3ed1aac8cd533280b09f4d6129c8f68903   # admin-vps
 ```
 
+Owner «Yes, switch then» (2026-11-20 ~21:15Z): two transient units wait for it instead of a person.
+`histor-wd035-switch` on the HISTOR host (`quality/after.sh`, log `/root/wd035-prod-20261120/after.log`) switches
+once the cosigned after.log ends with its healthy 15-minute line, production runs `c82f2e7f` and no crawl is open
+(until 2026-11-22 20:00Z), checks five routes and the vendored version, and rolls back on any failure.
+`histor-wd035-live` on admin-vps (`quality/rebind.sh`, log `/root/wd035-candidate-20261120/rebind.log`) waits for the
+cosigned MOMUS rebind unit to finish, then retries `skopos-warden-quality live` until HISTOR runs `ef3e5cb4`.
+
 Rollback: HISTOR host `/root/wd035-prod-20261120/switch.sh rollback`, then admin-vps
 `skopos-warden-quality rebind sha256:c82f2e7fc9f97cb95651b7dd2a09875663cf464e33a9ef68a4ca37f5b2569ed7`.
 
@@ -71,3 +78,17 @@ checking its sha256), not `publish_warden.sh`, which rebuilds. The candidate rec
 a later switch needs a new run. Publication: the owner publishes this tarball
 (`npm publish …/aimarket-warden-0.35.0.tgz --access public`, after checking its sha256), not `publish_warden.sh`,
 which rebuilds.
+
+## npm
+
+Published by the owner 2026-11-20 21:12:38Z (registry `time`). The registry's tarball is byte-identical to
+`aimarket-warden-0.35.0.tgz` (`cmp`), shasum `d3ba314d…` and integrity as above; jsDelivr and unpkg serve 0.35.0.
+
+## okx-a2mcp
+
+- 2026-11-20 21:24:55Z production (modelmarket.dev/a2mcp, /tools) on WARDEN 0.35.0: `okx-a2mcp/deploy.sh` from
+  `1ab42141c`, image `okx-a2mcp:prod-20261120-1ab42141c` built on the host from npm; healthy, 0 restarts, no error
+  lines. `/health` reports warden 0.35.0; the installed `dist/hint-claims.js` has the same sha256 as this tarball's
+  (`55398608…`). The public `warden-scan` blocks "Ignore previous instructions…", allows the clean tool, engine
+  `@aimarket/warden@0.35.0`, ruleset 23. It runs the gate chain, not `scan`, so `TOOL_HINT_CONTRADICTS_DESCRIPTION`
+  does not appear there. Rollback: the stopped `okx-a2mcp-prev` (`prod-20261120-bed23ef94`, WARDEN 0.33.0).
