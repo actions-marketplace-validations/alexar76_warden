@@ -7,7 +7,7 @@ Las llamadas de descubrimiento pueden generar cargos; consulte los [límites de 
 `warden-mcp scan` lee la configuración MCP que ya tienes, se conecta a cada servidor que inicia y revisa las definiciones de herramientas antes de que un modelo las vea. Es la misma cadena de compuertas que [`wrap`](../README-es.md) y la [biblioteca](integration.es.md), ejecutada una vez sobre tus configuraciones en lugar de delante de un solo servidor.
 
 ```bash
-npx -y @aimarket/warden@0.33.0 scan
+npx -y @aimarket/warden@0.35.0 scan
 ```
 
 ```text
@@ -130,6 +130,16 @@ Un cliente entrega las herramientas de todos sus servidores a un mismo modelo. S
 ```
 
 Las capacidades se leen de los nombres de las herramientas y de sus parámetros (`read_file`, `send_email`, un parámetro `url` o `to`), no de las descripciones: no depende del idioma, y una descripción no puede justificarse. Un flujo es orientativo: nunca bloquea ni cambia el código de salida. Aparece en `--json` (`flows`) y en el resumen Markdown. Para romperlo, quita una pata: un servidor `fetch` que no necesitas, o un servidor de archivos limitado a una carpeta en otro cliente.
+
+## Una indicación que contradice la propia descripción de la herramienta
+
+Un lock guarda una indicación de comportamiento equivocada tan estable como una correcta: dice si el servidor cambió su versión, no si era verdad. Una parte se ve en la propia definición. `scan` informa `TOOL_HINT_CONTRADICTS_DESCRIPTION` cuando una herramienta dice `readOnlyHint: true` y su descripción dice que borra, envía un mensaje, escribe archivos o crea una cuenta, o dice `destructiveHint: false` y su descripción dice que elimina, sobrescribe, "replaces the current …" o "cannot be undone":
+
+```text
+  ⚠ hint vs description  github.update_issue_labels: The server marks this tool destructiveHint=false, but its own description says it replaces the current …: "This replaces the current labels with the provided list." …
+```
+
+Es consultivo, como un flujo tóxico: aparece en la salida, en el informe Markdown y en `--json` (no en SARIF), nunca bloquea ni cambia el código de salida. Un cliente que no pide aprobación para herramientas de solo lectura o no destructivas no preguntaría antes de esa llamada, así que etiquete la herramienta usted mismo (`labels` de la política de flujos). La lectura es en inglés, frase por frase, y solo donde la herramienta es el sujeto del verbo ("Deletes the file", no "List deleted files"); las reglas se calibraron con las definiciones de herramientas de HISTOR (ver el CHANGELOG). Una indicación que solo el código contradice no se ve.
 
 ## HISTOR: ¿este servidor te sirve lo mismo que a todos?
 

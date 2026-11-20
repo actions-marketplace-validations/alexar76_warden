@@ -1,0 +1,6 @@
+
+> @aimarket/warden@0.35.0 check:ruleset
+> node scripts/check-published-ruleset.mjs
+
+local  @aimarket/warden@0.35.0 ruleset v23 sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g=
+@aimarket/warden@0.35.0 is not on the registry yet — nothing to compare, this is the pre-release state

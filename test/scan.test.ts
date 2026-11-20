@@ -154,6 +154,22 @@ describe('scan: lock file', () => {
     expect(md).toContain('- `notes`: readOnlyHint true → false: it now says it does more; an approval given before does not cover it');
   });
 
+  it('reports a hint its own description contradicts, advisory, in the text and the Markdown', async () => {
+    const t = { name: 'update_issue_labels', description: 'Update the labels of an existing issue. This replaces the current labels with the provided list.',
+      inputSchema: { type: 'object' }, annotations: { readOnlyHint: false, destructiveHint: false } };
+    const dir = project({ notes: { tools: [t] } });
+    const r = await runScan(await opts(dir, []));
+    const s = byKey(r).notes!;
+    expect(s.allow).toBe(true);
+    expect(exitCode(r, {})).toBe(0);
+    expect(s.findings).toContainEqual(expect.objectContaining({ code: 'TOOL_HINT_CONTRADICTS_DESCRIPTION', advisory: true, tool: 'update_issue_labels', gate: 'annotations' }));
+    expect(toTable(r, dir, false)).toContain('⚠ hint vs description  notes.update_issue_labels: The server marks this tool destructiveHint=false');
+    const md = toMarkdown(r, dir);
+    expect(md).toContain('**A behaviour hint its own description contradicts**');
+    expect(md).toContain('`notes.update_issue_labels`');
+    expect(JSON.stringify(toSarif(r, dir))).not.toContain('TOOL_HINT_CONTRADICTS_DESCRIPTION');
+  });
+
   it('catches a changed launch line for a reviewed server', async () => {
     const dir = project({ notes: {} }), lock = join(dir, 'warden.lock.json');
     await runScan(await opts(dir, ['--lock', lock, '--update-lock']));

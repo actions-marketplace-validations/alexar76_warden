@@ -151,7 +151,7 @@ Necesita una cuenta de administrador de OpenWebUI y Node.js 22 en la máquina do
 Docker, vea `--local` más abajo).
 
 ```bash
-npx -y @aimarket/warden@0.33.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.35.0 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 Pide la contraseña (o la lee de `OPENWEBUI_PASSWORD`); también sirve una clave API o un JWT de administrador en
@@ -212,14 +212,14 @@ una búsqueda web trajo una página que pide enviar el chat fuera, en el otro la
 
 Después:
 
-- `npx -y @aimarket/warden@0.33.0 openwebui check` repite la comprobación cuando quiera (código de salida 0 si no queda nada
+- `npx -y @aimarket/warden@0.35.0 openwebui check` repite la comprobación cuando quiera (código de salida 0 si no queda nada
   abierto);
-- etiquetas: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.33.0 warden-mcp gateway
+- etiquetas: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.35.0 warden-mcp gateway
   labels --config /etc/warden/gateway.json` lista las herramientas que los chats usaron sin etiqueta; añádalas a
   `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`), que se lee en cada
   llamada;
 - tras el piloto, `"mode": "deny"` en el mismo archivo;
-- `npx -y @aimarket/warden@0.33.0 openwebui undo` devuelve las conexiones originales, apaga el Filter y detiene la pasarela;
+- `npx -y @aimarket/warden@0.35.0 openwebui undo` devuelve las conexiones originales, apaga el Filter y detiene la pasarela;
   los archivos se quedan.
 
 Lo que queda en sus manos:
@@ -265,7 +265,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.33.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.35.0", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}

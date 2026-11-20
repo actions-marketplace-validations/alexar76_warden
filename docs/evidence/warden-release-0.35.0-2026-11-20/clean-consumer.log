@@ -1,0 +1,16 @@
+added 1 package in 699ms
+version 0.35.0
+hintContradictions exported: true [{"tool":"update_issue_labels","claim":"destructiveHint=false","says":"replaces the current …","quote":"This replaces the current labels with the provided list."}]
+TOOL_HINT_CONTRADICTS_DESCRIPTION true low
+$ npx warden-mcp scan --project --no-color   (one stdio server: labels-server.mjs)
+WARDEN scan 0.35.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
+  read .mcp.json (claude-code, 1 server)
+
+  ✓ allow   labels  claude-code    1 tool · score 0.90
+
+  ⚠ hint vs description  labels.update_issue_labels: The server marks this tool destructiveHint=false, but its own description says it replaces the current …: "This replaces the current labels with the provided list." A host that asks only before destructive tools would not ask before this call. Hints are the server's word; a fingerprint or lock keeps a wrong hint as stable as a right one. Label the tool yourself (flow policy labels).
+
+  ⚠ toxic flow  claude-code has a possible private-data / untrusted-input / outbound path: capabilities of labels.update_issue_labels are unknown. Review and bind operator capabilities to the launch identity and definitions; unrecognized names are not evidence of safety.
+
+1 server: 1 allowed, 0 blocked, 0 not checked, 0 skipped.
+exit 0

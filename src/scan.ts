@@ -12,6 +12,7 @@ import { fetchServer, McpClientError, type FetchedServer } from './mcp-client.js
 import { mtlToolSetDigest, MtlError } from './mtl.js';
 import { historCheck, historUserAgent, DEFAULT_HISTOR_URL, type HistorCheck, type PackageBehaviour } from './histor.js';
 import { boundCapabilities, toxicFlows, type ToxicFlow } from './toxic-flow.js';
+import { hintContradictionFindings } from './hint-claims.js';
 import { inspectTools, ClassifierError, type ClassifierOptions, type ClassifierInspection } from './classifier.js';
 import { LockStore, readLock, writeLock, lockEntryFor, diffTools, LOCK_VERSION, type LockEntry, type LockFile, type ToolChange } from './scan-lock.js';
 import type { PinStore, Severity, ToolDef, WardenFinding, WardenPolicy, WardenVerdict, RulesetRef } from './types.js';
@@ -519,7 +520,8 @@ export async function runScan(opts: ScanOptions, deps: ScanDeps = {}): Promise<S
     const reviewedWarden = Warden.create({ policy: opts.policy, threatFeed: feed, store,
       semanticReview: semanticReviews.get(fetched.tools) });
     const verdict: WardenVerdict = await reviewedWarden.vet(server.ref, fetched.tools);
-    const findings = [...verdict.findings];
+    // A hint its own description contradicts: advisory, so it never changes allow, score or the tool lists.
+    const findings = [...verdict.findings, ...hintContradictionFindings(fetched.tools)];
     let allow = verdict.allow, decidedBy = verdict.decidedBy, score = verdict.score;
     if (fetched.instructions) {
       // The same check wrap applies before passing initialize.instructions to the client.

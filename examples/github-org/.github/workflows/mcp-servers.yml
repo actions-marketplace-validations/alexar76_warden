@@ -74,7 +74,7 @@ jobs:
             if [[ -n "$ALLOWLIST" ]]; then
               echo "::error title=WARDEN policy::mcp-allowlist.lock.json not found in $ALLOWLIST"
             else
-              echo "::error title=WARDEN policy::warden.lock.json is missing, so no MCP server in this repository was reviewed. Create it: npx -y @aimarket/warden@0.33.0 scan --project --lock warden.lock.json --update-lock"
+              echo "::error title=WARDEN policy::warden.lock.json is missing, so no MCP server in this repository was reviewed. Create it: npx -y @aimarket/warden@0.35.0 scan --project --lock warden.lock.json --update-lock"
             fi
             exit 1
           fi

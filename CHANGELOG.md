@@ -1,6 +1,26 @@
 # Changelog
 
-## Unreleased
+## 0.35.0 — 2026-11-20 (a hint its own description contradicts)
+
+A minor release with one new advisory finding. Verdicts are unchanged: rulesets 23, the malware list and the flow
+guard are 0.34.0's, and the new finding never blocks a server, never costs a tool and never changes the exit code.
+
+- **A hint that its own description contradicts.** `scan` reports `TOOL_HINT_CONTRADICTS_DESCRIPTION` (advisory, so
+  it never blocks or changes the exit code) when a tool says `readOnlyHint: true` while its description says it
+  deletes, sends a message, writes files or creates an account, or says `destructiveHint: false` while its
+  description says it removes, overwrites, "replaces the current …" or "cannot be undone". A lock or a fingerprint
+  keeps a wrong hint as stable as a right one; this reads the one place the definition itself gives it away. Example:
+  GitHub's MCP server `update_issue_labels` (destructiveHint false; "This replaces the current labels with the
+  provided list"). English only; a hint only the code contradicts (Kubernetes `pods_run` force-applies a Service) is
+  not seen. On HISTOR's 2026-11-16 snapshot it marks 307 tools on 204 servers that say readOnlyHint true and 960 tools
+  on 593 servers that say destructiveHint false; in hand-labelled samples of 50, 40 and 45 were real contradictions
+  (`artifacts/hint-description-contradictions-2026-11-20` in the monorepo). Library: `hintContradictions`, `hintContradictionFindings`.
+
+## 0.34.0 — 2026-11-20 (which way a behaviour hint moved)
+
+A minor release that adds one line to a review: when a reviewed tool's behaviour hint moves, WARDEN names the hint and
+its direction. Verdicts are unchanged: rulesets 23, the malware list and the flow guard are 0.33.0's, and any change
+to a reviewed tool already failed the lock and asked again in `wrap`.
 
 - **A behaviour hint that moved is named, with its direction.** When a reviewed tool changes, the re-approval text and
   the `scan --lock` report now say which of `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` moved

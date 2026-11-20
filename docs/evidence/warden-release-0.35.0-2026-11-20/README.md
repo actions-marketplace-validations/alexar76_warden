@@ -1,0 +1,73 @@
+# WARDEN 0.35.0 — prepared 2026-11-20
+
+Built from a clean export of aicom `5dba9049f` (`git archive … warden`; `npm ci --ignore-scripts`, `npm run build`,
+then `npm pack`, whose `prepare` builds again; `dist/` was the same before and after the pack), Node and npm in
+`versions.log`. One new finding: `scan` reports `TOOL_HINT_CONTRADICTS_DESCRIPTION` (advisory) when a tool's
+`readOnlyHint: true` or `destructiveHint: false` is contradicted by its own description, shown in the text output, the
+Markdown summary and `--json`; the package entry exports `hintContradictions`, `hintContradictionFindings` and the
+`HintClaim` / `HintContradiction` types. No verdict changes: rulesets are 23, the malware list and the flow guard are
+0.34.0's. One new `dist/hint-claims.js` and changed `scan.js`, `scan-report.js`, `index.js`, so the MOMUS build digest
+is new and the release needs its own run. Calibration of the check:
+`artifacts/hint-description-contradictions-2026-11-20` in the monorepo.
+
+The first tarball of this version (`d8d9c5a8…`, from `f6997e58f`) put a second full stop after a quoted sentence in the
+finding's message; the installed `scan` showed it. It was never published or evaluated and is not kept; this tarball
+replaces it.
+
+## Artifact
+
+| | |
+|---|---|
+| Tarball | `aimarket-warden-0.35.0.tgz` (this folder) |
+| sha256 | `aa6eae019ca12e11bf87421b44061005207be249dfc85716b1d14c86d1917cae` |
+| npm shasum | `d3ba314d0f805a26b655702e3d23860c599e257b` |
+| integrity | `sha512-lSG/0G2JznRgU2fRYOOHIEaMqBEttNYN4d+YUjzBzJLMOSVW7YObNYeFJpy22cgQYIzYSYlRGeq1GDZSl0Y6hA==` |
+| Files / size | 479 files, 3,781,313 bytes packed, 7,114,971 unpacked |
+| MOMUS build digest | `9106a6d8988d87788f013542d77e0616aa4daad31645232a08b6a68d369431f2` (81 `dist/*.js`) |
+| Ruleset | v23 `sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g=` |
+
+## Checks
+
+| Check | Result | Log |
+|---|---|---|
+| Build, typecheck | pass | `build.log`, `typecheck.log`, `pack.log` |
+| Tests | 2135 of 2135, 85 files (`--maxWorkers=3`; the Mac's load average was 12–30, `load.log`) | `tests.log` |
+| Red team, Claude Code profile | 0 of 28 delivered; field regressions 0 of 4; the same log as 0.34.0 | `redteam.log` |
+| Red team, Codex / OpenCode | `all`: 0 of 28; `data`: the same three as 0.26.0–0.34.0 (`--check` exits 1 for these profiles in `data`); each log equal to 0.34.0's apart from the version and the folder | `redteam-codex-*.log`, `redteam-opencode-*.log` |
+| Ruleset vs registry | pass before publication (0.35.0 is not on npm yet) | `ruleset.log` |
+| Version references, release mode | pass | `versions-check.log` |
+| Clean consumer | installs into an empty project with `--ignore-scripts`; `hintContradictions` imports from the package entry; the installed `warden-mcp scan --project` on one stdio server whose `update_issue_labels` says `destructiveHint: false` and "This replaces the current labels with the provided list" prints `⚠ hint vs description` and exits 0 | `clean-consumer.log` |
+
+## MOMUS release gate
+
+| | |
+|---|---|
+| Candidate image | `histor-histor:warden-0.35.0-prod` = `sha256:ef3e5cb4b31278cc91d1d88c72fa3f3ed1aac8cd533280b09f4d6129c8f68903` |
+| Built from | `histor-histor:cosigned-20261120` = `sha256:c82f2e7f…`: the image another session built FROM the live 0.34.0 image and scheduled to switch to after the open crawl (`/root/histor-cosigned-20261120` on the HISTOR host). A candidate from `warden-0.34.0-prod` would have undone that change on switching. Vendored WARDEN replaced by this tarball and the source of `5dba9049f` (`quality/Dockerfile.candidate`). Built on admin-vps; context sent with `COPYFILE_DISABLE=1 tar --no-xattrs` (no `._*` files) |
+| Image check | 11,067 files in the base, 11,072 in the candidate, none different, added or removed outside the WARDEN folders; vendored 0.35.0, 81 `dist/*.js`, build digest `9106a6d8…` (`quality/verify.log`) |
+| Run | `skopos-warden-quality candidate sha256:ef3e5cb4…`, unit `warden-release-quality-035-prod-20261120`, started 2026-11-20 20:53:48Z |
+| Result | **passed** 2026-11-20 20:53:54Z (evaluated), run `20261120T205354`, policy `zero-regressions-v1`; development 8,244 attacks / 362 benign, holdout 24 / 24, candidates 22, behaviour 72 / 72 and smoke 72 / 72, 0 missed, 0 false positives, 0 incomplete; discovery complete (round 67). Baseline build `6617a3ff…` (0.34.0) |
+| Receipt | `quality/candidate-signed.json`, expires 2026-11-22 20:53:54Z |
+| `authorize` | done 2026-11-20 21:01:50Z (`skopos-warden-quality authorize sha256:ef3e5cb4…`; it prints nothing when it accepts) |
+
+## Production HISTOR
+
+Not switched. The image is loaded on the HISTOR host (same ID `sha256:ef3e5cb4…`, disk 82 %) and `quality/switch.sh`
+is in `/root/wd035-prod-20261120` (sha256 `d5b081b6…`, equal to this folder's). It switches only from
+`cosigned-20261120`: at 21:00Z production still ran `warden-0.34.0-prod` (`aef2d1c7`), with a crawl open and the
+other session's `histor-cosigned-switch` waiting for it, so it would refuse now. After the cosigned switch and the
+MOMUS rebind to `c82f2e7f` (unit `histor-cosigned-rebind` on admin-vps), and with no crawl open:
+
+```bash
+/root/wd035-prod-20261120/switch.sh            # HISTOR host
+skopos-warden-quality live sha256:ef3e5cb4b31278cc91d1d88c72fa3f3ed1aac8cd533280b09f4d6129c8f68903   # admin-vps
+```
+
+Rollback: HISTOR host `/root/wd035-prod-20261120/switch.sh rollback`, then admin-vps
+`skopos-warden-quality rebind sha256:c82f2e7fc9f97cb95651b7dd2a09875663cf464e33a9ef68a4ca37f5b2569ed7`.
+
+Publication: the owner publishes this tarball (`npm publish …/aimarket-warden-0.35.0.tgz --access public`, after
+checking its sha256), not `publish_warden.sh`, which rebuilds. The candidate receipt expires 2026-11-22 20:53:54Z;
+a later switch needs a new run. Publication: the owner publishes this tarball
+(`npm publish …/aimarket-warden-0.35.0.tgz --access public`, after checking its sha256), not `publish_warden.sh`,
+which rebuilds.

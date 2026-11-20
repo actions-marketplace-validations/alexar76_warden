@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 /private/tmp/claude-501/-Users-alex-Desktop-ai-tests-aicompany-aicom--claude-worktrees-ecosystem-growth-points-f13134/b86f7aed-59a1-4033-97f1-a53bfacd48f2/scratchpad/w035/warden
+
+
+ Test Files  85 passed (85)
+      Tests  2135 passed (2135)
+   Start at  22:49:08
+   Duration  75.70s (tests 94%, import 3%, transform 2%, setup 1%)
+
+    Isolate  85 workers spawned · ~170ms startup each (spawn + environment, per file)
+             at least ~4.64s faster with isolate: false — reuses workers across files instead of one per file
+
