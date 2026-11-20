@@ -75,8 +75,16 @@ the MOMUS build digest is new and the release needs its own run.
   by registry URL and this tarball's integrity (87 / 87 tests against the tarball; resolves from the registry once
   npm has it). The profile README (5 languages) names 0.32.0.
 
-Publication: the live receipt for this build is in place, so the owner can publish this tarball (colleague-tasks §139
-step 3). Not on npm at 07:01Z (`latest` = 0.31.0).
+## Publication
+
+- 2026-11-20 07:18:21Z (npm time) the owner published this tarball. The registry reports dist.shasum
+  `11804c92e38cd563173fac15b56a9753f04c28f6`, integrity
+  `sha512-HBkcnm7981fXaE6LwRxSJtuRM58GgmcKKZfHVIO90rWEEfcrYfazkR4yW7DKBBURMFx8jOGgxCViuWPATcPnXg==`, 475 files.
+- 09:45Z the registry tarball downloads (200, 3,767,088 bytes) and is byte for byte this folder's (`cmp`).
+- 08:43:31Z 0.33.0 followed (Open Terminal in OpenWebUI; `warden-release-0.33.0-2026-11-20/`, built over this
+  release, its own MOMUS run) and is `latest`. Production HISTOR moved on to it at 08:37:26Z. 0.33.0 contains this
+  release's flow-guard change. So the mirror, the tag, the MCP registry entry and the consumers go to 0.33.0; no
+  `v0.32.0` tag is planned.
 
 ## In use before publication
 

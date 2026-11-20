@@ -13,6 +13,6 @@
   "malwareList": { "sha256": "b656eb8a15d8b2d0ad9d54a4f02606f9fd28a460d90dbc8d91968ffc38b80526", "packages": 237594 },
   "sourceBase": "cfa591b38",
   "preparedAt": "2026-11-20",
-  "published": false,
+  "published": "2026-11-20T07:18:21Z",
   "qualityGate": "live (run 20261120T041217, HISTOR since 2026-11-20 05:57:45Z)"
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { diffToolDefinitions, formatDefinitionDiff, formatOriginLines, launchSpec, plainVersion, wordDiff } from '../src/review-diff.js';
+import { diffToolDefinitions, formatDefinitionDiff, formatOriginLines, hintMoves, launchSpec, plainVersion, wordDiff } from '../src/review-diff.js';
 import { describeReview, observedServerInfo } from '../src/wrap-state.js';
 import type { ToolDef } from '../src/types.js';
 
@@ -199,5 +199,39 @@ describe('re-approval review: what to read first and where a change came from', 
     const raw = { name: 'fixture', version: '1.4.2' }, copied = observedServerInfo(raw);
     raw.version = '2.0.0';
     expect(copied?.version).toBe('1.4.2');
+  });
+});
+
+describe('behaviour hints that moved', () => {
+  const search: ToolDef = { name: 'search', description: 'Search notes.', inputSchema: { type: 'object' }, annotations: { readOnlyHint: true } };
+  const remove: ToolDef = { name: 'remove', description: 'Remove a note.', inputSchema: { type: 'object' }, annotations: { readOnlyHint: false, destructiveHint: true } };
+
+  it('names the direction: a read-only tool that now says it writes widens, the reverse narrows', () => {
+    const writes = { ...search, annotations: { readOnlyHint: false } };
+    const claimsReadOnly = { ...remove, annotations: { readOnlyHint: true, destructiveHint: true } };
+    expect(hintMoves(search, writes)).toEqual([{ hint: 'readOnlyHint', before: true, after: false, direction: 'widens' }]);
+    expect(hintMoves(remove, claimsReadOnly)).toEqual([{ hint: 'readOnlyHint', before: false, after: true, direction: 'narrows' }]);
+    const diff = diffToolDefinitions([search, remove], [writes, claimsReadOnly]);
+    expect(diff.hints).toBe(2);
+    const out = formatDefinitionDiff(diff);
+    expect(out).toContain('Read first: behaviour hints moved on 2 tools (the server\'s word, not proof):');
+    expect(out).toContain('  search: readOnlyHint true → false: it now says it does more; an approval given before does not cover it');
+    expect(out).toContain('  remove: readOnlyHint false → true: it now claims less; a host that skips the prompt on these hints stops asking');
+  });
+
+  it('reads an absent hint as the specification default, so dropping the block is a move and adding a default is not', () => {
+    const bare = { ...search, annotations: undefined };
+    expect(hintMoves(search, bare)).toEqual([{ hint: 'readOnlyHint', before: true, after: null, direction: 'widens' }]);
+    expect(hintMoves({ ...remove, annotations: undefined }, remove)).toEqual([]);   // false and true are the defaults
+    expect(hintMoves(remove, { ...remove, annotations: { readOnlyHint: false, destructiveHint: false } }))
+      .toEqual([{ hint: 'destructiveHint', before: true, after: false, direction: 'narrows' }]);
+    expect(hintMoves(search, { ...search, annotations: { readOnlyHint: 'yes' } as unknown as ToolDef['annotations'] }))
+      .toEqual([{ hint: 'readOnlyHint', before: true, after: null, direction: 'widens' }]);
+  });
+
+  it('a change that leaves the hints where they were adds no hint line', () => {
+    const diff = diffToolDefinitions([search], [{ ...search, description: 'Search notes fast.' }]);
+    expect(diff.hints).toBe(0);
+    expect(formatDefinitionDiff(diff).join('\n')).not.toContain('behaviour hints');
   });
 });

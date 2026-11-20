@@ -140,6 +140,20 @@ describe('scan: lock file', () => {
     expect(md).toContain('<sub>[@aimarket/warden](https://github.com/alexar76/warden) ');
   });
 
+  it('names a behaviour hint that moved, in the JSON and at the top of the Markdown diff', async () => {
+    const tool = (readOnlyHint: boolean) => ({ name: 'notes', description: 'Read notes.', inputSchema: { type: 'object' }, annotations: { readOnlyHint } });
+    const dir = project({ notes: { tools: [tool(true)] } }), lock = join(dir, 'warden.lock.json');
+    await runScan(await opts(dir, ['--lock', lock, '--update-lock']));
+    writeFileSync(join(dir, 'notes.fixture.json'), JSON.stringify({ tools: [tool(false)] }));
+    const r = await runScan(await opts(dir, ['--lock', lock]));
+    const s = byKey(r).notes!;
+    expect(s).toMatchObject({ allow: false, lock: { state: 'drift' } });
+    expect(s.lock!.changes![0]!.hints).toEqual([{ hint: 'readOnlyHint', before: true, after: false, direction: 'widens' }]);
+    const md = toMarkdown(r, dir);
+    expect(md).toContain('**Read first: behaviour hints moved**');
+    expect(md).toContain('- `notes`: readOnlyHint true → false: it now says it does more; an approval given before does not cover it');
+  });
+
   it('catches a changed launch line for a reviewed server', async () => {
     const dir = project({ notes: {} }), lock = join(dir, 'warden.lock.json');
     await runScan(await opts(dir, ['--lock', lock, '--update-lock']));

@@ -38,6 +38,24 @@ export interface FieldChange {
  */
 export type Attention = "approval" | "tool choice";
 
+/**
+ * A behaviour hint that moved (MCP tool annotations; absent = the specification's default: readOnlyHint false,
+ * destructiveHint true, idempotentHint false, openWorldHint true).
+ *
+ * `widens`: the tool now says it does more (true → false for readOnlyHint): an approval given to it as it was does not
+ * cover what it says now. `narrows`: it now claims less (false → true for readOnlyHint): a host that skips the prompt
+ * for read-only or non-destructive tools stops asking about it. Hints are the server's word, not proof either way.
+ * In HISTOR's record from 23 October to 16 November 2026 (snapshot 2026-11-16), readOnlyHint went true → false on 524
+ * tools and false → true on 321; on 176 and 262 of them the Vercel AI SDK's tool fingerprint did not change in that read.
+ */
+export interface HintMove {
+  hint: "readOnlyHint" | "destructiveHint" | "idempotentHint" | "openWorldHint";
+  /** As served; null = absent. */
+  before: boolean | null;
+  after: boolean | null;
+  direction: "widens" | "narrows";
+}
+
 export interface ToolChange {
   tool: string;
   kind: "added" | "removed" | "changed";
@@ -49,6 +67,8 @@ export interface ToolChange {
   numbersOnly: boolean;
   /** For `changed`: every Attention its fields add. For `added`: every Attention in the new tool's text. */
   attention?: Attention[];
+  /** For `changed`: behaviour hints whose effective value moved. */
+  hints?: HintMove[];
 }
 
 export interface DefinitionDiff {
@@ -60,6 +80,48 @@ export interface DefinitionDiff {
   numbersOnly: number;
   /** Added or changed tools whose new text is about the user's approval or about tool choice. */
   attention: number;
+  /** Changed tools whose behaviour hints moved. */
+  hints: number;
+}
+
+// The specification's default for an absent hint, and the value that means "does more".
+const HINT_DEFAULTS: ReadonlyArray<readonly [HintMove["hint"], boolean, boolean]> = [
+  ["readOnlyHint", false, false],
+  ["destructiveHint", true, true],
+  ["idempotentHint", false, false],
+  ["openWorldHint", true, true],
+];
+
+function hintValue(tool: ToolDef | undefined, hint: string): boolean | null {
+  const a: unknown = tool?.annotations;
+  if (!a || typeof a !== "object" || Array.isArray(a)) return null;
+  const v = (a as Record<string, unknown>)[hint];
+  return typeof v === "boolean" ? v : null;
+}
+
+/** Behaviour hints whose effective value differs between two versions of one tool. */
+export function hintMoves(before: ToolDef | undefined, after: ToolDef | undefined): HintMove[] {
+  const out: HintMove[] = [];
+  for (const [hint, fallback, more] of HINT_DEFAULTS) {
+    const b = hintValue(before, hint), a = hintValue(after, hint);
+    if ((b ?? fallback) === (a ?? fallback)) continue;
+    out.push({ hint, before: b, after: a, direction: (a ?? fallback) === more ? "widens" : "narrows" });
+  }
+  return out;
+}
+
+function hintText(m: HintMove): string {
+  const v = (x: boolean | null) => (x === null ? "absent" : String(x));
+  return `${m.hint} ${v(m.before)} → ${v(m.after)}`;
+}
+
+/** One sentence per tool for a reviewer: what moved and what it means. */
+export function describeHintMoves(tool: string, moves: readonly HintMove[]): string {
+  const widens = moves.filter(m => m.direction === "widens"), narrows = moves.filter(m => m.direction === "narrows");
+  const parts: string[] = [];
+  if (widens.length) parts.push(`${widens.map(hintText).join(", ")}: it now says it does more; an approval given before does not cover it`);
+  if (narrows.length) parts.push(`${narrows.map(hintText).join(", ")}: it now claims less; a host that skips the prompt on these hints stops asking`);
+  return `${tool}: ${parts.join("; ")}`;
 }
 
 const NUMERIC_TEXT = /^[\s\d.,:\-/+%]*$/;
@@ -212,7 +274,9 @@ export function diffToolDefinitions(before: readonly ToolDef[], after: readonly 
       const fields: FieldChange[] = [];
       walk("", b, a, fields);
       const attention = ATTENTION_ORDER.filter(k => fields.some(f => f.attention?.includes(k)));
-      changes.push({ tool: name, kind: "changed", fields, numbersOnly: fields.length > 0 && fields.every(f => f.numbersOnly), ...flag(attention) });
+      const hints = hintMoves(b, a);
+      changes.push({ tool: name, kind: "changed", fields, numbersOnly: fields.length > 0 && fields.every(f => f.numbersOnly), ...flag(attention),
+        ...(hints.length ? { hints } : {}) });
     }
   }
   return {
@@ -222,6 +286,7 @@ export function diffToolDefinitions(before: readonly ToolDef[], after: readonly 
     changed: changes.filter(c => c.kind === "changed").length,
     numbersOnly: changes.filter(c => c.numbersOnly).length,
     attention: changes.filter(c => c.attention?.length).length,
+    hints: changes.filter(c => c.hints?.length).length,
   };
 }
 
@@ -238,6 +303,10 @@ export function formatDefinitionDiff(diff: DefinitionDiff): string[] {
   if (diff.attention) {
     const names = diff.changes.filter(c => c.attention?.length).map(c => `${c.tool} (${c.attention!.join(", ")})`);
     lines.push(`Read first: ${diff.attention} ${diff.attention === 1 ? "tool gains" : "tools gain"} text about the user's approval or about which tool to use: ${names.join("; ")}`);
+  }
+  if (diff.hints) {
+    lines.push(`Read first: behaviour hints moved on ${diff.hints} ${diff.hints === 1 ? "tool" : "tools"} (the server's word, not proof):`);
+    for (const c of diff.changes) if (c.hints?.length) lines.push(`  ${describeHintMoves(c.tool, c.hints)}`);
   }
   for (const c of diff.changes) {
     if (c.kind === "added") { lines.push(`+ ${c.tool}  (new tool${attentionNote(c.attention)})`, `    ${show(c.definition, 4000)}`); continue; }

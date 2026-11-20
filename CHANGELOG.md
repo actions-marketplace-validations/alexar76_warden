@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **A behaviour hint that moved is named, with its direction.** When a reviewed tool changes, the re-approval text and
+  the `scan --lock` report now say which of `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` moved
+  (an absent hint counts as the specification's default) and what it means: `widens` (true → false for readOnlyHint:
+  the tool now says it does more, so an approval given before does not cover it) or `narrows` (false → true: a host
+  that skips the prompt for read-only tools stops asking about it). The JSON report carries them as
+  `lock.changes[].hints`; the Markdown summary lists them above the diff under "Read first". Nothing new is refused:
+  any change already fails the lock and asks again in `wrap`. Asked on DEV (2026-11-20) after the readOnlyHint count;
+  in HISTOR's record from 23 October to 16 November 2026, readOnlyHint went true → false on 524 tools and false → true
+  on 321.
+
 ## 0.33.0 — 2026-11-20 (Open Terminal in OpenWebUI)
 
 The OpenWebUI Filter checks model calls to terminals configured under Integrations through the WARDEN gateway.
