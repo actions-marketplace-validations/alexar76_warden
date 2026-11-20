@@ -14,5 +14,5 @@
   "sourceBase": "cfa591b38",
   "preparedAt": "2026-11-20",
   "published": false,
-  "qualityGate": "candidate passed (run 20261120T041217, authorize 2026-11-20 04:21:04Z); HISTOR switch scheduled, receipt not live yet"
+  "qualityGate": "live (run 20261120T041217, HISTOR since 2026-11-20 05:57:45Z)"
 }
