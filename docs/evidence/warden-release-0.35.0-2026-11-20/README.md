@@ -92,3 +92,20 @@ Published by the owner 2026-11-20 21:12:38Z (registry `time`). The registry's ta
   (`55398608…`). The public `warden-scan` blocks "Ignore previous instructions…", allows the clean tool, engine
   `@aimarket/warden@0.35.0`, ruleset 23. It runs the gate chain, not `scan`, so `TOOL_HINT_CONTRADICTS_DESCRIPTION`
   does not appear there. Rollback: the stopped `okx-a2mcp-prev` (`prod-20261120-bed23ef94`, WARDEN 0.33.0).
+
+## GitHub mirror / tag / Marketplace / MCP registry
+
+- Mirror, tag and release `v0.35.0` were already on GitHub when this path resumed
+  (https://github.com/alexar76/warden/releases/tag/v0.35.0, published 2026-11-20 21:15:27Z). Package and
+  `server.json` on the satellite tip name 0.35.0.
+- GitHub Marketplace listing
+  https://github.com/marketplace/actions/warden-by-aimarket-mcp-tool-firewall — `latestRelease` = `v0.35.0`
+  (checked 2026-11-21). No Firefox/OTP step required this time.
+- Official MCP Registry: release-triggered "Publish to MCP Registry" for `v0.35.0` was cancelled while waiting on
+  the `release` environment (run
+  https://github.com/alexar76/warden/actions/runs/44818701110) — same as §132; registry entries come from the CLI.
+  Published 2026-11-21 08:23:23Z with `mcp-publisher login github -token $GH_PAT` then
+  `./scripts/publish_mcp_registry.sh --publish --only warden`. Live:
+  `io.github.alexar76/warden` **0.35.0** `[active]` `isLatest=true`
+  (`/v0.1/servers/io.github.alexar76%2Fwarden/versions/latest`).
+- Profile monorepo tip already names `@aimarket/warden@0.35.0` (publish-all exit 0 earlier this session).
