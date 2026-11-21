@@ -12,7 +12,8 @@ describe("hint contradicted by the tool's own description", () => {
       "Update the labels of an existing issue. This replaces the current labels with the provided list. When setting values, include a confidence level (LOW, MEDIUM, or HIGH) reflecting how certain you are about the choice.",
       { title: "Update Issue Labels", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true });
     expect(hintContradictions(t)).toEqual([{ tool: "update_issue_labels", claim: "destructiveHint=false",
-      says: "replaces the current …", quote: "This replaces the current labels with the provided list." }]);
+      says: "replaces the current …", quote: "This replaces the current labels with the provided list.",
+      phrase: "replaces the current", sentence: "This replaces the current labels with the provided list." }]);
   });
 
   it("does not see what only the code says (Kubernetes pods_run force-applies a Service)", () => {
@@ -55,5 +56,25 @@ describe("hint contradicted by the tool's own description", () => {
     expect(f!.message).toContain('readOnlyHint=true');
     expect(f!.message).toContain('"Deletes the table and its data."');
     expect(f!.message).toContain('"Deletes the table and its data." A host');
+  });
+
+  it("findings carry the claim, the matched phrase and the whole sentence as fields (asked on DEV, 2026-11-21)", () => {
+    const [f] = hintContradictionFindings([tool("drop_table", "Deletes the table and its data.", { readOnlyHint: true })]);
+    expect(f!.evidence).toEqual({ claim: "readOnlyHint=true", matchedPhrase: "deletes", quotedSentence: "Deletes the table and its data." });
+    const [g] = hintContradictionFindings([tool("update_issue_labels", "Update the labels. This replaces the current labels with the provided list.",
+      { destructiveHint: false })]);
+    expect(g!.evidence).toEqual({ claim: "destructiveHint=false", matchedPhrase: "replaces the current",
+      quotedSentence: "This replaces the current labels with the provided list." });
+    const [h] = hintContradictionFindings([tool("t", "Creates a draft. This action cannot be undone.", { destructiveHint: false })]);
+    expect(h!.evidence?.matchedPhrase).toBe("cannot be undone");
+  });
+
+  it("the message quotes 160 characters; quotedSentence keeps the whole sentence, with control characters escaped", () => {
+    const long = `Deletes the table and its data, ${"including every index and view that depends on it, ".repeat(4)}in one\u0007 call.`;
+    const [f] = hintContradictionFindings([tool("drop_table", long, { readOnlyHint: true })]);
+    expect(long.length).toBeGreaterThan(160);
+    expect(f!.message).toContain("…");
+    expect(f!.message).not.toContain("in one");
+    expect(f!.evidence!.quotedSentence).toBe(long.replace("\u0007", "\\u0007"));
   });
 });

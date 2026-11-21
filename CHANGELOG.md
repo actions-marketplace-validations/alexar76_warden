@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.36.0 — 2026-11-21 (the evidence of a contradicted hint as fields)
+
+A minor release that adds fields to one advisory finding. Verdicts are unchanged: rulesets 23, the malware list and
+the flow guard are 0.35.0's, and the finding still never blocks a server, never costs a tool and never changes the
+exit code.
+
+- **`TOOL_HINT_CONTRADICTS_DESCRIPTION` carries its evidence as fields.** In `--json` (and in `hintContradictionFindings`)
+  the finding now has `evidence: { claim, matchedPhrase, quotedSentence }`: the hint the server sets, the words of the
+  description that contradict it (lower case) and the whole sentence they are in (control characters escaped; the
+  message still quotes 160 characters and is unchanged). Reports can be grouped by trigger word and two runs diffed
+  without parsing the message. `hintContradictions` adds `phrase` and `sentence` to each result. Asked on DEV
+  (2026-11-21) under the readOnlyHint article. Verdicts and exit codes are unchanged.
+
 ## 0.35.0 — 2026-11-20 (a hint its own description contradicts)
 
 A minor release with one new advisory finding. Verdicts are unchanged: rulesets 23, the malware list and the flow

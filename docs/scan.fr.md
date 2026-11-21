@@ -7,7 +7,7 @@ Les appels de découverte peuvent entraîner des frais ; consultez les [limites 
 `warden-mcp scan` lit la configuration MCP que vous avez déjà, se connecte à chaque serveur qu’elle démarre et vérifie les définitions d’outils avant qu’un modèle ne les voie. C’est la même chaîne de portes que [`wrap`](../README-fr.md) et la [bibliothèque](integration.fr.md), exécutée une fois sur vos configurations au lieu de se placer devant un seul serveur.
 
 ```bash
-npx -y @aimarket/warden@0.35.0 scan
+npx -y @aimarket/warden@0.36.0 scan
 ```
 
 ```text
@@ -140,6 +140,12 @@ Un lock garde une indication de comportement fausse aussi stable qu’une juste 
 ```
 
 C’est un constat à titre consultatif, comme un flux toxique : il apparaît dans la sortie, le rapport Markdown et `--json` (pas dans SARIF), ne bloque jamais et ne change pas le code de sortie. Un client qui ne demande pas d’approbation pour les outils en lecture seule ou non destructifs ne demanderait rien avant un tel appel ; étiquetez donc l’outil vous-même (`labels` de la politique de flux). La lecture est en anglais, phrase par phrase, et seulement là où l’outil est le sujet du verbe (« Deletes the file », pas « List deleted files ») ; les règles ont été calibrées sur les définitions d’outils de HISTOR (voir le CHANGELOG). Une indication que seul le code contredit n’est pas vue.
+
+Dans `--json`, chacun de ces constats porte aussi `evidence` : `claim` (l’indication que pose le serveur, par exemple `destructiveHint=false`), `matchedPhrase` (les mots de la description qui la contredisent, en minuscules) et `quotedSentence` (la phrase entière ; le message en cite les 160 premiers caractères). On peut ainsi regrouper les constats par mot déclencheur, ou comparer deux exécutions, sans analyser le message :
+
+```bash
+warden-mcp scan --json | jq -r '.servers[].findings[] | select(.code == "TOOL_HINT_CONTRADICTS_DESCRIPTION") | [.evidence.matchedPhrase, .tool, .evidence.quotedSentence] | @tsv'
+```
 
 ## HISTOR : ce serveur vous sert-il ce qu’il sert à tout le monde ?
 

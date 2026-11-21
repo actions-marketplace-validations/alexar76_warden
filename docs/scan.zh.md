@@ -7,7 +7,7 @@
 `warden-mcp scan` 读取你已有的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。它与 [`wrap`](../README-zh.md) 和[库](integration.zh.md)使用同一条关卡链，只是对你的配置运行一次，而不是挡在单个服务器前面。
 
 ```bash
-npx -y @aimarket/warden@0.35.0 scan
+npx -y @aimarket/warden@0.36.0 scan
 ```
 
 ```text
@@ -140,6 +140,12 @@ repos:
 ```
 
 这只是提示性发现，与有毒数据流一样：显示在输出、Markdown 报告和 `--json` 中（不进入 SARIF），从不阻止，也不改变退出码。对只读或非破坏性工具跳过审批的客户端在此类调用前不会询问，因此请自己为该工具加标签（流策略中的 `labels`）。检查只读英文，逐句进行，并且只在工具是动词主语的地方生效（"Deletes the file"，而不是 "List deleted files"）；规则基于 HISTOR 的工具定义校准（见 CHANGELOG）。只有代码才与之矛盾的提示无法发现。
+
+在 `--json` 中，每条此类发现还带有 `evidence`：`claim`（服务器设置的提示，例如 `destructiveHint=false`）、`matchedPhrase`（描述中与之矛盾的词，小写）和 `quotedSentence`（完整句子；消息只引用前 160 个字符）。这样无需解析消息文本，就能按触发词对发现分组，或比较两次运行：
+
+```bash
+warden-mcp scan --json | jq -r '.servers[].findings[] | select(.code == "TOOL_HINT_CONTRADICTS_DESCRIPTION") | [.evidence.matchedPhrase, .tool, .evidence.quotedSentence] | @tsv'
+```
 
 ## HISTOR：这个服务器给你的是否和给所有人的一样？
 

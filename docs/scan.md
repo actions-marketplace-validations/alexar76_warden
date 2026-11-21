@@ -7,7 +7,7 @@ Discovery calls can incur costs; see [measurement limits and version evidence](s
 `warden-mcp scan` reads the MCP configuration you already have, connects to every server it starts, and vets the tool definitions before a model sees them. It is the same gate chain as [`wrap`](../README.md#protect-claude-desktop-or-cursor-with-one-wrapper) and the [library](integration.md), run once over your configs instead of in front of one server.
 
 ```bash
-npx -y @aimarket/warden@0.35.0 scan
+npx -y @aimarket/warden@0.36.0 scan
 ```
 
 ```text
@@ -140,6 +140,12 @@ A lock keeps a wrong behaviour hint as stable as a right one: it says whether th
 ```
 
 It is advisory, like a toxic flow: shown in the output, the Markdown report and `--json` (not SARIF), it never blocks and never changes the exit code. A host that skips approval for read-only or non-destructive tools would not ask before such a call, so label the tool yourself (flow policy `labels`). The reading is English and sentence by sentence, and only where the tool is the subject of the verb ("Deletes the file", not "List deleted files"); the rules were calibrated on HISTOR's tool definitions (see the CHANGELOG). A hint that only the code contradicts is not seen.
+
+In `--json` each of these findings also carries `evidence`: `claim` (the hint the server sets, such as `destructiveHint=false`), `matchedPhrase` (the description's words that contradict it, in lower case) and `quotedSentence` (the whole sentence; the message quotes its first 160 characters). That lets you group findings by trigger word, or diff two runs, without parsing the message:
+
+```bash
+warden-mcp scan --json | jq -r '.servers[].findings[] | select(.code == "TOOL_HINT_CONTRADICTS_DESCRIPTION") | [.evidence.matchedPhrase, .tool, .evidence.quotedSentence] | @tsv'
+```
 
 ## HISTOR: is this server serving you what it serves everyone?
 
