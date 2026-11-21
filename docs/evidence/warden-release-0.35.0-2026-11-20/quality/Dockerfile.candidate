@@ -1,0 +1,16 @@
+# WARDEN 0.35.0 for HISTOR: histor-histor:cosigned-20261120 (= sha256:c82f2e7fc9f97cb95651b7dd2a09875663cf464e33a9ef68a4ca37f5b2569ed7, the
+# image another session scheduled to replace warden-0.34.0-prod after the open crawl) with its vendored WARDEN replaced by the release
+# archive of 5dba9049f (aa6eae019ca12e11bf87421b44061005207be249dfc85716b1d14c86d1917cae) and the WARDEN source of the same commit
+# where the trusted recipe puts it. Nothing of HISTOR's own code changes. Built on admin-vps from the same image ID.
+FROM histor-histor:cosigned-20261120
+USER 0:0
+RUN rm -rf /app/scanner/node_modules/@aimarket/warden /opt/warden-source/src
+COPY package/ /app/scanner/node_modules/@aimarket/warden/
+COPY src/ /opt/warden-source/src/
+LABEL skopos.source.commit="5dba9049f683bd17afc60568edddba782e6d9db4" \
+      aicom.histor.overlay="warden-035-prod-20261120" \
+      org.aimarket.release.candidate="warden-0.35.0" \
+      org.aimarket.release.tarball-sha256="aa6eae019ca12e11bf87421b44061005207be249dfc85716b1d14c86d1917cae" \
+      org.aimarket.release.warden-build="9106a6d8988d87788f013542d77e0616aa4daad31645232a08b6a68d369431f2"
+USER 65532:65532
+RUN node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('/app/scanner/node_modules/@aimarket/warden/package.json','utf8')); if(p.name!=='@aimarket/warden'||p.version!=='0.35.0') process.exit(1)"

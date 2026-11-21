@@ -1,0 +1,7 @@
+added 1 package in 668ms
+version 0.34.0
+hintMoves exported: true [{"hint":"readOnlyHint","before":true,"after":false,"direction":"widens"}]
+Tool definitions: 1 changed, 0 added, 0 removed
+Read first: behaviour hints moved on 1 tool (the server's word, not proof):
+  search: readOnlyHint true → false: it now says it does more; an approval given before does not cover it
+exit 0

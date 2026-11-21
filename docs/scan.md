@@ -7,7 +7,7 @@ Discovery calls can incur costs; see [measurement limits and version evidence](s
 `warden-mcp scan` reads the MCP configuration you already have, connects to every server it starts, and vets the tool definitions before a model sees them. It is the same gate chain as [`wrap`](../README.md#protect-claude-desktop-or-cursor-with-one-wrapper) and the [library](integration.md), run once over your configs instead of in front of one server.
 
 ```bash
-npx -y @aimarket/warden@0.33.0 scan
+npx -y @aimarket/warden@0.35.0 scan
 ```
 
 ```text
@@ -130,6 +130,16 @@ A client hands every server's tools to one model. When the servers it starts inc
 ```
 
 The capabilities are read from tool names and parameter names (`read_file`, `send_email`, a `url` or `to` parameter), not from descriptions: the reading does not depend on the description's language, and a description cannot talk its way out of it. A flow is advisory: it never blocks and never changes the exit code. It is in `--json` (`flows`) and in the Markdown summary. To break one, drop a leg — a `fetch` server you do not need, or a filesystem server scoped to one folder in a separate client.
+
+## A hint its own description contradicts
+
+A lock keeps a wrong behaviour hint as stable as a right one: it says whether the server changed its story, not whether the story was true. One part of that is visible in the definition itself. `scan` reports `TOOL_HINT_CONTRADICTS_DESCRIPTION` when a tool says `readOnlyHint: true` while its description says it deletes, sends a message, writes files or creates an account, or says `destructiveHint: false` while its description says it removes, overwrites, "replaces the current …" or "cannot be undone":
+
+```text
+  ⚠ hint vs description  github.update_issue_labels: The server marks this tool destructiveHint=false, but its own description says it replaces the current …: "This replaces the current labels with the provided list." …
+```
+
+It is advisory, like a toxic flow: shown in the output, the Markdown report and `--json` (not SARIF), it never blocks and never changes the exit code. A host that skips approval for read-only or non-destructive tools would not ask before such a call, so label the tool yourself (flow policy `labels`). The reading is English and sentence by sentence, and only where the tool is the subject of the verb ("Deletes the file", not "List deleted files"); the rules were calibrated on HISTOR's tool definitions (see the CHANGELOG). A hint that only the code contradicts is not seen.
 
 ## HISTOR: is this server serving you what it serves everyone?
 

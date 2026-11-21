@@ -7,7 +7,7 @@ Les appels de découverte peuvent entraîner des frais ; consultez les [limites 
 `warden-mcp scan` lit la configuration MCP que vous avez déjà, se connecte à chaque serveur qu’elle démarre et vérifie les définitions d’outils avant qu’un modèle ne les voie. C’est la même chaîne de portes que [`wrap`](../README-fr.md) et la [bibliothèque](integration.fr.md), exécutée une fois sur vos configurations au lieu de se placer devant un seul serveur.
 
 ```bash
-npx -y @aimarket/warden@0.33.0 scan
+npx -y @aimarket/warden@0.35.0 scan
 ```
 
 ```text
@@ -130,6 +130,16 @@ Un client confie les outils de tous ses serveurs à un même modèle. Si l’un 
 ```
 
 Les capacités sont lues dans les noms des outils et de leurs paramètres (`read_file`, `send_email`, un paramètre `url` ou `to`), pas dans les descriptions : la lecture ne dépend pas de la langue, et une description ne peut pas s’en justifier. Un flux est indicatif : il ne bloque jamais et ne change pas le code de sortie. Il figure dans `--json` (`flows`) et dans le résumé Markdown. Pour le casser, retirez une patte : un serveur `fetch` inutile, ou un serveur de fichiers limité à un dossier dans un autre client.
+
+## Une indication que contredit la propre description de l’outil
+
+Un lock garde une indication de comportement fausse aussi stable qu’une juste : il dit si le serveur a changé sa version, pas si elle était vraie. Une partie se voit dans la définition elle-même. `scan` signale `TOOL_HINT_CONTRADICTS_DESCRIPTION` quand un outil dit `readOnlyHint: true` alors que sa description dit qu’il supprime, envoie un message, écrit des fichiers ou crée un compte, ou dit `destructiveHint: false` alors que sa description dit qu’il retire, écrase, « replaces the current … » ou « cannot be undone » :
+
+```text
+  ⚠ hint vs description  github.update_issue_labels: The server marks this tool destructiveHint=false, but its own description says it replaces the current …: "This replaces the current labels with the provided list." …
+```
+
+C’est un constat à titre consultatif, comme un flux toxique : il apparaît dans la sortie, le rapport Markdown et `--json` (pas dans SARIF), ne bloque jamais et ne change pas le code de sortie. Un client qui ne demande pas d’approbation pour les outils en lecture seule ou non destructifs ne demanderait rien avant un tel appel ; étiquetez donc l’outil vous-même (`labels` de la politique de flux). La lecture est en anglais, phrase par phrase, et seulement là où l’outil est le sujet du verbe (« Deletes the file », pas « List deleted files ») ; les règles ont été calibrées sur les définitions d’outils de HISTOR (voir le CHANGELOG). Une indication que seul le code contredit n’est pas vue.
 
 ## HISTOR : ce serveur vous sert-il ce qu’il sert à tout le monde ?
 

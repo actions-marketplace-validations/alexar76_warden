@@ -7,7 +7,7 @@
 `warden-mcp scan` 读取你已有的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。它与 [`wrap`](../README-zh.md) 和[库](integration.zh.md)使用同一条关卡链，只是对你的配置运行一次，而不是挡在单个服务器前面。
 
 ```bash
-npx -y @aimarket/warden@0.33.0 scan
+npx -y @aimarket/warden@0.35.0 scan
 ```
 
 ```text
@@ -130,6 +130,16 @@ repos:
 ```
 
 能力从工具名和参数名（`read_file`、`send_email`、`url` 或 `to` 参数）中读取，而不是从描述中读取：结果与描述的语言无关，描述也无法为自己开脱。数据流只是提示：从不阻止，也不改变退出码。它出现在 `--json`（`flows`）和 Markdown 摘要中。要打断它，去掉其中一环——例如不需要的 `fetch` 服务器，或把只开放一个文件夹的文件服务器放到另一个客户端。
+
+## 与工具自身描述相矛盾的行为提示
+
+锁文件对错误的行为提示和正确的提示一样稳定地保存：它说明服务器是否改了说法，而不说明说法是否属实。其中一部分在定义本身就能看出。当工具声明 `readOnlyHint: true`，而描述却说它会删除、发送消息、写入文件或创建账户；或声明 `destructiveHint: false`，而描述说它会移除、覆盖、"replaces the current …" 或 "cannot be undone" 时，`scan` 会报告 `TOOL_HINT_CONTRADICTS_DESCRIPTION`：
+
+```text
+  ⚠ hint vs description  github.update_issue_labels: The server marks this tool destructiveHint=false, but its own description says it replaces the current …: "This replaces the current labels with the provided list." …
+```
+
+这只是提示性发现，与有毒数据流一样：显示在输出、Markdown 报告和 `--json` 中（不进入 SARIF），从不阻止，也不改变退出码。对只读或非破坏性工具跳过审批的客户端在此类调用前不会询问，因此请自己为该工具加标签（流策略中的 `labels`）。检查只读英文，逐句进行，并且只在工具是动词主语的地方生效（"Deletes the file"，而不是 "List deleted files"）；规则基于 HISTOR 的工具定义校准（见 CHANGELOG）。只有代码才与之矛盾的提示无法发现。
 
 ## HISTOR：这个服务器给你的是否和给所有人的一样？
 

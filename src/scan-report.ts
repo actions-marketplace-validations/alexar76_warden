@@ -96,6 +96,11 @@ export function toTable(report: ScanReport, cwd: string, color: boolean): string
     }
     lines.push(`  ${mark}  ${name}  ${c('2', s.client.padEnd(14))} ${detail}`);
   }
+  // Advisory, like a toxic flow, and shown like one: otherwise it would live only in --json.
+  for (const [s, f] of hintNotes(report)) {
+    lines.push('');
+    lines.push(`  ${c('33;1', '⚠ hint vs description')}  ${displaySafe(s.key, 28)}.${displaySafe(f.tool ?? '', 40)}: ${displaySafe(f.message, 400)}`);
+  }
   for (const f of report.flows ?? []) {
     lines.push('');
     lines.push(`  ${c('33;1', '⚠ toxic flow')}  ${flowSentence(f, t => `${displaySafe(t.server, 28)}.${displaySafe(t.tool, 40)}`)}`);
@@ -216,6 +221,10 @@ export function lineDiff(before: string[], after: string[]): string[] {
   ];
 }
 
+function hintNotes(report: ScanReport): Array<[ScanReport['servers'][number], WardenFinding]> {
+  return report.servers.flatMap(s => s.findings.filter(f => f.code === 'TOOL_HINT_CONTRADICTS_DESCRIPTION').map(f => [s, f] as [typeof s, WardenFinding]));
+}
+
 export function toMarkdown(report: ScanReport, cwd: string): string {
   const m = report.summary;
   const out: string[] = [];
@@ -267,6 +276,14 @@ export function toMarkdown(report: ScanReport, cwd: string): string {
   if (report.lock?.stale.length) {
     out.push('');
     out.push(`In the lock but no longer in any config: ${report.lock.stale.map(id => mdCode(id, 60)).join(', ')}`);
+  }
+  const notes = hintNotes(report);
+  if (notes.length) {
+    out.push('');
+    out.push(`⚠️ **A behaviour hint its own description contradicts** (advisory; label these tools yourself):`);
+    out.push('');
+    for (const [s, f] of notes.slice(0, 40)) out.push(`- ${mdCode(`${s.key}.${f.tool ?? ''}`, 90)}: ${mdCode(f.message, 400)}`);
+    if (notes.length > 40) out.push(`- … ${notes.length - 40} more in --json`);
   }
   for (const f of report.flows ?? []) {
     out.push('');
