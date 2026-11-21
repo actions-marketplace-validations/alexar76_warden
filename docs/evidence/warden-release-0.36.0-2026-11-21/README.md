@@ -73,3 +73,9 @@ witnesses (witness.gdbsecurity.com) answers 429 (144 requests a day); the other 
 ## npm, GitHub, MCP registry
 
 Not published yet: colleague task §147 (npm from this tarball, mirror, tag v0.36.0, Marketplace, MCP registry).
+
+15 minutes after the switch (18:15:25Z): `image=sha256:3e2b70a5… health=healthy tracebacks=0`.
+
+npm: 0.36.0 published 2026-11-21 18:17:02Z (registry `time`, `latest`); the registry's tarball is byte-identical to
+`aimarket-warden-0.36.0.tgz` (`cmp`, sha256 `28544c38…`, shasum `9b607706…`). Mirror, tag, Marketplace and MCP registry:
+colleague task §147.
