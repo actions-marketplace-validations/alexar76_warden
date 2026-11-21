@@ -50,34 +50,25 @@ replaces it.
 | Receipt | `quality/candidate-signed.json`, expires 2026-11-22 20:53:54Z |
 | `authorize` | done 2026-11-20 21:01:50Z (`skopos-warden-quality authorize sha256:ef3e5cb4…`; it prints nothing when it accepts) |
 
-## Production HISTOR
+## Production HISTOR (owner «Yes, switch then», 2026-11-20)
 
-Not switched. The image is loaded on the HISTOR host (same ID `sha256:ef3e5cb4…`, disk 82 %) and `quality/switch.sh`
-is in `/root/wd035-prod-20261120` (sha256 `d5b081b6…`, equal to this folder's). It switches only from
-`cosigned-20261120`: at 21:00Z production still ran `warden-0.34.0-prod` (`aef2d1c7`), with a crawl open and the
-other session's `histor-cosigned-switch` waiting for it, so it would refuse now. After the cosigned switch and the
-MOMUS rebind to `c82f2e7f` (unit `histor-cosigned-rebind` on admin-vps), and with no crawl open:
-
-```bash
-/root/wd035-prod-20261120/switch.sh            # HISTOR host
-skopos-warden-quality live sha256:ef3e5cb4b31278cc91d1d88c72fa3f3ed1aac8cd533280b09f4d6129c8f68903   # admin-vps
-```
-
-Owner «Yes, switch then» (2026-11-20 ~21:15Z): two transient units wait for it instead of a person.
-`histor-wd035-switch` on the HISTOR host (`quality/after.sh`, log `/root/wd035-prod-20261120/after.log`) switches
-once the cosigned after.log ends with its healthy 15-minute line, production runs `c82f2e7f` and no crawl is open
-(until 2026-11-22 20:00Z), checks five routes and the vendored version, and rolls back on any failure.
-`histor-wd035-live` on admin-vps (`quality/rebind.sh`, log `/root/wd035-candidate-20261120/rebind.log`) waits for the
-cosigned MOMUS rebind unit to finish, then retries `skopos-warden-quality live` until HISTOR runs `ef3e5cb4`.
-
-Rollback: HISTOR host `/root/wd035-prod-20261120/switch.sh rollback`, then admin-vps
-`skopos-warden-quality rebind sha256:c82f2e7fc9f97cb95651b7dd2a09875663cf464e33a9ef68a4ca37f5b2569ed7`.
-
-Publication: the owner publishes this tarball (`npm publish …/aimarket-warden-0.35.0.tgz --access public`, after
-checking its sha256), not `publish_warden.sh`, which rebuilds. The candidate receipt expires 2026-11-22 20:53:54Z;
-a later switch needs a new run. Publication: the owner publishes this tarball
-(`npm publish …/aimarket-warden-0.35.0.tgz --access public`, after checking its sha256), not `publish_warden.sh`,
-which rebuilds.
+- The cosigned switch of the other session ran 2026-11-21 04:51:03Z (`SWITCH-OK`, healthy after 15 minutes,
+  0 tracebacks).
+- **First run of `histor-wd035-switch`, 05:11–05:12Z: a healthy switch rolled back by a wrong check of mine.** The
+  image came up healthy on `ef3e5cb4…` with vendored WARDEN 0.35.0, but the waiter checked the bare
+  `/api/v1/fingerprints`, which answers 400 by design when no server is named (it does so on every image). It rolled
+  back to `cosigned-20261120` at 05:12:30Z (healthy). Production ran the cosigned image until the second run.
+- **Second run (`histor-wd035-switch2`, route check names a server: `?package=npm:@aimarket/warden`):** 10:11:43Z
+  `histor-histor-1` healthy on `sha256:ef3e5cb4…`; `/`, `/health`, `/api/v1/stats`, `/api/v1/fingerprints?package=…`
+  and `/api/v1/log/checkpoint/cosigned` answer 200; vendored WARDEN 0.35.0 (`/root/wd035-prod-20261120/after.log`,
+  `quality/after.sh`). Only the image line of `docker-compose.warden-image.yml` changed.
+- 10:11:52Z `histor-wd035-live` on admin-vps: `skopos-warden-quality live sha256:ef3e5cb4…` accepted (`LIVE-OK`).
+  Public receipt (`quality/latest-signed-after.json`): phase `live`, status `passed`, build `9106a6d8…`, run
+  `20261120T205354`. This tarball's own `check-quality-gate.mjs` passes (`quality/check-quality-after.log`).
+- Rollback: HISTOR host `/root/wd035-prod-20261120/switch.sh rollback`, then admin-vps
+  `skopos-warden-quality rebind sha256:c82f2e7fc9f97cb95651b7dd2a09875663cf464e33a9ef68a4ca37f5b2569ed7`.
+- `histor/scanner` in main now vendors this tarball (`vendor/warden-build.json`); the installed `package.json` has the
+  same sha256 as production's (`35740a26…`); `npm test` there passes (5).
 
 ## npm
 
@@ -92,3 +83,20 @@ Published by the owner 2026-11-20 21:12:38Z (registry `time`). The registry's ta
   (`55398608…`). The public `warden-scan` blocks "Ignore previous instructions…", allows the clean tool, engine
   `@aimarket/warden@0.35.0`, ruleset 23. It runs the gate chain, not `scan`, so `TOOL_HINT_CONTRADICTS_DESCRIPTION`
   does not appear there. Rollback: the stopped `okx-a2mcp-prev` (`prod-20261120-bed23ef94`, WARDEN 0.33.0).
+
+## GitHub mirror / tag / Marketplace / MCP registry
+
+- Mirror, tag and release `v0.35.0` were already on GitHub when this path resumed
+  (https://github.com/alexar76/warden/releases/tag/v0.35.0, published 2026-11-20 21:15:27Z). Package and
+  `server.json` on the satellite tip name 0.35.0.
+- GitHub Marketplace listing
+  https://github.com/marketplace/actions/warden-by-aimarket-mcp-tool-firewall — `latestRelease` = `v0.35.0`
+  (checked 2026-11-21). No Firefox/OTP step required this time.
+- Official MCP Registry: release-triggered "Publish to MCP Registry" for `v0.35.0` was cancelled while waiting on
+  the `release` environment (run
+  https://github.com/alexar76/warden/actions/runs/44818701110) — same as §132; registry entries come from the CLI.
+  Published 2026-11-21 08:23:23Z with `mcp-publisher login github -token $GH_PAT` then
+  `./scripts/publish_mcp_registry.sh --publish --only warden`. Live:
+  `io.github.alexar76/warden` **0.35.0** `[active]` `isLatest=true`
+  (`/v0.1/servers/io.github.alexar76%2Fwarden/versions/latest`).
+- Profile monorepo tip already names `@aimarket/warden@0.35.0` (publish-all exit 0 earlier this session).

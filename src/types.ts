@@ -57,6 +57,13 @@ export interface WardenFinding {
    * for anyone who tightened `blockAtSeverity`.
    */
   advisory?: boolean;
+  /**
+   * What a text-reading finding matched, as data rather than only inside `message`. Set by
+   * TOOL_HINT_CONTRADICTS_DESCRIPTION: `claim` is the hint the server sets ("readOnlyHint=true",
+   * "destructiveHint=false"), `matchedPhrase` the description's words that contradict it (lower case), and
+   * `quotedSentence` the whole sentence they are in (control characters escaped; the message quotes 160 characters).
+   */
+  evidence?: { claim?: string; matchedPhrase: string; quotedSentence: string };
 }
 
 export interface WardenVerdict {

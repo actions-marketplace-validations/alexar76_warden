@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseScanArgs, runScan, exitCode, redactLaunch, redactUrl, historEndpoint, historPackage, behaviourFindings, packageFindings, looksSecret, UsageRequested, type ScanOptions } from '../src/scan.js';
-import { toSarif, toMarkdown, toTable, mdCode, mdBlock } from '../src/scan-report.js';
+import { toSarif, toMarkdown, toTable, toJson, mdCode, mdBlock } from '../src/scan-report.js';
 import { FilePinStore } from '../src/pin-store.js';
 import type { ConfiguredServer } from '../src/scan-config.js';
 import { mtlToolSetDigest } from '../src/mtl.js';
@@ -168,6 +168,9 @@ describe('scan: lock file', () => {
     expect(md).toContain('**A behaviour hint its own description contradicts**');
     expect(md).toContain('`notes.update_issue_labels`');
     expect(JSON.stringify(toSarif(r, dir))).not.toContain('TOOL_HINT_CONTRADICTS_DESCRIPTION');
+    const json = JSON.parse(toJson(r)) as { servers: { key: string; findings: { code: string; evidence?: unknown }[] }[] };
+    expect(json.servers.find(x => x.key === 'notes')!.findings.find(f => f.code === 'TOOL_HINT_CONTRADICTS_DESCRIPTION')!.evidence).toEqual({
+      claim: 'destructiveHint=false', matchedPhrase: 'replaces the current', quotedSentence: 'This replaces the current labels with the provided list.' });
   });
 
   it('catches a changed launch line for a reviewed server', async () => {

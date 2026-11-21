@@ -1,0 +1,22 @@
+added 1 package in 16s
+version 0.36.0
+hintContradictions [{"tool":"update_issue_labels","claim":"destructiveHint=false","says":"replaces the current …","quote":"This replaces the current labels with the provided list.","phrase":"replaces the current","sentence":"This replaces the current labels with the provided list."}]
+finding evidence {"claim":"destructiveHint=false","matchedPhrase":"replaces the current","quotedSentence":"This replaces the current labels with the provided list."}
+$ npx warden-mcp scan --project --json | jq -r (evidence rows)   (one stdio server: labels-server.mjs, two tools)
+replaces the current	update_issue_labels	This replaces the current labels with the provided list.
+deletes	drop_table	Deletes the table and its data.
+exit 0
+$ npx warden-mcp scan --project --no-color
+WARDEN scan 0.36.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-17 · block at high
+  read .mcp.json (claude-code, 1 server)
+
+  ✓ allow   labels  claude-code    2 tools · score 0.90
+
+  ⚠ hint vs description  labels.update_issue_labels: The server marks this tool destructiveHint=false, but its own description says it replaces the current …: "This replaces the current labels with the provided list." A host that asks only before destructive tools would not ask before this call. Hints are the server's word; a fingerprint or lock keeps a wrong hint as stable as a right one. Label the tool yourself (flow policy labels).
+
+  ⚠ hint vs description  labels.drop_table: The server marks this tool readOnlyHint=true, but its own description says it deletes: "Deletes the table and its data." A host that skips approval for read-only tools would not ask before this call. Hints are the server's word; a fingerprint or lock keeps a wrong hint as stable as a right one. Label the tool yourself (flow policy labels).
+
+  ⚠ toxic flow  claude-code has a possible private-data / untrusted-input / outbound path: capabilities of labels.update_issue_labels, labels.drop_table are unknown. Review and bind operator capabilities to the launch identity and definitions; unrecognized names are not evidence of safety.
+
+1 server: 1 allowed, 0 blocked, 0 not checked, 0 skipped.
+exit 0

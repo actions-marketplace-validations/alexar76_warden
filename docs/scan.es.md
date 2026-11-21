@@ -7,7 +7,7 @@ Las llamadas de descubrimiento pueden generar cargos; consulte los [límites de 
 `warden-mcp scan` lee la configuración MCP que ya tienes, se conecta a cada servidor que inicia y revisa las definiciones de herramientas antes de que un modelo las vea. Es la misma cadena de compuertas que [`wrap`](../README-es.md) y la [biblioteca](integration.es.md), ejecutada una vez sobre tus configuraciones en lugar de delante de un solo servidor.
 
 ```bash
-npx -y @aimarket/warden@0.35.0 scan
+npx -y @aimarket/warden@0.36.0 scan
 ```
 
 ```text
@@ -140,6 +140,12 @@ Un lock guarda una indicación de comportamiento equivocada tan estable como una
 ```
 
 Es consultivo, como un flujo tóxico: aparece en la salida, en el informe Markdown y en `--json` (no en SARIF), nunca bloquea ni cambia el código de salida. Un cliente que no pide aprobación para herramientas de solo lectura o no destructivas no preguntaría antes de esa llamada, así que etiquete la herramienta usted mismo (`labels` de la política de flujos). La lectura es en inglés, frase por frase, y solo donde la herramienta es el sujeto del verbo ("Deletes the file", no "List deleted files"); las reglas se calibraron con las definiciones de herramientas de HISTOR (ver el CHANGELOG). Una indicación que solo el código contradice no se ve.
+
+En `--json` cada uno de estos hallazgos lleva además `evidence`: `claim` (la indicación que pone el servidor, por ejemplo `destructiveHint=false`), `matchedPhrase` (las palabras de la descripción que la contradicen, en minúsculas) y `quotedSentence` (la frase completa; el mensaje cita sus primeros 160 caracteres). Así puede agrupar los hallazgos por la palabra que los activó, o comparar dos ejecuciones, sin analizar el mensaje:
+
+```bash
+warden-mcp scan --json | jq -r '.servers[].findings[] | select(.code == "TOOL_HINT_CONTRADICTS_DESCRIPTION") | [.evidence.matchedPhrase, .tool, .evidence.quotedSentence] | @tsv'
+```
 
 ## HISTOR: ¿este servidor te sirve lo mismo que a todos?
 

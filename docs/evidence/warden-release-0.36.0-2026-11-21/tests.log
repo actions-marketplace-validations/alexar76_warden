@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 <scratch>/w036/warden
+
+
+ Test Files  85 passed (85)
+      Tests  2137 passed (2137)
+   Start at  19:41:20
+   Duration  106.22s (tests 95%, import 3%, transform 1%, setup 1%)
+
+    Isolate  85 workers spawned · ~246ms startup each (spawn + environment, per file)
+             at least ~6.72s faster with isolate: false — reuses workers across files instead of one per file
+

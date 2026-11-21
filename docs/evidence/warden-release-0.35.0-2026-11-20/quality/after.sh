@@ -23,7 +23,9 @@ while :; do
     if [ "$open" = 0 ]; then
       if bash "$D/switch.sh" >> "$D/after.log" 2>&1; then
         sleep 20
-        ok=1; for p in / /health /api/v1/stats /api/v1/fingerprints /api/v1/log/checkpoint/cosigned; do
+        # /api/v1/fingerprints answers 400 without naming a server (by design): the first run, 2026-11-21 05:12Z, checked
+        # the bare path and rolled a healthy switch back. It names a server now.
+        ok=1; for p in / /health /api/v1/stats '/api/v1/fingerprints?package=npm:@aimarket/warden' /api/v1/log/checkpoint/cosigned; do
           c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --resolve histor.modelmarket.dev:443:127.0.0.1 "https://histor.modelmarket.dev$p"); log "route $p $c"; [ "$c" = 200 ] || ok=0; done
         v=$(docker exec histor-histor-1 node -e 'console.log(require("/app/scanner/node_modules/@aimarket/warden/package.json").version)' 2>&1); log "vendored warden $v"
         [ "$v" = 0.35.0 ] || ok=0

@@ -29,8 +29,12 @@ export interface HintContradiction {
   claim: HintClaim;
   /** What the description says the tool does, as matched: "deletes", "replaces the current …", "cannot be undone". */
   says: string;
-  /** The sentence it was read in, shortened. */
+  /** The sentence it was read in, shortened to 160 characters for the message. */
   quote: string;
+  /** The words that matched, in lower case: "deletes", "replaces the current", "cannot be undone". */
+  phrase: string;
+  /** The whole sentence they were read in (control characters escaped; cut only past 1,000 characters). */
+  sentence: string;
 }
 
 // Verbs that change something. Imperative forms ("Delete a file") count only in a description's first sentence: later
@@ -140,6 +144,10 @@ function quote(sentence: string): string {
   return displaySafe(sentence.length > 160 ? `${sentence.slice(0, 157)}…` : sentence, 170);
 }
 
+function found(tool: string, claim: HintClaim, phrase: string, says: string, s: string): HintContradiction {
+  return { tool, claim, says, quote: quote(s), phrase, sentence: displaySafe(s, 1000) };
+}
+
 /** Every contradiction between a tool's hints and its own description. Empty when the tool makes no such claim. */
 export function hintContradictions(tool: Pick<ToolDef, "name" | "description" | "annotations">): HintContradiction[] {
   const a = tool.annotations;
@@ -158,12 +166,12 @@ export function hintContradictions(tool: Pick<ToolDef, "name" | "description" | 
   for (const [i, s] of sentences(text).entries()) {
     if (NOT_DONE.test(s)) continue;
     const verb = leadingVerb(s, readOnly ? WRITE_FORMS : DESTROY_FORMS, i === 0, readOnly);
-    if (verb) return [{ tool: tool.name, claim, says: verb, quote: quote(s) }];
+    if (verb) return [found(tool.name, claim, verb, verb, s)];
     if (readOnly) continue;
     const permanent = PERMANENT.exec(s);
-    if (permanent && !aboutOther(s, permanent.index)) return [{ tool: tool.name, claim, says: permanent[0].toLowerCase(), quote: quote(s) }];
+    if (permanent && !aboutOther(s, permanent.index)) return [found(tool.name, claim, permanent[0].toLowerCase(), permanent[0].toLowerCase(), s)];
     const all = REPLACES_ALL.exec(s);
-    if (all && !aboutOther(s, all.index)) return [{ tool: tool.name, claim, says: `${all[0].toLowerCase()} …`, quote: quote(s) }];
+    if (all && !aboutOther(s, all.index)) return [found(tool.name, claim, all[0].toLowerCase(), `${all[0].toLowerCase()} …`, s)];
   }
   return [];
 }
@@ -173,6 +181,8 @@ export function hintContradictionFindings(tools: readonly ToolDef[]): WardenFind
   return tools.flatMap(hintContradictions).map(c => ({
     gate: "annotations", severity: c.claim === "readOnlyHint=true" ? "medium" : "low", code: "TOOL_HINT_CONTRADICTS_DESCRIPTION",
     advisory: true, tool: c.tool,
+    // The same facts as fields, so a report can be grouped by trigger word or diffed without parsing the message.
+    evidence: { claim: c.claim, matchedPhrase: c.phrase, quotedSentence: c.sentence },
     // The quote is a sentence and usually ends with its own full stop: no second one after the closing quote.
     message: `The server marks this tool ${c.claim}, but its own description says it ${c.says}: "${c.quote}"${/[.!?…]$/.test(c.quote) ? "" : "."} ` +
       (c.claim === "readOnlyHint=true"
