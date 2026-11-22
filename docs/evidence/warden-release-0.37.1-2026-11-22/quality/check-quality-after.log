@@ -1,0 +1,4 @@
+> @aimarket/warden@0.37.1 check:quality
+> node scripts/check-quality-gate.mjs
+
+MOMUS release gate passed: 20261122T145708, 1672b95c79bf83f9364fcf1c1e3dcc6346387d631dcf2a1e2509473b93ab3e20

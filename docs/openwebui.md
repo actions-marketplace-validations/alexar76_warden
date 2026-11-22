@@ -149,7 +149,7 @@ You need an OpenWebUI admin account and Node.js 22 on the machine that runs Open
 `--local` below).
 
 ```bash
-npx -y @aimarket/warden@0.37.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.37.1 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 It asks for the password (or reads `OPENWEBUI_PASSWORD`); an admin API key or JWT in `OPENWEBUI_TOKEN` works instead.
@@ -209,12 +209,12 @@ brought in a page that asks to send the chat out, one where the person asks for 
 
 Afterwards:
 
-- `npx -y @aimarket/warden@0.37.0 openwebui check` runs the same check at any time (exit 0 when nothing is open);
-- labels: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.37.0 warden-mcp gateway labels --config
+- `npx -y @aimarket/warden@0.37.1 openwebui check` runs the same check at any time (exit 0 when nothing is open);
+- labels: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.37.1 warden-mcp gateway labels --config
   /etc/warden/gateway.json` lists the tools chats used without a label; add them to
   `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`), read on every call;
 - after the pilot, `"mode": "deny"` in the same file;
-- `npx -y @aimarket/warden@0.37.0 openwebui undo` puts the original connections back, switches the Filter off and stops the
+- `npx -y @aimarket/warden@0.37.1 openwebui undo` puts the original connections back, switches the Filter off and stops the
   gateway; the files stay.
 
 What it leaves to you:
@@ -259,7 +259,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.37.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.37.1", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}

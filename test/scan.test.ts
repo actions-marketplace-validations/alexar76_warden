@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseScanArgs, runScan, exitCode, redactLaunch, redactUrl, historEndpoint, historPackage, behaviourFindings, packageFindings, looksSecret, UsageRequested, type ScanOptions } from '../src/scan.js';
-import { toSarif, toMarkdown, toTable, toJson, mdCode, mdBlock } from '../src/scan-report.js';
+import { toSarif, toMarkdown, toTable, toJson, mdCode, mdBlock, historHint } from '../src/scan-report.js';
 import { FilePinStore } from '../src/pin-store.js';
 import type { ConfiguredServer } from '../src/scan-config.js';
 import { mtlToolSetDigest } from '../src/mtl.js';
@@ -249,6 +249,33 @@ describe('scan: HISTOR, privacy first', () => {
     expect(historUserAgent('1.2.3', { GITLAB_CI: 'true' })).toBe('warden-scan/1.2.3 (ci; gitlab)');
     expect(historUserAgent('1.2.3', { CI: '1' })).toBe('warden-scan/1.2.3 (ci)');
     expect(historUserAgent('1.2.3', { CI: 'false' })).toBe('warden-scan/1.2.3');
+  });
+
+  it('without --histor counts the servers the log could answer for, says how to ask, and sends nothing', async () => {
+    const dir = tmp(), cfg = join(dir, 'c.json');
+    writeFileSync(cfg, JSON.stringify({ mcpServers: {
+      mem: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory@2026.8.31'] },
+      fetch: { command: 'uvx', args: ['mcp-server-fetch'] },
+      corp: { command: 'npx', args: ['-y', '--registry', 'https://npm.corp.example.com', '@corp/tools'] },
+      local: { command: 'node', args: ['/home/me/server.js'] },
+    } }));
+    let asked = 0;
+    const historFetch = (async () => { asked += 1; return new Response('{}', { status: 200 }); }) as typeof fetch;
+    const deps = { fetch: async () => ({ tools }), historFetch };
+    const quiet = await runScan(await parseScanArgs([cfg, '--state-dir', join(dir, 's')], {}), deps);
+    expect(asked).toBe(0);
+    expect(quiet.historAvailable).toBe(2); // the private registry and the local file are not counted
+    expect(quiet.servers.every(s => s.histor === undefined)).toBe(true);
+    for (const text of [toTable(quiet, dir, false), toMarkdown(quiet, dir)]) {
+      expect(text).toMatch(/2 of these servers are public .*Add --histor.*Nothing was sent to it in this run\./);
+    }
+    expect(JSON.parse(toJson(quiet)).historAvailable).toBe(2);
+    expect(historHint(1)).toMatch(/^1 of these servers is public /);
+
+    const asking = await runScan(await parseScanArgs([cfg, '--histor', '--state-dir', join(dir, 's2')], {}), deps);
+    expect(asked).toBe(2);
+    expect(asking.historAvailable).toBeUndefined();
+    expect(toTable(asking, dir, false)).not.toMatch(/Add --histor/);
   });
 
   it('names a stdio server by its public npm/PyPI package and sends nothing else', async () => {

@@ -114,6 +114,7 @@ export function toTable(report: ScanReport, cwd: string, color: boolean): string
   }
   if (m.blocked) lines.push(`Details: warden-mcp scan --json, or --markdown FILE. To review a changed server: warden-mcp scan --lock warden.lock.json --update-lock.`);
   if (report.historWatch) lines.push(`Follow changes to these servers in any feed reader: ${displaySafe(report.historWatch, 2000)}`);
+  if (report.historAvailable) lines.push(historHint(report.historAvailable));
   return lines.join('\n');
 }
 
@@ -293,8 +294,18 @@ export function toMarkdown(report: ScanReport, cwd: string): string {
     out.push('');
     out.push(`[Follow changes to these servers](${report.historWatch}) (HISTOR feed)`);
   }
+  if (report.historAvailable) {
+    out.push('');
+    out.push(historHint(report.historAvailable));
+  }
   out.push('');
   // The report lands in PR comments and step summaries of other repositories; the link is how a reader finds the source.
   out.push(`<sub>[@aimarket/warden](https://github.com/alexar76/warden) ${displaySafe(report.version, 20)} ·${mdCode(report.ruleset.digest, 60)} · tool descriptions are shown as code; they are untrusted text from the servers.</sub>`);
   return out.join('\n') + '\n';
+}
+
+/** Shown when the scan ran without --histor: what the log could answer, and that nothing was sent. */
+export function historHint(n: number): string {
+  return `${n} of these servers ${n === 1 ? 'is' : 'are'} public (npm, PyPI or a public address). `
+    + 'Add --histor to ask the HISTOR log whether you were served the tools it records for everyone. Nothing was sent to it in this run.';
 }

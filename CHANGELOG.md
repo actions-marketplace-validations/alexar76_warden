@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.37.1 — 2026-11-22 (scan says what `--histor` could check)
+
+A patch release with one addition to `scan`'s output. No default changes: the HISTOR log is asked only with
+`--histor`. Scan verdicts, rulesets (23), the malware list, masking and the flow guard rules are 0.37.0's.
+
+- **`scan` says what `--histor` could check.** A scan run without `--histor` now ends with one line: how many of the
+  servers are public (an npm or PyPI package, or a public address) and could be compared with the HISTOR log, and
+  that nothing was sent. The count is made locally; `--json` carries it as `historAvailable`. The default is
+  unchanged: the log is asked only with `--histor`.
+
 ## 0.37.0 — 2026-11-22 (masking: keys and personal data stay out of the model)
 
 A minor release with one changed default: `wrap` and the gateway now mask credentials in what a tool returns (below).

@@ -129,7 +129,7 @@ Code 中一样生效；其他内置工具为 `mcp__owui__<tool>`（标签见下�
 需要一个 OpenWebUI 管理员账号，以及运行 OpenWebUI 的 Docker 所在机器上的 Node.js 22（不用 Docker 时见下文 `--local`）。
 
 ```bash
-npx -y @aimarket/warden@0.37.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.37.1 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 命令会询问密码（或读取 `OPENWEBUI_PASSWORD`）；也可以把管理员 API 密钥或 JWT 放在 `OPENWEBUI_TOKEN` 中。管理员令牌只在安装期间
@@ -188,12 +188,12 @@ OpenWebUI is behind WARDEN.
 
 之后：
 
-- `npx -y @aimarket/warden@0.37.0 openwebui check` 随时重做同样的检查（没有遗留问题时退出码为 0）；
-- 标签：`docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.37.0 warden-mcp gateway
+- `npx -y @aimarket/warden@0.37.1 openwebui check` 随时重做同样的检查（没有遗留问题时退出码为 0）；
+- 标签：`docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.37.1 warden-mcp gateway
   labels --config /etc/warden/gateway.json` 列出对话用过但没有标签的工具；把它们加到
   `warden-openwebui/state/flow-policy.json`（`outbound`、`destructive`、`private`、`untrusted`），每次调用都会读取该文件；
 - 试点结束后，在同一文件中设为 `"mode": "deny"`；
-- `npx -y @aimarket/warden@0.37.0 openwebui undo` 恢复原来的连接、关闭 Filter 并停止网关；文件保留。
+- `npx -y @aimarket/warden@0.37.1 openwebui undo` 恢复原来的连接、关闭 Filter 并停止网关；文件保留。
 
 需要你自己处理的：
 
@@ -234,7 +234,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.37.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.37.1", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}

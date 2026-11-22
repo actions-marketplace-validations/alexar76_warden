@@ -1,0 +1,31 @@
+
+ RUN  v5.0.5 /private/tmp/claude-501/-Users-alex-Desktop-ai-tests-aicompany-aicom--claude-worktrees-ecosystem-onboarding-analysis-158bfd/73b997f7-26ea-4589-a669-0abe7679409f/scratchpad/wd0371b/export/warden
+
+ ❯ test/wrap.test.ts (124 tests | 1 failed) 145996ms
+   ❯ wrap proxy (124)
+     × revoke persists denial, without silently starting a fresh TOFU 5029ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > revoke persists denial, without silently starting a fresh TOFU
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/wrap.test.ts:194:3
+    192|     expect(pinRevision(await store.getPin('fixture'))).toBe(before);
+    193|   });
+    194|   it('revoke persists denial, without silently starting a fresh TOFU',…
+       |   ^
+    195|     const h = harness(); await ready(h); await h.stop(); ttyPins(h.dir…
+    196|     const next = harness({ dir: h.dir }); expect((await next.init()).e…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 88 passed (89)
+      Tests  1 failed | 2174 passed (2175)
+   Start at  16:28:57
+   Duration  156.14s (tests 93%, import 4%, transform 2%, setup 1%)
+
+    Isolate  89 workers spawned · ~375ms startup each (spawn + environment, per file)
+             at least ~10.76s faster with isolate: false — reuses workers across files instead of one per file
+

@@ -7,7 +7,7 @@ Las llamadas de descubrimiento pueden generar cargos; consulte los [límites de 
 `warden-mcp scan` lee la configuración MCP que ya tienes, se conecta a cada servidor que inicia y revisa las definiciones de herramientas antes de que un modelo las vea. Es la misma cadena de compuertas que [`wrap`](../README-es.md) y la [biblioteca](integration.es.md), ejecutada una vez sobre tus configuraciones en lugar de delante de un solo servidor.
 
 ```bash
-npx -y @aimarket/warden@0.37.0 scan
+npx -y @aimarket/warden@0.37.1 scan
 ```
 
 ```text
@@ -22,7 +22,7 @@ WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-
 Details: warden-mcp scan --json, or --markdown FILE. To review a changed server: warden-mcp scan --lock warden.lock.json --update-lock.
 ```
 
-Sin cuenta, sin clave de API, sin modelo. El único tráfico de red va a los servidores de tu configuración y, si pasas `--histor`, al registro HISTOR.
+Sin cuenta, sin clave de API, sin modelo. El único tráfico de red va a los servidores de tu configuración y, si pasas `--histor`, al registro HISTOR. Sin esa opción el escaneo termina con una línea: cuántos de tus servidores son públicos (un paquete de npm o PyPI, o una dirección pública) y por tanto podrían compararse con el registro. Ese recuento se hace en tu máquina y no se envía nada.
 
 ## Dónde busca
 

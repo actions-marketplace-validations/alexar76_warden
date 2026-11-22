@@ -115,6 +115,11 @@ export interface ScanReport {
   flows: ToxicFlow[];
   /** With --histor: a feed of changes to the servers HISTOR knows among these, for any feed reader. */
   historWatch?: string;
+  /**
+   * Without --histor: how many of these servers the HISTOR log could be asked about (a public address,
+   * or a package from the public npm or PyPI registry). A count only: nothing was sent.
+   */
+  historAvailable?: number;
   summary: { servers: number; scanned: number; allowed: number; blocked: number; errors: number; skipped: number; launchOnly: number };
 }
 
@@ -418,6 +423,18 @@ export function behaviourFindings(behaviour: Record<string, unknown> | undefined
   return out;
 }
 
+/** The servers `--histor` would ask the log about, counted on this machine without asking. */
+function historAvailable(opts: ScanOptions, all: readonly ConfiguredServer[]): { historAvailable?: number } {
+  if (opts.histor) return {};
+  const n = all.filter((server) => {
+    const target: { endpoint?: string; package?: string } = server.ref.url
+      ? historEndpoint(server.ref.url)
+      : historPackage(server.ref.command ?? '', server.ref.args ?? []);
+    return !!(target.endpoint || target.package);
+  }).length;
+  return n ? { historAvailable: n } : {};
+}
+
 function historWatchUrl(opts: ScanOptions, servers: ScanServerResult[]): { historWatch?: string } {
   if (!opts.histor) return {};
   const ids = [...new Set(servers.map(s => s.histor?.targetId).filter((x): x is string => !!x))].sort().slice(0, 100);
@@ -688,6 +705,7 @@ export async function runScan(opts: ScanOptions, deps: ScanDeps = {}): Promise<S
     servers, lock: lockSummary,
     flows: toxicFlows(servers.filter(s => s.status === 'scanned' && s.allow === true).map(s => ({ client: s.client, key: s.key, tools: s.tools?.filter(t => s.allowedTools.includes(t.name)), capabilities: s.tools ? boundCapabilities(serverRef(s, all), s.tools, opts.policy.capabilityBindings) : undefined }))),
     ...historWatchUrl(opts, servers),
+    ...historAvailable(opts, all),
     summary,
   };
 }

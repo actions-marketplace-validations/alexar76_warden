@@ -7,7 +7,7 @@ Discovery calls can incur costs; see [measurement limits and version evidence](s
 `warden-mcp scan` reads the MCP configuration you already have, connects to every server it starts, and vets the tool definitions before a model sees them. It is the same gate chain as [`wrap`](../README.md#protect-claude-desktop-or-cursor-with-one-wrapper) and the [library](integration.md), run once over your configs instead of in front of one server.
 
 ```bash
-npx -y @aimarket/warden@0.37.0 scan
+npx -y @aimarket/warden@0.37.1 scan
 ```
 
 ```text
@@ -22,7 +22,7 @@ WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-
 Details: warden-mcp scan --json, or --markdown FILE. To review a changed server: warden-mcp scan --lock warden.lock.json --update-lock.
 ```
 
-No account, no API key, no model. The only network traffic is to the servers in your config, and to the HISTOR log if you pass `--histor`.
+No account, no API key, no model. The only network traffic is to the servers in your config, and to the HISTOR log if you pass `--histor`. Without the flag the scan ends with one line saying how many of your servers are public (an npm or PyPI package, or a public address) and so could be compared with the log; that count is made on your machine and nothing is sent.
 
 ## Where it looks
 
