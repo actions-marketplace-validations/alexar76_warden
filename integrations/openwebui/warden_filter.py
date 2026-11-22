@@ -1,9 +1,9 @@
 """
 title: WARDEN flow guard
 author: AIMarket (alexar76)
-version: 0.1.0
+version: 0.2.0
 license: MIT
-description: Tells the WARDEN gateway what happens in a chat (the user's own words, web search, documents, files, approval codes) so it can refuse a send or a destructive call made after the model read someone else's text.
+description: Tells the WARDEN gateway what happens in a chat (the user's own words, web search, documents, files, approval codes) so it can refuse a send or a destructive call made after the model read someone else's text; masks credentials (and personal data, when the gateway has it on) in what the model reads and shows the person the real values in the answer.
 requirements:
 """
 # Install: Admin Panel -> Functions -> Import (this one file) -> enable it and make it Global.
@@ -13,7 +13,13 @@ requirements:
 # - inlet: if the user's last message is "<phrase> <CODE>", approves that code (/v1/approve); records the message as the
 #   user's own words (/v1/prompt); records outside text this turn will read (/v1/source): web search, attached files,
 #   knowledge collections, fetched pages.
-# - outlet: records the sources the answer was built from (web pages it cites).
+# - inlet, masking (mask_messages, default on): the chat's text goes to the model with credentials replaced by placeholders
+#   (WARDEN_SECRET_…), and personal data too when the gateway's mask config turns it on (/v1/mask). The table that links
+#   a placeholder to its value stays in the gateway's memory.
+# - outlet: records the sources the answer was built from (web pages it cites); with reveal_answers (default on) the
+#   person sees the answer with personal data back in place of its placeholders (/v1/reveal); credentials stay masked.
+# - built-in tools: the model's placeholders become real values for the tool (/v1/pre returns tool_input), and the
+#   result reaches the model masked (/v1/post returns tool_response).
 # - guard_builtin_tools (default on): wraps OpenWebUI's built-in and integrated terminal tools in the chat middleware.
 #   Like @warden_guard for a Python tool, it calls /v1/pre before execution (a confirmation dialog for `ask`) and
 #   /v1/post before returning the result. If get_builtin_tools is unavailable, the inlet still reports web search.
@@ -94,6 +100,9 @@ def _wrap_tool(name: str, fn, extra_params: dict, policy_name: str):
                 # No dialog answer (no browser session): the refusal below carries the code for the person to type.
             if pre.get("decision") != "allow":
                 return pre.get("refusal") or "Refused by the WARDEN flow guard."
+            if isinstance(pre.get("tool_input"), dict):
+                # The model passed placeholders; the tool gets the real values the masking policy allows.
+                kwargs = {**kwargs, **{k: v for k, v in pre["tool_input"].items() if not k.startswith("__")}}
         except GatewayRefused as e:
             return f"Refused by WARDEN ({e}): {name} was not run."
         except GatewayUnavailable as e:
@@ -116,9 +125,12 @@ def _wrap_tool(name: str, fn, extra_params: dict, policy_name: str):
             raise result
         if out.get("withhold"):
             return f"Tool result withheld by WARDEN: it reads as instructions to the model ({', '.join(out.get('codes') or [])})."
+        if "tool_response" in out:
+            # Masked by the gateway: the model reads placeholders, never the credentials or personal data in the result.
+            result = out["tool_response"]
         if isinstance(result, str):
             notice, note = out.get("notice"), out.get("flowNote")
-            return "\n\n".join(x for x in (notice, result, f"[WARDEN] {note}" if note else None) if x)
+            return "\n\n".join(x for x in (notice, result, f"[WARDEN] {note}" if note else None, out.get("mask_note")) if x)
         return result
 
     guarded.__warden_guarded__ = True
@@ -251,6 +263,9 @@ class Filter:
         approve_phrases: str = Field(default="подтверждаю,approve", description="Words the user types before an approval code")
         guard_builtin_tools: bool = Field(default=True, description="Check OpenWebUI's built-in and integrated terminal tools with WARDEN before and after each chat tool call")
         native_tools_read_outside_text: bool = Field(default=False, description="Treat every chat whose model may call OpenWebUI's built-in web/knowledge tools as having read outside text (only needed when guard_builtin_tools is off)")
+        mask_messages: bool = Field(default=True, description="Send the chat's messages to the model with credentials (and personal data, when the gateway's mask config has it on) replaced by placeholders")
+        mask_fail_closed: bool = Field(default=False, description="If the gateway cannot mask a message, do not send it to the model (for organisations that must not send personal data to the model provider)")
+        reveal_answers: bool = Field(default=True, description="Show the person the answer with personal data back in place of its placeholders (credentials stay masked)")
         timeout_seconds: float = Field(default=5.0, description="Per request to the gateway")
         priority: int = Field(default=-100, description="Run before other filters")
 
@@ -365,7 +380,56 @@ class Filter:
             if isinstance(body.get("features"), dict):
                 body["features"]["web_search"] = False
             await self._warn(__event_emitter__, f"WARDEN недоступен ({failed}): веб-поиск и файлы для этого сообщения отключены")
+        if self.valves.mask_messages:
+            await self._mask_messages(who, body, __event_emitter__)
         return body
+
+    async def _mask_messages(self, who: dict, body: dict, emitter) -> None:
+        """Replace credentials (and personal data, when on) in the text of every message with the gateway's placeholders.
+
+        Only text: an image part's data URL is not text and is left alone. The person's own messages are masked with origin
+        `user` (their personal data may go to any tool, a key they typed only where the policy names); every other message
+        is history, whose known values keep the origins they had."""
+        slots = []  # (message, part index or None, role)
+        for m in body.get("messages") or []:
+            if not isinstance(m, dict):
+                continue
+            content = m.get("content")
+            if isinstance(content, str) and content:
+                slots.append((m, None, m.get("role")))
+            elif isinstance(content, list):
+                for i, part in enumerate(content):
+                    if isinstance(part, dict) and part.get("type") == "text" and isinstance(part.get("text"), str) and part["text"]:
+                        slots.append((m, i, m.get("role")))
+        if not slots:
+            return
+
+        def text_of(slot):
+            m, i, _ = slot
+            return m["content"] if i is None else m["content"][i]["text"]
+
+        def set_text(slot, value):
+            m, i, _ = slot
+            if i is None:
+                m["content"] = value
+            else:
+                m["content"][i] = {**m["content"][i], "text": value}
+
+        try:
+            for origin, group in (("user", [s for s in slots if s[2] == "user"]), ("chat", [s for s in slots if s[2] != "user"])):
+                if not group:
+                    continue
+                r = await self._call("/v1/mask", {**who, **({"origin": "user"} if origin == "user" else {"server": "openwebui-chat"}),
+                                                  "value": [text_of(s) for s in group], "history": True})
+                values = r.get("value")
+                if isinstance(values, list) and len(values) == len(group) and r.get("total"):
+                    for s, v in zip(group, values):
+                        if isinstance(v, str):
+                            set_text(s, v)
+        except (GatewayUnavailable, GatewayRefused) as e:
+            if self.valves.mask_fail_closed:
+                raise Exception(f"WARDEN could not mask this message ({e}); it was not sent to the model.") from None
+            await self._warn(emitter, f"WARDEN недоступен ({e}): сообщения ушли модели без маскирования")
 
     async def outlet(self, body: dict, __user__: Optional[dict] = None, __metadata__: Optional[dict] = None,
                      __event_emitter__=None) -> dict:
@@ -379,4 +443,16 @@ class Filter:
                 await self._call("/v1/source", {"chat_id": chat_id, "user_id": user_id, "kind": "url", "url": url[:4000]})
         except (GatewayUnavailable, GatewayRefused) as e:
             await self._warn(__event_emitter__, f"WARDEN недоступен ({e})")
+        if self.valves.reveal_answers:
+            # The answer the person reads: personal data back in place of its placeholders (the gateway keeps credentials
+            # masked). The next turn sends this text to the model again, and the inlet masks it again.
+            msgs = [m for m in (body.get("messages") or []) if isinstance(m, dict)]
+            last = msgs[-1] if msgs else None
+            if last and last.get("role") == "assistant" and isinstance(last.get("content"), str) and "warden_" in last["content"].lower():
+                try:
+                    r = await self._call("/v1/reveal", {"chat_id": chat_id, "user_id": user_id, "text": last["content"]})
+                    if isinstance(r.get("text"), str):
+                        last["content"] = r["text"]
+                except (GatewayUnavailable, GatewayRefused):
+                    pass  # the person sees placeholders; nothing is lost
         return body

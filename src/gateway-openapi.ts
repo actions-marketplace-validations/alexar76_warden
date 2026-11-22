@@ -15,6 +15,7 @@ import type { GatewayConfig, GatewayServer } from './gateway-config.js';
 import { Decider, GatewayError, type Who } from './gateway-decide.js';
 import { createHash } from 'node:crypto';
 import { canonicalizeRfc8785 } from './jcs.js';
+import { MaskRefusal } from './mask.js';
 
 const METHODS = ['get', 'put', 'post', 'delete', 'patch', 'head', 'options', 'trace'];
 const MAX_OPERATIONS = 500;
@@ -206,19 +207,31 @@ export class OpenApiProxy {
     try { pre = this.decider.pre(who, this.server.name, op.id, args, bind); }
     catch (e) { const g = e as GatewayError; return this.json(res, g.status ?? 400, { detail: g.message }); }
     if (pre.decision !== 'allow') return this.json(res, 403, { detail: this.decider.refusal(pre, op.id) });
-    const upstream = await this.fetchUp(sub + (query ? `?${query}` : ''), { method, headers: { accept: 'application/json', ...(sent ? { 'content-type': 'application/json' } : {}) }, ...(sent ? { body: sent } : {}) });
+    // The approval and the guard saw what the model wrote; the server gets the real values the masking policy allows:
+    // in the path and query URL-encoded, in the body as JSON (written again in RFC 8785 form).
+    let upPath = sub, upQuery = query, upBody = sent;
+    try {
+      upPath = this.decider.restore(who, this.server.name, op.id, sub, encodeURIComponent);
+      upQuery = this.decider.restore(who, this.server.name, op.id, query, encodeURIComponent);
+      if (sent) { const b = this.decider.restore(who, this.server.name, op.id, JSON.parse(sent) as unknown); upBody = canonicalizeRfc8785(b); }
+    } catch (e) { if (e instanceof MaskRefusal) return this.json(res, 403, { detail: e.message }); throw e; }
+    const upstream = await this.fetchUp(upPath + (upQuery ? `?${upQuery}` : ''), { method, headers: { accept: 'application/json', ...(upBody ? { 'content-type': 'application/json' } : {}) }, ...(upBody ? { body: upBody } : {}) });
     const text = await this.text(upstream);
     let result: unknown = text;
     try { result = JSON.parse(text); } catch { /* plain text */ }
     const post = await this.decider.post(who, this.server.name, op.id, args, result, !upstream.ok);
     if (post.withhold) return this.json(res, 502, { detail: `Tool result withheld by WARDEN: it reads as instructions to the model (${(post.codes ?? []).join(', ')}). The tool already ran.` });
-    // JSON results keep their shape; only text that addressed the model gets a note next to it.
-    const notice = [post.notice, post.instruction ? post.flowNote : undefined].filter(Boolean).join('\n');
-    if (!notice) {
+    // Recorded and screened as the server sent it; masked on its way to the model.
+    const masked = this.decider.mask(who, this.server.name, op.id, result);
+    // JSON results keep their shape; only text that addressed the model, or was masked, gets a note next to it.
+    const notice = [post.notice, post.instruction ? post.flowNote : undefined, masked.note].filter(Boolean).join('\n');
+    if (!notice && !masked.total) {
       res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
       res.end(text); return;
     }
-    const wrapped = result && typeof result === 'object' && !Array.isArray(result) ? { warden_notice: notice, ...result as object } : { warden_notice: notice, result };
+    const value = masked.value;
+    if (!notice) return this.json(res, upstream.status, value);
+    const wrapped = value && typeof value === 'object' && !Array.isArray(value) ? { warden_notice: notice, ...value as object } : { warden_notice: notice, result: value };
     return this.json(res, upstream.status, wrapped);
   }
 }

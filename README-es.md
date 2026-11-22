@@ -4,7 +4,7 @@
 **Revisa todos los servidores MCP de tu máquina.** Sin cuenta, sin clave de API, sin modelo. El único tráfico de red va a los servidores de tu configuración.
 
 ```bash
-npx -y @aimarket/warden@0.36.0 scan
+npx -y @aimarket/warden@0.37.0 scan
 ```
 
 ```text
@@ -21,6 +21,18 @@ Details: warden-mcp scan --json, or --markdown FILE. To review a changed server:
 
 Frente a otros cuatro escáneres de código abierto sobre los mismos servidores, cada uno en un contenedor gVisor sin red: en la mitad reservada de MCPTox (un benchmark de AAAI 2026; las reglas de WARDEN se escribieron con la otra mitad) WARDEN bloqueó 171 de 218 herramientas envenenadas con las reglas de esa comparación (v12) y bloquea 210 desde el ruleset v16, los demás entre 8 y 41. En 986 servidores públicos WARDEN bloquea 3 y en 14 933 paquetes de npm y PyPI, 369; mcp-shield bloquea 343 y 5354. [Método y todas las cifras](docs/scanner-comparison.es.md) · [guía de scan](docs/scan.es.md).
 <!-- /warden-try -->
+
+<!-- warden-mask -->
+**Las claves y los datos personales no llegan al modelo** (desde la 0.37.0). WARDEN sustituye las
+credenciales de lo que devuelve una herramienta por marcadores como `WARDEN_SECRET_7Q2M9XD4RK` antes de que el modelo
+lo lea, y devuelve el valor real solo cuando el modelo usa el marcador en una llamada al lugar del que vino el valor; en
+cualquier otro sitio la llamada se rechaza. Las credenciales se enmascaran por defecto. Los datos personales (correo,
+teléfono, tarjeta, IBAN, IP, números nacionales, su propia lista de nombres) se activan con un interruptor para equipos
+sujetos al RGPD, la CCPA, la 152-FZ o PCI DSS: `--mask-personal gdpr` o `WARDEN_MASK_PERSONAL=gdpr`. Funciona en `wrap`
+(Claude Code, Cursor, Codex, Windsurf, Hermes, cualquier cliente MCP), en el gateway para OpenWebUI y como plugins para
+Hermes y OpenClaw. En un Hermes real, el almacén de sesiones solo guardó el marcador mientras el shell recibía el token
+real. [Cómo funciona, configuración y límites](docs/masking.es.md).
+<!-- /warden-mask -->
 
 <!-- star-line -->
 Código, incidencias y versiones: [github.com/alexar76/warden](https://github.com/alexar76/warden). Si WARDEN te ha sido útil, una estrella allí ayuda a que otras personas lo encuentren.
@@ -97,14 +109,14 @@ Operaciones limitadas explícitas: `node dist/mcp-server.js task`. [Adaptador, p
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@aimarket/warden@0.36.0", "wrap", "--id", "filesystem", "--",
+      "args": ["-y", "@aimarket/warden@0.37.0", "wrap", "--id", "filesystem", "--",
                "npx", "-y", "@modelcontextprotocol/server-filesystem", "/Users/me/docs"]
     }
   }
 }
 ```
 
-Especifique siempre `--id`: sin él, cambiar los argumentos crea otra identidad y otro primer contacto. Con un ID estable, cambiar el comando o una ruta produce `SERVER_IDENTITY_DRIFT`. El hijo hereda el entorno, excluido de la identidad. `npm install -g @aimarket/warden@0.36.0` y el comando `warden-mcp` evitan arranques fríos repetidos de `npx`.
+Especifique siempre `--id`: sin él, cambiar los argumentos crea otra identidad y otro primer contacto. Con un ID estable, cambiar el comando o una ruta produce `SERVER_IDENTITY_DRIFT`. El hijo hereda el entorno, excluido de la identidad. `npm install -g @aimarket/warden@0.37.0` y el comando `warden-mcp` evitan arranques fríos repetidos de `npx`.
 
 **Herramientas sensibles.** `sensitiveToolPatterns` en un archivo de política (`--policy policy.json` con `{"sensitiveToolPatterns": ["*delete*", "*transfer*"]}`, comodines `*` sin distinguir mayúsculas) hace que cada llamada a una herramienta que coincida espere a una persona: `wrap` pregunta mediante el propio formulario del cliente (elicitation de MCP) con la herramienta, el servidor y los argumentos, y solo una respuesta aceptada con la casilla marcada deja pasar esa llamada. La casilla empieza desmarcada, así que un cliente que acepta formularios con sus valores por defecto no aprueba nada. Un cliente sin formulario de elicitation recibe un rechazo y el servidor nunca recibe la llamada; `--ask refuse` rechaza sin preguntar. Si el cliente cancela la llamada mientras la persona decide, o las definiciones cambian entretanto, no se envía. Antes de 0.20.0 `wrap` aceptaba estos patrones sin aplicarlos. Con `--flow`, un envío por el que la guardia de flujo preguntaría se pregunta igual.
 
@@ -153,13 +165,13 @@ escritorio, Qwen y MiniMax por OpenRouter): todos los escenarios terminaron como
 
 Desde la 0.31.0, un solo comando pone WARDEN delante de un OpenWebUI que ya funciona: pasa las conexiones de
 los servidores de herramientas por la pasarela, instala el Filter y comprueba el resultado:
-`npx -y @aimarket/warden@0.36.0 openwebui setup --url http://localhost:3000 --email admin@example.com`
+`npx -y @aimarket/warden@0.37.0 openwebui setup --url http://localhost:3000 --email admin@example.com`
 ([detalles](docs/openwebui.es.md#instalación-con-un-comando)).
 
 ## Analiza todos los servidores que inician tus clientes
 
 ```bash
-npx -y @aimarket/warden@0.36.0 scan
+npx -y @aimarket/warden@0.37.0 scan
 ```
 
 Lee las configuraciones MCP de Claude Code, Claude Desktop, Cursor, VS Code y Windsurf, se conecta a cada servidor que inician y revisa las definiciones de herramientas antes de que un modelo las vea. Imprime una tabla, JSON, SARIF o Markdown, y sale con 1 cuando bloquea un servidor; `--no-launch` no inicia nada. En un repositorio, `warden.lock.json` convierte un cambio en las definiciones en un diff revisable, y la CI falla ante un servidor nuevo o modificado. También como GitHub Action (`uses: alexar76/warden@v0.31.0`), hooks de pre-commit y plugin de Claude Code (`/plugin marketplace add alexar76/warden`). `--histor` pregunta al registro público HISTOR si un servidor te sirve lo mismo que a todos; para un servidor remoto envía el endpoint y un digest; para un servidor stdio que arranca desde npm o PyPI, el nombre del paquete (`npm:<nombre>`, `pypi:<nombre>`, que HISTOR ejecuta en un sandbox gVisor) y un digest; nunca el texto de las herramientas. Un clasificador opcional (`--classifier-url`, `--classifier-model`) añade la lectura de un modelo que tú eliges, local o alojado, para lo que ninguna regla nombra. Consulta la [guía de scan](docs/scan.es.md). Cómo se compara con otros dos escáneres sobre los mismos servidores: [comparación de escáneres](docs/scanner-comparison.es.md).
@@ -169,18 +181,18 @@ Lee las configuraciones MCP de Claude Code, Claude Desktop, Cursor, VS Code y Wi
 `package-lock.json` registra qué paquetes instalas. `warden.lock.json` registra lo que tus servidores MCP le dicen a tu modelo: el nombre, la descripción y el esquema de cada herramienta, tal como los revisaste.
 
 ```bash
-npx -y @aimarket/warden@0.36.0 scan --project --lock warden.lock.json --update-lock   # escribirlo, después de leer las definiciones
+npx -y @aimarket/warden@0.37.0 scan --project --lock warden.lock.json --update-lock   # escribirlo, después de leer las definiciones
 git add warden.lock.json
-npx -y @aimarket/warden@0.36.0 scan --project --lock warden.lock.json                 # salida 1: un servidor es nuevo, arranca distinto o lista otras herramientas
+npx -y @aimarket/warden@0.37.0 scan --project --lock warden.lock.json                 # salida 1: un servidor es nuevo, arranca distinto o lista otras herramientas
 ```
 
 En CI, la GitHub Action ejecuta el segundo comando en cada pull request y, de forma programada, avisa cuando un servidor cambió en origen ([el archivo lock](docs/scan.es.md) · [para equipos](docs/teams.md)). Cada entrada guarda además el digest de contrato de `mcp-tool-set-digest/1`, que otras herramientas calculan igual, de modo que lo bloqueado puede compararse con un registro público como HISTOR sin enviar texto de herramientas. Una pasarela o un cliente que hable la extensión de interceptores de MCP puede hacer la misma pregunta en cada `tools/list`: [`warden-mcp interceptor`](docs/interceptor.md) (experimental).
 
-**Para el editor de un servidor.** Si tu servidor lista otras herramientas donde está instalado algo que el sandbox de HISTOR no tiene —el runner de un lanzador, uno por sistema operativo—, `npx -y @aimarket/warden@0.36.0 declare --out mcp-tool-sets.json -- <tu servidor>` escribe esos conjuntos en un archivo que publicas en tu propio dominio, y quienes los reciben ven la declaración del editor en lugar de un conjunto desconocido. Consulta la [guía de scan](docs/scan.es.md).
+**Para el editor de un servidor.** Si tu servidor lista otras herramientas donde está instalado algo que el sandbox de HISTOR no tiene —el runner de un lanzador, uno por sistema operativo—, `npx -y @aimarket/warden@0.37.0 declare --out mcp-tool-sets.json -- <tu servidor>` escribe esos conjuntos en un archivo que publicas en tu propio dominio, y quienes los reciben ven la declaración del editor en lugar de un conjunto desconocido. Consulta la [guía de scan](docs/scan.es.md).
 
 ## Lo que WARDEN no hace
 
-Solo envuelve stdio. Los resultados de las herramientas se leen con las mismas reglas (`--results warn`, por defecto, antepone un aviso al resultado que se lee como instrucciones al modelo; `block` lo retiene, cuando la herramienta ya se ejecutó; `off`); no analiza argumentos de llamadas, `prompts/*`, `resources/*`, sampling ni elicitation. Pueden pasar paráfrasis e instrucciones no inglesas sin literales reconocidos; véase el [clasificador HISTOR](https://github.com/alexar76/histor). No es un sandbox ni protege la configuración contra ediciones. Sin un backend de pantalla atómico participante y de confianza, no puede hacer atómicas la comprobación y la ejecución en otro proceso: un cambio detectado antes del envío bloquea; durante la ejecución se retiene el resultado, pero la acción pudo ocurrir. Un cambio silencioso posterior a la última lista no es observable. Los clientes sin notificaciones pueden mostrar listas antiguas; las definiciones se comprueban antes de llamar.
+Solo envuelve stdio. Los resultados de las herramientas se leen con las mismas reglas (`--results warn`, por defecto, antepone un aviso al resultado que se lee como instrucciones al modelo; `block` lo retiene, cuando la herramienta ya se ejecutó; `off`); no busca instrucciones en argumentos de llamadas, `prompts/*`, `resources/*`, sampling ni elicitation (el [enmascaramiento](docs/masking.es.md) sí sustituye en ellos las credenciales y, si está activo, los datos personales). Pueden pasar paráfrasis e instrucciones no inglesas sin literales reconocidos; véase el [clasificador HISTOR](https://github.com/alexar76/histor). No es un sandbox ni protege la configuración contra ediciones. Sin un backend de pantalla atómico participante y de confianza, no puede hacer atómicas la comprobación y la ejecución en otro proceso: un cambio detectado antes del envío bloquea; durante la ejecución se retiene el resultado, pero la acción pudo ocurrir. Un cambio silencioso posterior a la última lista no es observable. Los clientes sin notificaciones pueden mostrar listas antiguas; las definiciones se comprueban antes de llamar.
 
 Los veredictos son diagnósticos sin firma, no certificaciones de cumplimiento. `--audit-only` marca los registros `AUDIT-ONLY`, deja pasar descripciones y llamadas bloqueadas por seguridad y no crea pins; mantiene límites de protocolo y recursos. Sirve para investigar falsos positivos, no para proteger.
 
@@ -391,6 +403,7 @@ comprobarlas: [Identidades ERC-8004](https://github.com/alexar76/aicom/blob/main
 | [Estudio de campo: 1 108 servidores MCP públicos](docs/mcp-survey.es.md) | Qué decidió WARDEN sobre definiciones de herramienta reales de terceros — 50 servidores bloqueados, 4 sustentados, y las seis formas en que el resto se equivocó |
 | [Comparación de escáneres](docs/scanner-comparison.es.md) | WARDEN, mcp-audit, mcp-shield, truecopy y mcpsentry sobre los mismos servidores, sobre 14 933 paquetes de npm y PyPI y sobre el benchmark MCPTox, con cada juicio, el manifiesto y el banco de pruebas |
 | [Guardián de flujos](docs/flow-guard.es.md) | La protección en ejecución del plugin de Claude Code: texto ajeno, datos privados, llamadas salientes; la medición en AgentDojo y sus límites |
+| [Enmascaramiento](docs/masking.es.md) | Credenciales (por defecto) y datos personales (perfiles RGPD, CCPA, 152-FZ, PCI) sustituidos por marcadores antes del modelo y restaurados solo para herramientas permitidas; wrap, gateway, OpenWebUI, Hermes, OpenClaw |
 | [Guardia de flujo para Codex](docs/codex.es.md) | Hooks de Codex: sin `ask`, falla cerrado, hooks gestionados, esquemas para Multica |
 | [Ejecutor de tareas fijas](docs/fixed-job-runner.es.md) | `deny` estricto para agentes que deben leer texto externo: operaciones fijas, ejecutor sin claves, informe acotado |
 | [Nueva comparación del modelo](docs/flow-guard-model-comparison-2026-10-25.es.md) | 720 respuestas: mejora en casos conocidos, incertidumbre, canal de avisos y ninguna corrección de ID observada por Stop |

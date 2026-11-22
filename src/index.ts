@@ -54,6 +54,9 @@ export { createAnswerGate } from "./answer-gate.js";
 export type { AnswerGate, AnswerGateOptions, AnswerRule, AnswerRecord, AnswerScalar, AnswerCatalog, StructuredAnswer, AnswerGateCode, AnswerGateViolation, AnswerGateDecision, AnswerGateRequest, AnswerGateRunOptions, AnswerGateRunResult } from "./answer-gate.js";
 export type { AnswerConstraintCheck, ConstraintEvidence, ConstraintViolation } from "./flow-guard-constraints.js";
 export * from "./types.js";
+export { Masker, MaskSession, MaskRefusal, parseMaskConfig, loadMaskConfig, withMaskNote, USER_ORIGIN } from "./mask.js";
+export type { MaskConfig, MaskOverrides, MaskOrigin, MaskResult, RestoreResult, RestorePolicy, ClassPolicy } from "./mask.js";
+export { PROFILES as MASK_PROFILES, PERSONAL_KINDS } from "./mask-detect.js";
 
 const SEVERITY_RANK: Record<Severity, number> = {
   info: 0,

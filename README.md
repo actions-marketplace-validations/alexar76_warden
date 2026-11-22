@@ -6,7 +6,7 @@ Vets what an MCP server *says* its tools do — tool poisoning, rug pulls, reque
 **Check every MCP server on your machine.** No account, no API key, no model. `scan` starts each server in your config the way your client would, reads its `tools/list`, vets it and stops it; the only network traffic is to those servers.
 
 ```bash
-npx -y @aimarket/warden@0.36.0 scan
+npx -y @aimarket/warden@0.37.0 scan
 ```
 
 ```text
@@ -23,10 +23,21 @@ WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-
 Details: warden-mcp scan --json, or --markdown FILE. To review a changed server: warden-mcp scan --lock warden.lock.json --update-lock.
 ```
 
-That is the real output of 0.29.0 on [`examples/scan-demo/`](examples/scan-demo/): three tiny stdio servers, one of them poisoned. `cd examples/scan-demo && npx -y @aimarket/warden@0.36.0 scan --project` reproduces it with nothing installed. [Scan guide](docs/scan.md).
+That is the real output of 0.29.0 on [`examples/scan-demo/`](examples/scan-demo/): three tiny stdio servers, one of them poisoned. `cd examples/scan-demo && npx -y @aimarket/warden@0.37.0 scan --project` reproduces it with nothing installed. [Scan guide](docs/scan.md).
 
 Against four other open-source scanners on the same servers, each in a gVisor container with no network: on the held-out half of MCPTox (an AAAI 2026 benchmark; WARDEN's rules were written from the other half) WARDEN blocked 171 of 218 poisoned tools with the rules of that comparison (v12) and blocks 210 since ruleset v16, the others 8 to 41. On 986 public servers it blocks 3 and on 14,933 npm and PyPI packages 369; mcp-shield blocks 343 and 5,354. [Method and every number](docs/scanner-comparison.md) · [scan guide](docs/scan.md) · **[for teams: one policy, a lock per repository, weekly checks](docs/teams.md)**.
 <!-- /warden-try -->
+
+<!-- warden-mask -->
+**Keys and personal data stay out of the model** (since 0.37.0). WARDEN replaces the credentials
+in what a tool returns with placeholders such as `WARDEN_SECRET_7Q2M9XD4RK` before the model reads it, and puts the real
+value back only when the model uses the placeholder in a call to the place the value came from; anywhere else the call
+is refused. Credentials are masked by default. Personal data (e-mail, phone, card, IBAN, IP, national ids, your own
+list of names) is one switch for teams under GDPR, CCPA, 152-FZ or PCI DSS: `--mask-personal gdpr` or
+`WARDEN_MASK_PERSONAL=gdpr`. It works in `wrap` (Claude Code, Cursor, Codex, Windsurf, Hermes, any MCP client), in the
+gateway for OpenWebUI, and as plugins for Hermes and OpenClaw. On a live Hermes the session store held only the
+placeholder while the shell still received the real token. [How it works, settings and limits](docs/masking.md).
+<!-- /warden-mask -->
 
 <!-- star-line -->
 Source, issues and releases: [github.com/alexar76/warden](https://github.com/alexar76/warden). If WARDEN was useful to you, a star there helps other people find it.
@@ -105,7 +116,7 @@ Opt-in constrained operations: `node dist/mcp-server.js task`. See the [task ada
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@aimarket/warden@0.36.0", "wrap", "--id", "filesystem", "--",
+      "args": ["-y", "@aimarket/warden@0.37.0", "wrap", "--id", "filesystem", "--",
                "npx", "-y", "@modelcontextprotocol/server-filesystem", "/Users/me/docs"]
     }
   }
@@ -114,7 +125,7 @@ Opt-in constrained operations: `node dist/mcp-server.js task`. See the [task ada
 
 For explicit first-contact review, add `--require-approval` to `wrap`. It withholds new definitions until `warden-mcp pins approve --id filesystem` in an operator terminal, then rejects any changed field or launch identity. Automatic/legacy pins need reapproval. See the [language-independent admission boundary](docs/security-hardening-language-boundary.md).
 
-Always specify `--id`: without it, changing command arguments creates a new identity and a new first contact. A stable ID turns a command or path change into `SERVER_IDENTITY_DRIFT`. Environment variables are inherited by the child and excluded from identity. To avoid repeated cold `npx` starts, install globally with `npm install -g @aimarket/warden@0.36.0`, then use `warden-mcp`.
+Always specify `--id`: without it, changing command arguments creates a new identity and a new first contact. A stable ID turns a command or path change into `SERVER_IDENTITY_DRIFT`. Environment variables are inherited by the child and excluded from identity. To avoid repeated cold `npx` starts, install globally with `npm install -g @aimarket/warden@0.37.0`, then use `warden-mcp`.
 
 **Sensitive tools.** A policy file's `sensitiveToolPatterns` (`--policy policy.json` with `{"sensitiveToolPatterns": ["*delete*", "*transfer*"]}`, case-insensitive `*` globs) makes every call to a matching tool wait for a person: `wrap` asks through the client's own form (MCP elicitation) with the tool, the server and the arguments, and only a ticked, accepted answer lets that one call through. The box starts unticked, so a client that accepts forms with their defaults approves nothing. A client that offers no elicitation form gets a refusal and the server never receives the call; `--ask refuse` refuses without asking. If the client cancels the call while the person decides, or the definitions change meanwhile, it is not sent. Before 0.20.0 `wrap` accepted these patterns and did not enforce them. With `--flow`, a send the flow guard would ask about is asked the same way.
 
@@ -171,13 +182,13 @@ document…) ended as expected. See [docs/openwebui.md](docs/openwebui.md) and
 
 Since 0.31.0 one command puts an OpenWebUI that already runs behind WARDEN: it moves the tool
 server connections behind the gateway, installs the Filter and proves the result:
-`npx -y @aimarket/warden@0.36.0 openwebui setup --url http://localhost:3000 --email admin@example.com`
+`npx -y @aimarket/warden@0.37.0 openwebui setup --url http://localhost:3000 --email admin@example.com`
 ([details](docs/openwebui.md#set-up-in-one-command)).
 
 ## Scan every server your clients start
 
 ```bash
-npx -y @aimarket/warden@0.36.0 scan
+npx -y @aimarket/warden@0.37.0 scan
 ```
 
 Reads the MCP configs of Claude Code, Claude Desktop, Cursor, VS Code and Windsurf, connects to every server they start, and vets the tool definitions before a model sees them. It prints a table, JSON, SARIF or Markdown, and exits 1 when a server is blocked; `--no-launch` starts nothing. In a repository, `warden.lock.json` turns a change in tool definitions into a reviewable diff, and CI fails on a new or changed server. Also as a GitHub Action (`uses: alexar76/warden@v0.31.0`), pre-commit hooks and a Claude Code plugin (`/plugin marketplace add alexar76/warden`). `--histor` asks the public HISTOR log whether a server serves you what it serves everyone; for a remote server it sends the endpoint and a digest, for a stdio server started from npm or PyPI the package name (`npm:<name>`, `pypi:<name>`, which HISTOR runs in a gVisor sandbox) and a digest — never tool text. An opt-in classifier (`--classifier-url`, `--classifier-model`) adds the reading of a model you choose, local or hosted, for what no rule names. See the [scan guide](docs/scan.md). How it compares with two other scanners, on the same servers: [scanner comparison](docs/scanner-comparison.md).
@@ -187,18 +198,18 @@ Reads the MCP configs of Claude Code, Claude Desktop, Cursor, VS Code and Windsu
 `package-lock.json` records which packages you install. `warden.lock.json` records what your MCP servers tell your model: every tool's name, description and schema, as you reviewed them.
 
 ```bash
-npx -y @aimarket/warden@0.36.0 scan --project --lock warden.lock.json --update-lock   # write it, after reading the definitions
+npx -y @aimarket/warden@0.37.0 scan --project --lock warden.lock.json --update-lock   # write it, after reading the definitions
 git add warden.lock.json
-npx -y @aimarket/warden@0.36.0 scan --project --lock warden.lock.json                 # exit 1: a server is new, starts differently or lists other tools
+npx -y @aimarket/warden@0.37.0 scan --project --lock warden.lock.json                 # exit 1: a server is new, starts differently or lists other tools
 ```
 
 In CI the GitHub Action runs the second command on every pull request and, on a schedule, tells you when a server changed upstream ([the lock file](docs/scan.md#the-lock-file-review-the-definitions-not-just-the-command) · [for teams](docs/teams.md)). Each entry also holds the contract digest of `mcp-tool-set-digest/1`, a digest other tools compute the same way, so what you locked can be compared with a public record such as HISTOR without sending any tool text. A gateway or client that speaks the MCP interceptor extension can ask the same question on every `tools/list`: [`warden-mcp interceptor`](docs/interceptor.md) (experimental).
 
-**For a server's publisher.** If your server lists different tools where something HISTOR's sandbox lacks is installed — a launcher's runner, one per operating system — `npx -y @aimarket/warden@0.36.0 declare --out mcp-tool-sets.json -- <your server>` writes those sets to a file you publish on your own domain, and the people who get them see the publisher's declaration instead of an unseen tool set. See [declare your server's tool sets](docs/scan.md#for-publishers-declare-your-servers-tool-sets).
+**For a server's publisher.** If your server lists different tools where something HISTOR's sandbox lacks is installed — a launcher's runner, one per operating system — `npx -y @aimarket/warden@0.37.0 declare --out mcp-tool-sets.json -- <your server>` writes those sets to a file you publish on your own domain, and the people who get them see the publisher's declaration instead of an unseen tool set. See [declare your server's tool sets](docs/scan.md#for-publishers-declare-your-servers-tool-sets).
 
 ## What WARDEN does not do
 
-Only stdio is wrapped. Tool results are read by the same rules (`--results warn`, the default, puts a notice in front of a result that reads as instructions to the model; `block` withholds it after the tool ran; `off`); call arguments, `prompts/*`, `resources/*`, sampling and elicitation content pass through without scanning. Paraphrases and non-English instructions without recognized literals can pass; see the separate [HISTOR classifier](https://github.com/alexar76/histor). WARDEN is not a sandbox and does not protect the client config from edits. Without a trusted participating atomic screen backend, it cannot make verification and execution inside another process atomic: a detected change before dispatch blocks the call; a change during execution withholds the result, but the action may already have happened. A silent change after the last list response is not observable. Clients ignoring list-change notifications may display old tools, but changed definitions are checked again before calls.
+Only stdio is wrapped. Tool results are read by the same rules (`--results warn`, the default, puts a notice in front of a result that reads as instructions to the model; `block` withholds it after the tool ran; `off`); call arguments, `prompts/*`, `resources/*`, sampling and elicitation content are not screened for instructions ([masking](docs/masking.md) still replaces credentials and, when on, personal data in them). Paraphrases and non-English instructions without recognized literals can pass; see the separate [HISTOR classifier](https://github.com/alexar76/histor). WARDEN is not a sandbox and does not protect the client config from edits. Without a trusted participating atomic screen backend, it cannot make verification and execution inside another process atomic: a detected change before dispatch blocks the call; a change during execution withholds the result, but the action may already have happened. A silent change after the last list response is not observable. Clients ignoring list-change notifications may display old tools, but changed definitions are checked again before calls.
 
 Verdicts are unsigned diagnostic records, not compliance attestations. `--audit-only` logs `AUDIT-ONLY`, forwards security-blocked descriptions/calls and does not establish pins; framing and resource limits still apply. Use it to investigate false positives, not for protection.
 
@@ -408,6 +419,7 @@ check them: [ERC-8004 identities](https://github.com/alexar76/aicom/blob/main/do
 | [Field survey: 1 108 public MCP servers](docs/mcp-survey.md) | What WARDEN decided on real third-party tool definitions — 50 servers blocked, 4 substantiated, and the six ways the rest were wrong |
 | [Scanner comparison](docs/scanner-comparison.md) | WARDEN, mcp-audit, mcp-shield, truecopy and mcpsentry on the same servers, on 14,933 npm and PyPI packages and on the MCPTox benchmark, with every judgment, the manifest and the harness |
 | [Flow guard](docs/flow-guard.md) | The Claude Code plugin's runtime guard: outside text, private data, outbound calls; the AgentDojo measurement and its limits |
+| [Masking](docs/masking.md) | Credentials (by default) and personal data (GDPR, CCPA, 152-FZ, PCI profiles) replaced by placeholders before the model, restored only for allowed tools; wrap, gateway, OpenWebUI, Hermes, OpenClaw |
 | [Flow guard for Codex](docs/codex.md) | Codex hooks: no `ask`, fail-closed, managed hooks, Multica schemes |
 | [Fixed-job runner](docs/fixed-job-runner.md) | Strict `deny` for agents that must read outside text: fixed operations, a keyless worker, a bounded report |
 | [Fresh model comparison](docs/flow-guard-model-comparison-2026-10-25.md) | 720 answers; known-case improvement, uncertainty, warning custody and no observed Stop choice correction |

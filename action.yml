@@ -57,7 +57,7 @@ inputs:
   version:
     description: '@aimarket/warden version to run.'
     required: false
-    default: 0.36.0
+    default: 0.37.0
 
 outputs:
   blocked:

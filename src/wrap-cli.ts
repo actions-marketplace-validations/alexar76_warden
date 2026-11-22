@@ -12,6 +12,7 @@ import type { Observation } from './wrap-state.js';
 import type { McpServerRef, WardenLogger, WardenPolicy } from './types.js';
 import { parseJsonStrict } from './jcs.js';
 import { screenObservation } from './flow-guard.js';
+import { loadMaskConfig, type MaskConfig, type MaskOverrides } from './mask.js';
 
 export interface WrapOptions {
   mode: 'wrap' | 'pins'; action?: string; id?: string; command?: string; args: string[];
@@ -39,6 +40,10 @@ export interface WrapOptions {
   /** When set with `--histor-revision`, gate every tools/call, not only sensitive ones. */
   historRevisionAll?: boolean;
   historUrl?: string;
+  /** Credentials (on by default) and personal data (off by default) replaced by placeholders before the model reads a
+   *  result, and put back in calls to the allowed servers (mask.ts). `--mask FILE`, `--mask-credentials`,
+   *  `--mask-personal`, or the WARDEN_MASK* environment. */
+  mask?: MaskConfig;
 }
 export const ASK_POLICIES = ['elicit', 'refuse'] as const;
 export type AskPolicy = typeof ASK_POLICIES[number];
@@ -51,6 +56,7 @@ export async function parseWrapArgs(argv: string[]): Promise<WrapOptions> {
     if (!['status', 'approve', 'revoke'].includes(opts.action ?? '')) throw new Error('pins requires status, approve or revoke');
   }
   const seen = new Set<string>();
+  const mask: MaskOverrides = {};
   while (argv.length) {
     const flag = argv.shift()!;
     if (flag === '--' && mode === 'wrap') { opts.command = argv.shift(); opts.args = argv; break; }
@@ -61,7 +67,7 @@ export async function parseWrapArgs(argv: string[]): Promise<WrapOptions> {
     if (flag === '--histor-revision-all' && mode === 'wrap') { opts.historRevisionAll = true; continue; }
     if (flag === '--require-approval' && mode === 'wrap') { continue; }
     const allowed = mode === 'wrap'
-      ? ['--id', '--state-dir', '--policy', '--feed', '--feed-key', '--verdict-log', '--results', '--flow', '--ask', '--screen-read', '--screen-read-input', '--histor-revision', '--histor-url']
+      ? ['--id', '--state-dir', '--policy', '--feed', '--feed-key', '--verdict-log', '--results', '--flow', '--ask', '--screen-read', '--screen-read-input', '--histor-revision', '--histor-url', '--mask', '--mask-credentials', '--mask-personal']
       : ['--id', '--state-dir', '--feed', '--feed-key'];
     if (!allowed.includes(flag)) throw new Error(`Unknown flag ${flag}`);
     const value = argv.shift();
@@ -98,6 +104,11 @@ export async function parseWrapArgs(argv: string[]): Promise<WrapOptions> {
           throw new Error('--histor-revision must be a registry name (e.g. io.github.alexar76/warden)');
         }
         opts.historRevision = value; break;
+      case '--mask': mask.file = value; break;
+      case '--mask-credentials':
+        if (value !== 'on' && value !== 'off') throw new Error('--mask-credentials must be on or off');
+        mask.credentials = value === 'on'; break;
+      case '--mask-personal': mask.personal = value === 'off' ? false : value; break;
       case '--histor-url': {
         const url = new URL(value);
         if (!['https:', 'http:'].includes(url.protocol)) throw new Error('--histor-url requires an HTTP(S) URL');
@@ -116,6 +127,7 @@ export async function parseWrapArgs(argv: string[]): Promise<WrapOptions> {
     }
   }
   if (mode === 'wrap' && !opts.command) throw new Error('wrap requires -- command [args]');
+  if (mode === 'wrap') opts.mask = loadMaskConfig(mask);
   if (opts.screenReadInput && !opts.screenRead) throw new Error('--screen-read-input requires --screen-read');
   if (opts.screenRead && (!opts.flow || !screenObservation(`mcp__${opts.flow}__${opts.screenRead}`, opts.screenReadInput ?? {}))) throw new Error('--screen-read requires --flow and a supported observation schema (empty input, or a generic controller with only a read action)');
   if (opts.screenAtomic && (!opts.screenRead || opts.auditOnly)) throw new Error('--screen-atomic requires --flow and --screen-read in enforcing mode');

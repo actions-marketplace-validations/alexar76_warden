@@ -1,0 +1,9 @@
+name: warden
+version: 0.1.0
+description: "WARDEN: credentials (and, when turned on, personal data) are masked before the model sees them and restored only for the tools allowed to receive them; the WARDEN flow guard checks every tool call."
+author: "AIMarket (alexar76)"
+hooks:
+  - pre_tool_call
+  - post_tool_call
+  - transform_tool_result
+  - transform_llm_output

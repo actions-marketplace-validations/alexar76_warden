@@ -1,6 +1,6 @@
 {
   "name": "@aimarket/warden",
-  "version": "0.36.0",
+  "version": "0.37.0",
   "description": "WARDEN — MCP security firewall. Stdio wrap proxy, inspection tools and library. Vets definitions before model exposure. Zero runtime dependencies.",
   "type": "module",
   "license": "MIT",
@@ -29,6 +29,16 @@
       "types": "./dist/jcs.d.ts",
       "import": "./dist/jcs.js",
       "default": "./dist/jcs.js"
+    },
+    "./mask": {
+      "types": "./dist/mask.d.ts",
+      "import": "./dist/mask.js",
+      "default": "./dist/mask.js"
+    },
+    "./agent-guard": {
+      "types": "./dist/agent-guard.d.ts",
+      "import": "./dist/agent-guard.js",
+      "default": "./dist/agent-guard.js"
     },
     "./atomic-screen": {
       "types": "./dist/atomic-screen.d.ts",
@@ -83,7 +93,15 @@
     "scripts/openwebui-turnkey-check.sh",
     "scripts/openwebui-live/*",
     "scripts/openwebui-local-deploy.sh",
-    "examples/openwebui/docker-compose.yml"
+    "examples/openwebui/docker-compose.yml",
+    "docs/masking*.md",
+    "integrations/hermes/warden/__init__.py",
+    "integrations/hermes/warden/plugin.yaml",
+    "integrations/hermes/README.md",
+    "integrations/openclaw/warden/index.js",
+    "integrations/openclaw/warden/package.json",
+    "integrations/openclaw/warden/openclaw.plugin.json",
+    "integrations/openclaw/README.md"
   ],
   "engines": {
     "node": ">=20"

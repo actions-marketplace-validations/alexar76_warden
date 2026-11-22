@@ -22,6 +22,7 @@ import { vetAndPin, WardenBlock } from './wrap-state.js';
 import type { McpServerRef, ToolDef, WardenVerdict } from './types.js';
 import type { GatewayConfig, GatewayServer } from './gateway-config.js';
 import { Decider, GatewayError, type Who } from './gateway-decide.js';
+import { MaskRefusal, withMaskNote } from './mask.js';
 
 type Rpc = { jsonrpc: '2.0'; id?: string | number | null; method?: string; params?: Record<string, unknown>; result?: any; error?: any };
 
@@ -188,7 +189,7 @@ export class McpProxy {
   }
 
   async handle(req: IncomingMessage, res: ServerResponse, body: string, who: Who): Promise<void> {
-    if (req.method === 'GET' || req.method === 'DELETE') return this.passThrough(req, res, undefined);
+    if (req.method === 'GET' || req.method === 'DELETE') return this.passThrough(req, res, undefined, who);
     if (req.method !== 'POST') return this.json(res, 405, { error: 'method not allowed' });
     let msg: Rpc;
     try { msg = parseRpc(body); }
@@ -213,7 +214,7 @@ export class McpProxy {
     }
     if (msg.method === 'tools/call') return this.call(req, res, msg, who, sessionHeader);
     if (msg.method && READ_METHODS[msg.method] && msg.id !== undefined) return this.read(req, res, msg, who, sessionHeader);
-    return this.passThrough(req, res, body);
+    return this.passThrough(req, res, body, who);
   }
 
   /**
@@ -229,12 +230,19 @@ export class McpProxy {
     try { pre = this.decider.pre(who, this.server.name, tool, args); }
     catch (e) { return fail(`WARDEN: ${e instanceof Error ? e.message : String(e)}`); }
     if (pre.decision !== 'allow') return fail(this.decider.refusal(pre, tool));
-    const r = await this.request(this.upstreamHeaders(req), msg);
+    let sendMsg = msg;
+    try {
+      const params = this.decider.restore(who, this.server.name, tool, msg.params);
+      if (params !== msg.params) sendMsg = { ...msg, params };
+    } catch (e) { if (e instanceof MaskRefusal) return fail(e.message); throw e; }
+    const r = await this.request(this.upstreamHeaders(req), sendMsg);
     let post;
     try { post = await this.decider.post(who, this.server.name, tool, args, r.msg.error !== undefined ? { error: r.msg.error } : r.msg.result, r.msg.error !== undefined); }
     catch { return fail('WARDEN flow guard could not record this result; withheld.'); }
     if (post.withhold) return fail(`Result withheld by WARDEN: it reads as instructions to the model (${(post.codes ?? []).join(', ')}).`);
-    const notice = [post.notice, post.flowNote ? `[WARDEN] ${post.flowNote}` : undefined].filter(Boolean).join('\n');
+    const masked = r.msg.result !== undefined ? this.decider.mask(who, this.server.name, tool, r.msg.result) : undefined;
+    if (masked?.total) r.msg = { ...r.msg, result: masked.value };
+    const notice = [post.notice, post.flowNote ? `[WARDEN] ${post.flowNote}` : undefined, masked?.note].filter(Boolean).join('\n');
     const result = r.msg.result;
     // The notice goes where the model reads: a resource's contents, a prompt's messages. A completion is argument
     // suggestions for the person, not text for the model.
@@ -260,7 +268,11 @@ export class McpProxy {
     try { pre = this.decider.pre(who, this.server.name, name, args); }
     catch (e) { return this.json(res, 200, this.toolError(msg.id, `WARDEN: ${e instanceof Error ? e.message : String(e)}`), sessionHeader); }
     if (pre.decision !== 'allow') return this.json(res, 200, this.toolError(msg.id, this.decider.refusal(pre, name)), sessionHeader);
-    const upstream = await this.send('POST', this.upstreamHeaders(req), JSON.stringify(msg));
+    // The guard judged what the model wrote; the server gets the real values the masking policy lets it have.
+    let sendArgs: Record<string, unknown>;
+    try { sendArgs = this.decider.restore(who, this.server.name, name, args); }
+    catch (e) { if (e instanceof MaskRefusal) return this.json(res, 200, this.toolError(msg.id, e.message), sessionHeader); throw e; }
+    const upstream = await this.send('POST', this.upstreamHeaders(req), JSON.stringify(sendArgs === args ? msg : { ...msg, params: { ...msg.params, arguments: sendArgs } }));
     const type = upstream.headers.get('content-type') ?? '';
     const passHeaders = this.responseHeaders(upstream);
     const finish = async (m: Rpc): Promise<Rpc> => {
@@ -269,6 +281,9 @@ export class McpProxy {
       try { post = await this.decider.post(who, this.server.name, name, args, m.error !== undefined ? { error: m.error } : m.result, isError); }
       catch { return this.toolError(msg.id, 'WARDEN flow guard could not record this result; withheld to avoid untracked outside text. The tool already ran.'); }
       if (post.withhold) return this.toolError(msg.id, `Tool result withheld by WARDEN: it reads as instructions to the model (${(post.codes ?? []).join(', ')}). The tool already ran.`);
+      // Recorded and screened as the server sent it; masked on its way to the model.
+      const masked = this.decider.mask(who, this.server.name, name, m.error !== undefined ? m.error : m.result);
+      if (masked.total) m = m.error !== undefined ? { ...m, error: withMaskNote(masked.value, masked.note) } : { ...m, result: withMaskNote(masked.value, masked.note) };
       if (m.result && Array.isArray(m.result.content) && (post.notice || post.flowNote)) {
         return { ...m, result: { ...m.result, content: [
           ...(post.notice ? [{ type: 'text', text: post.notice }] : []), ...m.result.content,
@@ -309,7 +324,8 @@ export class McpProxy {
               try { m = parseRpc(e.data); } catch { continue; }
               res.write(sseFrame({ ...e, data: JSON.stringify(await finish({ ...m, id: msg.id })) }));
               answered = true;
-            } else if (k.kind === 'message' || k.kind === 'empty') res.write(sseFrame(e));
+            } else if (k.kind === 'message') res.write(sseFrame({ ...e, data: this.maskMessage(who, e.data, name) }));
+            else if (k.kind === 'empty') res.write(sseFrame(e));
             // Any other response, a batch or unreadable data is dropped: only the screened answer to this call may reach
             // the client.
           }
@@ -333,7 +349,17 @@ export class McpProxy {
   }
 
   /** Everything the gateway does not judge: sent on, answered as the server answers (streamed). */
-  private async passThrough(req: IncomingMessage, res: ServerResponse, body: string | undefined): Promise<void> {
+  /** A server request or notification (a log line, progress, a sampling request: text for the model), masked. */
+  private maskMessage(who: Who, data: string, tool?: string): string {
+    if (!this.decider.masker.enabled) return data;
+    let m: Rpc;
+    try { m = JSON.parse(data) as Rpc; } catch { return data; }
+    if (m.params === undefined) return data;
+    const masked = this.decider.mask(who, this.server.name, tool ?? m.method, m.params);
+    return masked.total ? JSON.stringify({ ...m, params: masked.value }) : data;
+  }
+
+  private async passThrough(req: IncomingMessage, res: ServerResponse, body: string | undefined, who: Who): Promise<void> {
     const headers = this.upstreamHeaders(req);
     if (req.method === 'GET') { headers.accept = 'text/event-stream'; delete headers['content-type']; }
     let upstream: Response;
@@ -358,7 +384,7 @@ export class McpProxy {
       const ok = k.kind === 'empty' || k.kind === 'message' || (k.kind === 'response' && sameId(k.m!.id, ownId));
       if (!ok) return this.json(res, 502, { jsonrpc: '2.0', id: ownId ?? null, error: { code: -32603, message: 'WARDEN gateway: the tool server answered with a message that is not the response to this request; dropped.' } });
       res.writeHead(upstream.status, this.responseHeaders(upstream));
-      res.end(text);
+      res.end(k.kind === 'message' ? this.maskMessage(who, text) : text);
       return;
     }
     res.writeHead(upstream.status, this.responseHeaders(upstream));
@@ -383,7 +409,8 @@ export class McpProxy {
         for (const part of parts) {
           for (const e of parseSse(part + '\n\n')) {
             const k = kindOf(e.data);
-            if (k.kind === 'message' || k.kind === 'empty' || (k.kind === 'response' && sameId(k.m!.id, ownId))) res.write(sseFrame(e));
+            if (k.kind === 'message') res.write(sseFrame({ ...e, data: this.maskMessage(who, e.data) }));
+            else if (k.kind === 'empty' || (k.kind === 'response' && sameId(k.m!.id, ownId))) res.write(sseFrame(e));
           }
         }
       }

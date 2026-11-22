@@ -18,6 +18,7 @@ import { McpProxy } from './gateway-mcp.js';
 import { OpenApiProxy, operationsOf } from './gateway-openapi.js';
 import { packageVersion } from './mcp-rpc.js';
 import { displaySafe } from './index.js';
+import { MaskRefusal, USER_ORIGIN } from './mask.js';
 
 export { operationsOf };
 
@@ -91,13 +92,43 @@ export function createGateway(config: GatewayConfig, env: NodeJS.ProcessEnv = pr
         case '/v1/pre': {
           const server = typeof b.server === 'string' ? b.server : 'openwebui';
           const tool = typeof b.tool_name === 'string' ? b.tool_name : '';
-          const answer = decider.pre(w, server, tool, argsOf(b.tool_input));
-          return send(res, 200, { ...answer, ...(answer.decision !== 'allow' ? { refusal: decider.refusal(answer, tool) } : {}) });
+          const args = argsOf(b.tool_input);
+          const answer = decider.pre(w, server, tool, args);
+          if (answer.decision !== 'allow') return send(res, 200, { ...answer, refusal: decider.refusal(answer, tool) });
+          // An allowed call: the adapter runs the tool with `tool_input` when masking put real values back.
+          try {
+            const restored = decider.restore(w, server, tool, args);
+            return send(res, 200, { ...answer, ...(restored !== args ? { tool_input: restored } : {}) });
+          } catch (e) {
+            if (!(e instanceof MaskRefusal)) throw e;
+            return send(res, 200, { decision: 'deny', reason: 'mask_scope', mode: answer.mode, message: e.message, refusal: e.message });
+          }
         }
         case '/v1/post': {
           const server = typeof b.server === 'string' ? b.server : 'openwebui';
           const tool = typeof b.tool_name === 'string' ? b.tool_name : '';
-          return send(res, 200, await decider.post(w, server, tool, argsOf(b.tool_input), b.tool_response, b.tool_error === true));
+          const answer = await decider.post(w, server, tool, argsOf(b.tool_input), b.tool_response, b.tool_error === true);
+          // The adapter gives the model `tool_response` (masked) instead of the raw result, with `mask_note` after it.
+          const masked = decider.mask(w, server, tool, b.tool_response);
+          return send(res, 200, { ...answer, ...(masked.total ? { tool_response: masked.value, masked: masked.counts, ...(masked.note ? { mask_note: masked.note } : {}) } : {}) });
+        }
+        // Masking for adapters that hold the model's messages themselves (the OpenWebUI filter, the Hermes plugin).
+        case '/v1/mask': {
+          // `origin: "user"` for the person's own words; otherwise the server (and tool) the text came from.
+          const origin = b.origin === 'user' ? USER_ORIGIN : typeof b.server === 'string' && b.server ? b.server : 'openwebui';
+          const tool = typeof b.tool_name === 'string' ? b.tool_name : undefined;
+          const masked = decider.mask(w, origin, tool, b.value, b.history === true);
+          return send(res, 200, { value: masked.value, total: masked.total, counts: masked.counts, ...(masked.note ? { note: masked.note } : {}) });
+        }
+        case '/v1/restore': {
+          const server = typeof b.server === 'string' && b.server ? b.server : 'openwebui';
+          const tool = typeof b.tool_name === 'string' ? b.tool_name : '';
+          try { return send(res, 200, { ok: true, value: decider.restore(w, server, tool, b.value) }); }
+          catch (e) { if (e instanceof MaskRefusal) return send(res, 200, { ok: false, refusal: e.message }); throw e; }
+        }
+        case '/v1/reveal': {
+          if (typeof b.text !== 'string') throw new GatewayError(400, 'text must be a string');
+          return send(res, 200, { text: decider.reveal(w, b.text) });
         }
         case '/v1/approve': return send(res, 200, decider.approve(w, b.code, b.approved, b.peek === true));
       }
