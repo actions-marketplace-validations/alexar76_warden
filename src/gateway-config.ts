@@ -11,6 +11,7 @@ import { asPolicy } from './mcp-tools.js';
 import { RESULT_POLICIES, type ResultPolicy } from './result-screen.js';
 import type { WardenPolicy } from './types.js';
 import { defaultStateDir } from './state.js';
+import { loadMaskConfig, parseMaskConfig, type MaskConfig } from './mask.js';
 
 export type GatewayServerType = 'mcp-http' | 'openapi';
 
@@ -54,12 +55,14 @@ export interface GatewayConfig {
   upstreamTimeoutMs: number;
   /** A chat the platform adapter never reported a message for counts as having read outside text (default true). */
   requireAdapter: boolean;
+  /** Masking (mask.ts): credentials on, personal data off unless set; without the field, the WARDEN_MASK* environment. */
+  mask: MaskConfig;
 }
 
 const NAME = /^[A-Za-z0-9_-]{1,64}$/;
 const HEADER = /^[A-Za-z0-9-]{1,100}$/;
 const KEYS = new Set(['listen', 'tokenEnv', 'approveTokenEnv', 'chatHeader', 'userHeader', 'servers', 'stateDir', 'flowPolicy',
-  'policy', 'results', 'approvePhrase', 'approvalTtlSeconds', 'retentionDays', 'maxBodyBytes', 'upstreamTimeoutMs', 'requireAdapter']);
+  'policy', 'results', 'approvePhrase', 'approvalTtlSeconds', 'retentionDays', 'maxBodyBytes', 'upstreamTimeoutMs', 'requireAdapter', 'mask']);
 const SERVER_KEYS = new Set(['name', 'type', 'url', 'headers', 'specPath']);
 
 function obj(v: unknown, what: string): Record<string, unknown> {
@@ -156,6 +159,7 @@ export function parseGatewayConfig(raw: unknown, env: NodeJS.ProcessEnv = proces
     maxBodyBytes: int(r.maxBodyBytes, 'maxBodyBytes', 1024, 64 * 1_048_576, 4 * 1_048_576),
     upstreamTimeoutMs: int(r.upstreamTimeoutMs, 'upstreamTimeoutMs', 1000, 600_000, 120_000),
     requireAdapter: r.requireAdapter === undefined ? true : (() => { if (typeof r.requireAdapter !== 'boolean') throw new Error('requireAdapter must be true or false'); return r.requireAdapter; })(),
+    mask: r.mask === undefined ? loadMaskConfig({}, env) : parseMaskConfig(r.mask, baseDir),
   };
 }
 

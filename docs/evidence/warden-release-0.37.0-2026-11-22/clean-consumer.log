@@ -1,0 +1,41 @@
+found 0 vulnerabilities
+version 0.37.0
+file ok  docs/masking.md
+file ok  docs/masking.ru.md
+file ok  docs/masking.es.md
+file ok  docs/masking.fr.md
+file ok  docs/masking.zh.md
+file ok  integrations/hermes/warden/__init__.py
+file ok  integrations/hermes/warden/plugin.yaml
+file ok  integrations/hermes/README.md
+file ok  integrations/openclaw/warden/index.js
+file ok  integrations/openclaw/warden/package.json
+file ok  integrations/openclaw/warden/openclaw.plugin.json
+file ok  integrations/openclaw/README.md
+$ node demo.mjs   (the example from the release notes, verbatim)
+GITHUB_TOKEN=WARDEN_SECRET_J43HH3YA0T
+1 true
+true WARDEN masking: WARDEN_SECRET_J43HH3YA0T stands for a creden
+exit 0
+$ warden-mcp agent-guard --mask-personal gdpr  (config, ping)
+{"id":1,"result":{"credentials":{"enabled":true,"restore":"origin"},"personal":{"enabled":true,"profile":"gdpr","kinds":["EMAIL","PHONE","CARD","IBAN","IP"],"restore":"origin"},"display":{"credentials":false,"personal":true}}}
+{"id":2,"result":{}}
+exit 0
+$ warden-mcp wrap --id crm --mask-personal gdpr -- node crm-server.mjs   (driven like an MCP client by drive.mjs)
+tools get_customer,send_mail
+--- what the model reads
+customer: warden_email_tpkbcehkvj@mask.invalid
+CRM_TOKEN=WARDEN_SECRET_1WX26V1EPY
+[WARDEN] 1 EMAIL, 1 SECRET in this result were replaced by placeholders such as WARDEN_SECRET_7Q2M9XD4RK or warden_email_…@mask.invalid. You can still use a masked value: write its placeholder, exactly as shown, where the value belongs in a tool call (a command, a header, a field). The tool receives the real value if it may have it (by default: the place the value came from); otherwise WARDEN refuses the call and says why. You never need to see the value, so do not guess, reconstruct or ask for it.
+---
+raw token in model text: false | raw e-mail in model text: false
+server received real e-mail: true | real token: true
+token in WARDEN stderr: false
+stderr lines:
+warden: masked EMAIL×1 SECRET×1 in get_customer from crm
+warden: restored EMAIL×1 SECRET×1 into send_mail on crm
+exit 0
+$ OpenClaw plugin from the installed package (README install, without openclaw itself)
+found 0 vulnerabilities
+openclaw plugin id warden function
+exit 0

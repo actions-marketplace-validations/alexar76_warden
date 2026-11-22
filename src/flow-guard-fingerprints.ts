@@ -73,7 +73,7 @@ export function piiTokens(text: string): string[] {
   return [...out];
 }
 
-const SECRET_PATTERNS: Array<[string, RegExp]> = [
+export const SECRET_PATTERNS: ReadonlyArray<readonly [string, RegExp]> = [
   ['private key', /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
   ['AWS access key', /\b(AKIA|ASIA)[0-9A-Z]{16}\b/],
   ['GitHub token', /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,}\b|\bgithub_pat_[A-Za-z0-9_]{60,}/],

@@ -16,6 +16,7 @@ import { screenLease } from './wrap-screen.js';
 import { ATOMIC_SCREEN_PROTOCOL, ATOMIC_SCREEN_PREPARE, ATOMIC_SCREEN_COMMIT, ATOMIC_SCREEN_CANCEL, atomicScreenPrepared, atomicScreenReceipt, type AtomicScreenPrepared } from './atomic-screen.js';
 import { annotationReview } from './annotation-review.js';
 import { checkSignedRevision } from './signed-revision.js';
+import { Masker, MaskRefusal, loadMaskConfig, maskSummary, withMaskNote } from './mask.js';
 
 type Message = { jsonrpc: '2.0'; id?: string | number | null; method?: string; params?: Record<string, unknown>; result?: any; error?: unknown };
 // How long a call waits for a person to answer the approval form before it is refused.
@@ -41,6 +42,11 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
     if (opts.verdictLog) appendFileSync(opts.verdictLog, JSON.stringify({ timestamp: new Date().toISOString(), serverId: server.id,
       mode: opts.auditOnly ? 'AUDIT-ONLY' : 'ENFORCE', ...verdict }) + '\n', { mode: 0o600 });
   };
+  // Masking (mask.ts): one session for this connection; this server is the origin of every value it returns, and the
+  // only destination its placeholders go back to unless the policy names more.
+  const masker = new Masker(opts.mask ?? loadMaskConfig());
+  const maskSession = masker.session();
+  const maskOrigin = opts.flow || server.id;
   const launch = await warden.vetLaunch(server); record(launch);
   const prior = await readState<Observation>(observationPath(opts.stateDir, server.id));
   const blockedLaunch = !opts.auditOnly && (!launch.allow || prior?.revoked);
@@ -118,6 +124,24 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
       }
     };
     const send = (msg: object) => clientWrite(JSON.stringify(msg));
+    /** A message from the child on its way to the client (and the model): credentials and enabled personal data masked. */
+    const maskOut = (m: Message, tool?: string): Message => {
+      if (!masker.enabled) return m;
+      const field = m.result !== undefined ? 'result' : m.error !== undefined ? 'error' : m.params !== undefined ? 'params' : undefined;
+      if (!field) return m;
+      const r = maskSession.mask((m as Record<string, unknown>)[field], { server: maskOrigin, tool });
+      if (!r.total) return m;
+      process.stderr.write(`warden: ${opts.auditOnly ? 'AUDIT-ONLY would mask' : 'masked'} ${maskSummary(r.counts)} in ${displaySafe(tool ?? m.method ?? 'a response', 200)} from ${displaySafe(server.id)}\n`);
+      if (opts.auditOnly) return m;
+      return { ...m, [field]: field === 'params' ? r.value : withMaskNote(r.value, maskSession.note(r)) };
+    };
+    /** Real values back into what goes to the child; a placeholder the policy keeps from this server stops it (MaskRefusal). */
+    const restoreIn = <T,>(value: T, tool: string): T => {
+      if (!masker.enabled || opts.auditOnly) return value;
+      const r = maskSession.restore(value, { server: maskOrigin, tool });
+      if (r.restored) process.stderr.write(`warden: restored ${maskSummary(r.kinds)} into ${displaySafe(tool, 200)} on ${displaySafe(server.id)}\n`);
+      return r.value;
+    };
     const fail = (msg: Message, message: string, code = -32602) => {
       if (msg.id !== undefined) send({ jsonrpc: '2.0', id: msg.id, error: { code, message: displaySafe(message, 8192) } });
     };
@@ -385,13 +409,16 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
               if (quarantined || epoch !== generation) throw new Error('WARDEN: definitions changed before execution');
               if (atomic && atomic.expiresAt <= Date.now()) throw new Error('Atomic approval expired; action was not run');
               if (annotationEnforced && humanApproved) reviewedAnnotations.add(firstAnnotationUse.key);
+              // The checks above judged what the model wrote; the server gets the real values the policy lets it have.
+              const sendArgs = restoreIn(args, tool);
               tracked.set(msg.id, { kind: 'call', generation, tool, args, screenRelease: releaseScreen, atomic });
               releaseScreen = undefined;
               // Forward the inspected object: ignored duplicate JSON fields must not carry hidden bytes.
               const forward = atomic ? { jsonrpc: '2.0', id: msg.id, method: ATOMIC_SCREEN_COMMIT, params: { protocol: ATOMIC_SCREEN_PROTOCOL, ticket: atomic.ticket,
-                expected: { revision: atomic.revision, stamp: atomic.stamp }, action: { name: tool, arguments: args } } } : msg;
+                expected: { revision: atomic.revision, stamp: atomic.stamp }, action: { name: tool, arguments: sendArgs } } }
+                : sendArgs !== args ? { ...msg, params: { ...msg.params, arguments: sendArgs } } : msg;
               atomic = undefined; // Now tracked; cancellation/crash may mean the effect happened.
-              childWrite(opts.flow && !opts.auditOnly ? JSON.stringify(forward) : body);
+              childWrite((opts.flow && !opts.auditOnly) || sendArgs !== args ? JSON.stringify(forward) : body);
             } catch (err) {
               if (screenChecking) flowScreenValidation({ session_id: flowSession, tool_name: flowTool(String(name)) }, tracked.has(msg.id) ? 'execution_uncertain' : humanApproved ? 'refused_after_approval' : 'refused_without_approval');
               throw err;
@@ -404,11 +431,24 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
         finally { activeChecks--; }
         return;
       }
+      // A resource URI, a prompt's arguments, a completion, and the client's answer to the server's own request (a
+      // sampling result is the model's text) can carry placeholders back to the server: restore them, or refuse.
+      let outBody = body;
+      if (masker.enabled && !opts.auditOnly && (['resources/read', 'prompts/get', 'completion/complete'].includes(msg.method ?? '') || (msg.method === undefined && msg.id !== undefined && msg.result !== undefined))) {
+        try {
+          const next = msg.method ? { ...msg, params: restoreIn(msg.params, msg.method) } : { ...msg, result: restoreIn(msg.result, 'sampling/createMessage') };
+          if (next.params !== msg.params || next.result !== msg.result) outBody = JSON.stringify(next);
+        } catch (e) {
+          if (!(e instanceof MaskRefusal)) throw e;
+          if (msg.method) { fail(msg, e.message); return; }
+          childWrite(JSON.stringify({ jsonrpc: '2.0', id: msg.id, error: { code: -32603, message: e.message } })); return;
+        }
+      }
       if (msg.method !== undefined && msg.id !== undefined) {
         if (tracked.size >= 256 || tracked.has(msg.id)) { fail(msg, 'Too many or duplicate pending MCP requests'); return; }
-        tracked.set(msg.id, { kind: msg.method === 'initialize' ? 'initialize' : 'other', generation });
+        tracked.set(msg.id, { kind: msg.method === 'initialize' ? 'initialize' : 'other', generation, ...(msg.method !== 'initialize' ? { tool: msg.method } : {}) });
       }
-      childWrite(body);
+      childWrite(outBody);
     };
     const fromChild = async (body: string) => {
       const msg = parse(body);
@@ -438,11 +478,13 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
         })().catch(e => log.warn(e instanceof Error ? e.message : String(e)));
         return;
       }
+      let maskTool: string | undefined;
       if (msg.method === undefined && msg.id !== undefined) {
         const request = tracked.get(msg.id);
         if (!request) { log.warn(`dropped a child response to request ${displaySafe(JSON.stringify(msg.id), 80)}, which the client did not send to it or already received`); return; }
         {
           tracked.delete(msg.id);
+          maskTool = request.tool;
           if (request.atomic) {
             try {
               if (msg.error !== undefined) throw new Error('Atomic commit returned an error');
@@ -494,8 +536,8 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
                 }
                 if (msg.error !== undefined) {
                   const error = msg.error as { message?: unknown; code?: number };
-                  send({ ...msg, error: { ...error, message: resultNotice(tool, screen.codes) + '\n' + String(error?.message ?? '') } });
-                } else send({ ...msg, result: annotateResult(msg.result, tool, screen.codes) });
+                  send(maskOut({ ...msg, error: { ...error, message: resultNotice(tool, screen.codes) + '\n' + String(error?.message ?? '') } }, tool));
+                } else send(maskOut({ ...msg, result: annotateResult(msg.result, tool, screen.codes) }, tool));
                 return;
               }
             }
@@ -521,7 +563,10 @@ export async function runWrap(opts: WrapOptions): Promise<number> {
           }
         }
       }
-      clientWrite(body);
+      // Everything else the child sends the client: responses, log and progress notifications, its own requests (a
+      // sampling request is text for the model).
+      const out = maskOut(msg, maskTool);
+      if (out !== msg) send(out); else clientWrite(body);
     };
     process.stdout.on('error', fatal);
     process.once('SIGTERM', signalStop); process.once('SIGINT', signalStop);

@@ -22,6 +22,7 @@ import { screenResult, resultNotice } from './result-screen.js';
 import { displaySafe } from './index.js';
 import { secretPattern } from './flow-guard-fingerprints.js';
 import type { McpServerRef } from './types.js';
+import { Masker, MaskRefusal, USER_ORIGIN, maskSummary } from './mask.js';
 
 export type GatewayDecision = 'allow' | 'deny' | 'ask';
 
@@ -234,6 +235,8 @@ export class Decider {
   readonly cwd: string;
   private grants: GrantStore;
   private readonly expiredDir: string;
+  /** Placeholders per chat, in memory only (mask.ts). The header values the gateway sends its servers are masked too. */
+  readonly masker: Masker;
 
   constructor(readonly config: GatewayConfig, env: NodeJS.ProcessEnv = process.env, private now: () => number = Date.now) {
     this.env = flowEnv(config, env);
@@ -243,6 +246,37 @@ export class Decider {
     this.grants = new GrantStore(join(config.stateDir, 'gateway', 'approvals'), () => this.now());
     this.expiredDir = join(config.stateDir, 'gateway', 'expired');
     mkdirSync(this.expiredDir, { recursive: true, mode: 0o700 });
+    this.masker = new Masker(config.mask, env, () => this.now(), config.servers.flatMap(s => Object.values(s.headers)));
+  }
+
+  /** The masking session of a chat. A call with no chat id gets a session of its own: its placeholders cannot come back. */
+  private maskSession(who: Who) {
+    checkWho(who);
+    return this.masker.session(who.chat ? `owui:${encodeURIComponent(who.user || '-')}:${encodeURIComponent(who.chat)}` : `nochat:${randomUUID()}`);
+  }
+
+  /**
+   * Text on its way to the model: placeholders for credentials and, when on, personal data. `origin` is the server the
+   * text came from (`user` for the person's own message). `history`: text the chat showed before and now sends again,
+   * whose known values keep the origins they had.
+   */
+  mask<T>(who: Who, origin: string, tool: string | undefined, value: T, history = false): { value: T; total: number; counts: Record<string, number>; note?: string } {
+    const s = this.maskSession(who);
+    const r = s.mask(value, { server: origin, tool }, { keepOrigins: history });
+    if (r.total && who.chat) this.note(this.session(who), who, { kind: 'mask', server: origin, tool: tool ? safeToolName(tool) : undefined, masked: maskSummary(r.counts) });
+    return { ...r, note: s.note(r) };
+  }
+
+  /** Real values back into a call to `server`/`tool`; a placeholder the policy keeps from it throws MaskRefusal. */
+  restore<T>(who: Who, server: string, tool: string, value: T, encode?: (v: string) => string): T {
+    const r = this.maskSession(who).restore(value, { server, tool }, encode);
+    if (r.restored && who.chat) this.note(this.session(who), who, { kind: 'restore', server, tool: safeToolName(tool), restored: maskSummary(r.kinds) });
+    return r.value;
+  }
+
+  /** Placeholders back to values for the person reading the answer (personal data by default; credentials stay masked). */
+  reveal(who: Who, text: string): string {
+    return who.chat ? this.maskSession(who).reveal(text) : text;
   }
 
   /**

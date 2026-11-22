@@ -115,6 +115,10 @@ async function entry(): Promise<void> {
     stdout.write("", () => process.exit(code));
     return;
   }
+  if (process.argv[2] === 'agent-guard') {
+    process.exitCode = await (await import("./agent-guard.js")).runAgentGuard(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === 'gateway') {
     process.exitCode = await (await import("./gateway.js")).runGatewayCli(process.argv.slice(3));
     return;

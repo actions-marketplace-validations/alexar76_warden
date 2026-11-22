@@ -1,0 +1,11 @@
+11:58  up 10 days,  5:51, 5 users, load averages: 25.92 27.25 23.91
+
+ RUN  v5.0.5 <scratch>/w037/warden
+
+
+ Test Files  2 passed (2)
+      Tests  126 passed (126)
+   Start at  11:58:18
+   Duration  118.53s (tests 97%, transform 2%, import 1%)
+
+12:00  up 10 days,  5:53, 5 users, load averages: 19.79 24.60 23.31

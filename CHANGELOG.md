@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.37.0 — 2026-11-22 (masking: keys and personal data stay out of the model)
+
+A minor release with one changed default: `wrap` and the gateway now mask credentials in what a tool returns (below).
+Scan verdicts are unchanged: rulesets 23, the malware list and the flow guard rules are 0.36.0's.
+
+- **Masking.** Credentials in what a tool returns are replaced by placeholders (`WARDEN_SECRET_7Q2M9XD4RK`) before the
+  model reads them, and put back only when the model uses the placeholder in a call to the place the value came from;
+  anywhere else the call is refused. On by default for credentials (about 40 provider formats, PEM keys, JWTs,
+  `Authorization` values, URL passwords and credential parameters, credential-named fields, WARDEN's own credential
+  environment). Personal data is off by default and one switch away: `--mask-personal gdpr|us|ru-152fz|pci|custom` or
+  `WARDEN_MASK_PERSONAL`, with checksum-validated cards (Luhn), IBANs (mod-97), E.164 phones, public IPs, SSN, SNILS and
+  INN, plus the organisation's terms and patterns. Placeholders are random, carry no part of the value, and live in the
+  WARDEN process's memory only (EDPB Guidelines 01/2025 on pseudonymisation). [docs/masking.md](docs/masking.md).
+- **Where.** `wrap` (results, errors, resources, prompts, notifications and sampling masked; arguments, URIs and
+  sampling results restored; `--mask FILE`, `--mask-credentials`, `--mask-personal`), the gateway (per chat, MCP and
+  OpenAPI, plus `/v1/mask`, `/v1/restore`, `/v1/reveal`; `/v1/pre` returns `tool_input` and `/v1/post` returns
+  `tool_response`), the OpenWebUI Filter (the person's messages and history before the model, the answer revealed for
+  the person) and `@warden_guard`.
+- **`warden-mcp agent-guard`** and **`@aimarket/warden/agent-guard`**: masking and the flow guard as a stdio service or
+  an in-process library, for agents with a plugin API. Plugins for **Hermes** (`integrations/hermes`: the model request
+  itself through `llm_request`, values restored at `tool_execution`; tested on a live Hermes 0.19.0) and **OpenClaw**
+  (`integrations/openclaw`: transcript masking, restore in `before_tool_call`, the flow guard; OpenClaw 2026.11.6 has no
+  hook that rewrites a result before the model reads it within a run, documented as a limit).
+- `wrap` and the gateway now change traffic by default where they find a credential: a result carrying one reaches the
+  client with a placeholder and a one-time note to the model. `--mask-credentials off` or `WARDEN_MASK_CREDENTIALS=off`
+  restores the old behaviour. `--audit-only` only reports what it would mask.
+
 ## 0.36.0 — 2026-11-21 (the evidence of a contradicted hint as fields)
 
 A minor release that adds fields to one advisory finding. Verdicts are unchanged: rulesets 23, the malware list and

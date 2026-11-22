@@ -1,0 +1,30 @@
+
+ RUN  v5.0.5 <scratch>/w037/warden
+
+ ❯ test/persistent-pins.test.ts (2 tests | 1 failed) 5746ms
+   × requires operator opt-in and exact reviewed payload, persists approval across real process restarts, then revokes 5706ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/persistent-pins.test.ts > requires operator opt-in and exact reviewed payload, persists approval across real process restarts, then revokes
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/persistent-pins.test.ts:14:1
+     12|   return JSON.parse(child.stdout).result;
+     13| }
+     14| it('requires operator opt-in and exact reviewed payload, persists appr…
+       | ^
+     15|   const status = rpc('status_mcp_server', { server, tools }).structure…
+     16|   expect(status.previous).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 88 passed (89)
+      Tests  1 failed | 2173 passed (2174)
+   Start at  11:54:21
+   Duration  168.24s (tests 92%, import 4%, transform 3%, setup 1%)
+
+    Isolate  89 workers spawned · ~347ms startup each (spawn + environment, per file)
+             at least ~9.95s faster with isolate: false — reuses workers across files instead of one per file
+

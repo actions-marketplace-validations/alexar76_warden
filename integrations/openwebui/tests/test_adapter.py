@@ -437,5 +437,83 @@ class BuiltinGuardTest(unittest.TestCase):
         self.assertEqual(self.gw.requests, [])
 
 
+
+class MaskingTest(unittest.TestCase):
+    """Masking through the filter and the tool guards: placeholders to the model, values to the tool and the person."""
+
+    def setUp(self):
+        warden_filter._STATE.update({"filter": None, "builtin_guard": False})
+        self.gw = Gateway()
+        self.f = warden_filter.Filter()
+        self.f.valves.gateway_url, self.f.valves.token = self.gw.url, "main-token"
+        self.meta, self.user = {"chat_id": "c1"}, {"id": "u1"}
+
+    def tearDown(self):
+        self.gw.close()
+
+    def test_inlet_masks_text_parts_only_user_origin_for_the_person(self):
+        def mask_reply(values):
+            return {"value": [v.replace("ghp_SECRET", "WARDEN_SECRET_7Q2M9XD4RK") for v in values], "total": 1}
+        self.gw.replies["/v1/mask"] = [mask_reply(["key ghp_SECRET"]), mask_reply(["system ghp_SECRET", "earlier answer"])]
+        body = {"messages": [
+            {"role": "system", "content": "system ghp_SECRET"},
+            {"role": "assistant", "content": "earlier answer"},
+            {"role": "user", "content": [{"type": "text", "text": "key ghp_SECRET"}, {"type": "image_url", "image_url": {"url": "data:image/png;base64,Z2hwX1NFQ1JFVA=="}}]}]}
+        run(self.f.inlet(body, __user__=self.user, __metadata__=self.meta))
+        calls = [b for p, b, _ in self.gw.requests if p == "/v1/mask"]
+        self.assertEqual(calls[0]["origin"], "user")
+        self.assertEqual(calls[0]["value"], ["key ghp_SECRET"])
+        self.assertEqual(calls[1]["server"], "openwebui-chat")
+        self.assertTrue(all(c["history"] for c in calls))
+        self.assertEqual(body["messages"][0]["content"], "system WARDEN_SECRET_7Q2M9XD4RK")
+        self.assertEqual(body["messages"][2]["content"][0]["text"], "key WARDEN_SECRET_7Q2M9XD4RK")
+        self.assertEqual(body["messages"][2]["content"][1]["image_url"]["url"], "data:image/png;base64,Z2hwX1NFQ1JFVA==")
+
+    def test_gateway_down_masking_warns_or_refuses(self):
+        self.gw.close()
+        self.f.valves.gateway_url = "http://127.0.0.1:9"
+        body = {"messages": [{"role": "user", "content": "hello"}]}
+        self.assertIs(run(self.f.inlet(body, __user__=self.user, __metadata__=self.meta)), body)
+        self.f.valves.mask_fail_closed = True
+        with self.assertRaises(Exception) as e:
+            run(self.f.inlet({"messages": [{"role": "user", "content": "hello"}]}, __user__=self.user, __metadata__=self.meta))
+        self.assertIn("not sent to the model", str(e.exception))
+        self.gw = Gateway()  # tearDown closes it
+
+    def test_outlet_reveals_the_last_answer(self):
+        self.gw.replies["/v1/reveal"] = {"text": "Write to ann.smith@acme.org"}
+        body = {"messages": [{"role": "user", "content": "who?"}, {"role": "assistant", "content": "Write to warden_email_7q2m9xd4rk@mask.invalid"}]}
+        run(self.f.outlet(body, __user__=self.user, __metadata__=self.meta))
+        self.assertEqual(body["messages"][-1]["content"], "Write to ann.smith@acme.org")
+        self.f.valves.reveal_answers = False
+        body2 = {"messages": [{"role": "assistant", "content": "warden_email_7q2m9xd4rk@mask.invalid"}]}
+        run(self.f.outlet(body2, __user__=self.user, __metadata__=self.meta))
+        self.assertEqual(body2["messages"][-1]["content"], "warden_email_7q2m9xd4rk@mask.invalid")
+
+    def test_python_tool_gets_values_and_the_model_gets_placeholders(self):
+        ran = []
+        gw = self.gw
+
+        class V:
+            warden_url = gw.url
+            warden_token = "main-token"
+            warden_approve_token = ""
+
+        class Tools:
+            valves = V()
+
+            @warden_guard(server="crm")
+            async def lookup(self, email: str, __user__=None, __metadata__=None, __event_call__=None):
+                ran.append(email)
+                return f"{email}: card 4111 1111 1111 1111"
+
+        self.gw.replies["/v1/pre"] = {"decision": "allow", "tool_input": {"email": "ann.smith@acme.org"}}
+        self.gw.replies["/v1/post"] = {"tool_response": "ann.smith@acme.org: card WARDEN_CARD_7Q2M9XD4RK", "mask_note": "[WARDEN] 1 CARD masked"}
+        out = run(Tools().lookup(email="warden_email_7q2m9xd4rk@mask.invalid", __user__={"id": "u1"}, __metadata__={"chat_id": "c1"}))
+        self.assertEqual(ran, ["ann.smith@acme.org"])
+        self.assertNotIn("4111", out)
+        self.assertIn("[WARDEN] 1 CARD masked", out)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,15 @@
+{
+  "id": "warden",
+  "name": "WARDEN",
+  "description": "Masks credentials (and personal data when configured) before the model sees them, restores them only for allowed tools, and runs the WARDEN flow guard on every tool call.",
+  "activation": { "onStartup": true },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "personal": { "type": "string", "description": "Personal-data profile: gdpr, us, ru-152fz, pci, custom, or off (default off)." },
+      "maskConfig": { "type": "string", "description": "Path of a WARDEN mask config JSON file (overrides the WARDEN_MASK* environment)." },
+      "flowGuard": { "type": "boolean", "description": "Run the WARDEN flow guard on every tool call (default true)." }
+    }
+  }
+}

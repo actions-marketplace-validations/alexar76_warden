@@ -87,6 +87,9 @@ def warden_guard(server: str = "openwebui", risky: bool = True, timeout: float =
                     # No dialog answer (no browser session): the refusal below carries the code for the person to type.
                 if pre.get("decision") != "allow":
                     return pre.get("refusal") or "Refused by the WARDEN flow guard."
+                if isinstance(pre.get("tool_input"), dict):
+                    # Placeholders the model passed become the real values the masking policy allows for this tool.
+                    kwargs = {**kwargs, **{k: v for k, v in pre["tool_input"].items() if not k.startswith("__")}}
             except WardenRefused as e:
                 return f"Refused by WARDEN ({e}): {fn.__name__} was not run."
             except WardenUnavailable as e:
@@ -107,9 +110,11 @@ def warden_guard(server: str = "openwebui", risky: bool = True, timeout: float =
                 return f"Result withheld: the WARDEN gateway could not record it ({e}). The tool already ran."
             if out.get("withhold"):
                 return f"Tool result withheld by WARDEN: it reads as instructions to the model ({', '.join(out.get('codes') or [])}). The tool already ran."
+            if "tool_response" in out:
+                result = out["tool_response"]  # masked: credentials and enabled personal data replaced by placeholders
             if isinstance(result, str):
                 notice, note = out.get("notice"), out.get("flowNote")
-                return "\n\n".join(x for x in (notice, result, f"[WARDEN] {note}" if note else None) if x)
+                return "\n\n".join(x for x in (notice, result, f"[WARDEN] {note}" if note else None, out.get("mask_note")) if x)
             return result
 
         return guarded

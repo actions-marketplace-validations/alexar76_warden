@@ -1,0 +1,9 @@
+{
+  "name": "@aimarket/openclaw-warden",
+  "version": "0.1.0",
+  "description": "WARDEN for OpenClaw: credentials (and, when turned on, personal data) masked before the model sees them and restored only for the tools allowed to receive them; the WARDEN flow guard on every tool call.",
+  "type": "module",
+  "license": "MIT",
+  "openclaw": { "extensions": ["./index.js"] },
+  "dependencies": { "@aimarket/warden": ">=0.37.0" }
+}
