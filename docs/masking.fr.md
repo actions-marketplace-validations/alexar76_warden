@@ -15,7 +15,7 @@ voir.
   CCPA, 152-FZ, PCI DSS) : adresses e-mail, numéros de téléphone, cartes de paiement, IBAN, adresses IP publiques,
   numéros nationaux, ainsi que les noms et motifs que l'organisation liste.
 
-Le masquage est livré avec WARDEN 0.37.0 (npm `@aimarket/warden@0.37.0`).
+Le masquage est livré avec WARDEN 0.37.0 (npm `@aimarket/warden@0.37.1`).
 
 ## Fonctionnement
 
@@ -219,7 +219,7 @@ jetable (ce que chaque essai a montré figure dans [Vérifié](#vérifié)).
 ### Hermes
 
 ```bash
-npm install -g @aimarket/warden@0.37.0
+npm install -g @aimarket/warden@0.37.1
 cp -r "$(npm root -g)/@aimarket/warden/integrations/hermes/warden" ~/.hermes/plugins/warden
 hermes plugins enable warden
 systemctl restart hermes-gateway     # ou relancez hermes
@@ -253,7 +253,7 @@ Ce qui est propre à Hermes :
 ### OpenClaw
 
 ```bash
-npm install -g @aimarket/warden@0.37.0
+npm install -g @aimarket/warden@0.37.1
 cp -r "$(npm root -g)/@aimarket/warden/integrations/openclaw/warden" ~/openclaw-warden
 cd ~/openclaw-warden && npm install --omit=dev
 sudo chown -R root:root .

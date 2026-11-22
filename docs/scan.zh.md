@@ -7,7 +7,7 @@
 `warden-mcp scan` 读取你已有的 MCP 配置，连接其中启动的每个服务器，并在模型看到工具定义之前对其进行审查。它与 [`wrap`](../README-zh.md) 和[库](integration.zh.md)使用同一条关卡链，只是对你的配置运行一次，而不是挡在单个服务器前面。
 
 ```bash
-npx -y @aimarket/warden@0.37.0 scan
+npx -y @aimarket/warden@0.37.1 scan
 ```
 
 ```text
@@ -22,7 +22,7 @@ WARDEN scan 0.29.0 · ruleset 23 sha256-J12lNmUUNTNk… · malware list 2026-11-
 Details: warden-mcp scan --json, or --markdown FILE. To review a changed server: warden-mcp scan --lock warden.lock.json --update-lock.
 ```
 
-无需账号、无需 API 密钥、不调用模型。唯一的网络流量是发往你配置中的服务器；如果传入 `--histor`，还会发往 HISTOR 日志。
+无需账号、无需 API 密钥、不调用模型。唯一的网络流量是发往你配置中的服务器；如果传入 `--histor`，还会发往 HISTOR 日志。不带该选项时，扫描会以一行结束：你的服务器中有多少是公开的（npm 或 PyPI 包，或公开地址），因而可以与日志比对。这个数字在你的机器上计算，不会发送任何内容。
 
 ## 查找位置
 
