@@ -1,0 +1,14 @@
+2026-11-22T10:24:21Z start
+ Container histor-histor-1 Recreate 
+ Container histor-histor-1 Recreated 
+ Container histor-histor-1 Starting 
+ Container histor-histor-1 Started 
+2026-11-22T10:25:00Z health=healthy image=sha256:d888324c6e3a5d40722a824896d0223cc395dbb9f07cdb7bca3d3a9c001b592f
+2026-11-22T10:25:21Z route / 200
+2026-11-22T10:25:22Z route /health 200
+2026-11-22T10:25:25Z route /api/v1/stats 200
+2026-11-22T10:25:26Z route /api/v1/fingerprints?package=npm:@aimarket/warden 200
+2026-11-22T10:25:26Z route /api/v1/log/checkpoint/cosigned 200
+2026-11-22T10:25:27Z vendored warden 0.37.0
+2026-11-22T10:25:27Z SWITCH-OK
+2026-11-22T10:40:27Z after 15 min: image=sha256:d888324c6e3a5d40722a824896d0223cc395dbb9f07cdb7bca3d3a9c001b592f health=healthy tracebacks=0

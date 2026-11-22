@@ -51,26 +51,31 @@ timeouts in `persistent-pins.test.ts` and `wrap.test.ts`, which passed alone. It
 | Receipt | `quality/candidate-signed.json`, evaluated 2026-11-22 10:04:20Z, expires 2026-11-24 10:04:20Z; the package's own `checkEvidence` accepts it for this build |
 | `authorize` | done 2026-11-22 10:12:42Z (`skopos-warden-quality authorize sha256:d888324c…`; it prints nothing when it accepts) |
 
-## Production HISTOR
+## Production HISTOR (owner «Да, переключай», 2026-11-22)
 
-Not switched yet. The candidate image is loaded on the HISTOR host (same ID `d888324c…`) and the switch kit is in
-`/root/wd037-prod-20261122` (`quality/switch.sh` sha256 `6a6898ce…`, `quality/after.sh` `db5c7cec…`, the same on the
-host). Starting it was refused to me without the owner's explicit word for a production switch. When it runs:
+- Candidate image copied from admin-vps (`docker save | gzip | docker load` through the Mac), same ID `d888324c…`.
+- `histor-wd037-switch` (`quality/after.sh` → `quality/switch.sh`, sha256 `db5c7cec…` and `6a6898ce…`, the same on the
+  host) started 10:24:21Z with no open crawl: 10:25:00Z `histor-histor-1` healthy on `sha256:d888324c…`; `/`, `/health`,
+  `/api/v1/stats`, `/api/v1/fingerprints?package=npm:@aimarket/warden` and `/api/v1/log/checkpoint/cosigned` answer
+  200; vendored WARDEN 0.37.0; `SWITCH-OK` 10:25:27Z (`quality/after.log`). Only the image line of
+  `docker-compose.warden-image.yml` changed (`.pre` copy kept in `/root/wd037-prod-20261122`).
+- 10:25:50Z on admin-vps: `skopos-warden-quality live sha256:d888324c…` accepted. Public receipt
+  (`quality/latest-signed-after.json`, from https://histor.modelmarket.dev/security-quality/latest.json): phase `live`,
+  status `passed`, build `2f358b17…`, run `20261122T100420`. This build's own `check-quality-gate.mjs` passes
+  (`quality/check-quality-after.log`).
+- Rollback: HISTOR host `/root/wd037-prod-20261122/switch.sh rollback`, then admin-vps
+  `skopos-warden-quality rebind sha256:3e2b70a5f17e46677afddf6c5a01142a94b040ccd072727a1513906c3913ba16`.
+- `histor/scanner` in main now vendors this tarball (`vendor/warden-build.json`); the installed `package.json` has the
+  same sha256 as production's (`fe05443e…`); `npm test` there passes (5).
 
-```bash
-# HISTOR host: waits for no open crawl, switches, checks five routes from outside the container, rolls back on failure
-systemd-run --unit=histor-wd037-switch /bin/bash /root/wd037-prod-20261122/after.sh
-# admin-vps, after SWITCH-OK in /root/wd037-prod-20261122/after.log
-skopos-warden-quality live sha256:d888324c6e3a5d40722a824896d0223cc395dbb9f07cdb7bca3d3a9c001b592f
-```
+Open alerts read before the switch (skopos-vps alerter, last 24 h): "The disk of histor-vps is filling up" (since
+01:01Z; 17 GB free, 86 %; the candidate added one WARDEN layer of about 10 MB) and "The disk of pingblip is filling up".
+Neither was touched.
 
-Rollback: HISTOR host `/root/wd037-prod-20261122/switch.sh rollback`, then admin-vps
-`skopos-warden-quality rebind sha256:3e2b70a5f17e46677afddf6c5a01142a94b040ccd072727a1513906c3913ba16`.
-`histor/scanner` keeps vendoring 0.36.0 until the switch.
-
-Open alerts read before preparing it (skopos-vps alerter, last 24 h): "The disk of histor-vps is filling up" (since
-01:01Z; 17 GB free, 86 %; the candidate adds one WARDEN layer of about 10 MB) and "The disk of pingblip is filling up".
+15 minutes after the switch (10:40:27Z): `image=sha256:d888324c… health=healthy tracebacks=0`.
 
 ## npm, GitHub, MCP registry
 
-Not published yet: colleague task §148 (npm from this tarball, mirror, tag v0.37.0, Marketplace, MCP registry).
+npm: 0.37.0 published 2026-11-22 10:25:39Z (registry `time`, `latest`); the registry's tarball is byte-identical to
+`aimarket-warden-0.37.0.tgz` (`cmp`, sha256 `ef9ae648…`, shasum `dcd3ac17…`). Mirror, tag, Marketplace and MCP registry:
+colleague task §148.
