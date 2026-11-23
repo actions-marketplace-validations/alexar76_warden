@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { createGateway } from '../src/gateway.js';
 import { loadGatewayConfig } from '../src/gateway-config.js';
-import { CHAT_HEADERS, Owui, check, parseEnv, planConnections, routedName, setup, undo, type OwuiConnection, type SetupOptions } from '../src/openwebui-setup.js';
+import { CHAT_HEADERS, Owui, check, composeFile, dockerGatewayUser, parseEnv, planConnections, routedName, setup, undo, type OwuiConnection, type SetupOptions, type SetupState } from '../src/openwebui-setup.js';
 
 const cleanup: Array<() => Promise<void> | void> = [];
 afterEach(async () => { while (cleanup.length) await cleanup.pop()!(); });
@@ -126,6 +126,18 @@ async function run(owui: FakeOwui, dir: string, extra: Partial<SetupOptions> = {
   });
   return { ok, out: lines.join('\n'), port };
 }
+
+it('maps rootless Docker gateway mounts to the daemon owner and keeps the host UID on rootful Docker', () => {
+  const state: SetupState = { owuiUrl: 'http://owui:8080', gatewayUrl: 'http://warden-gateway:8787',
+    runtime: 'docker', network: 'owui', port: 8787, project: 'warden', package: '@aimarket/warden', version: 'test' };
+  const rootful = composeFile(state, undefined, dockerGatewayUser(['name=seccomp,profile=builtin'], 1000, 1000));
+  const rootless = composeFile(state, undefined, dockerGatewayUser(['name=seccomp,profile=builtin', 'name=rootless'], 1000, 1000));
+  expect(rootful).toContain('user: "1000:1000"');
+  expect(rootless).not.toMatch(/^\s+user:/m);
+  expect(rootless).toContain('"./config:/etc/warden:ro", "./state:/var/lib/warden-gateway"');
+  expect(dockerGatewayUser(undefined, 1000, 1000)).toBe('1000:1000');
+  expect(dockerGatewayUser([], 0, 0)).toBeUndefined();
+});
 
 describe('planConnections', () => {
   const base = { gatewayUrl: 'http://warden-gateway:8787', gatewayToken: 'gw-token', gatewayInDocker: true };

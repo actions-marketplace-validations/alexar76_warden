@@ -9,6 +9,8 @@ import { MAX_TEXT, hostsIn, strings } from './flow-guard-text.mjs';
 import { screenOperation } from './flow-guard-screen.mjs';
 import { namesParty } from './flow-guard-destinations.mjs';
 import { INJECTION_HINTS } from './flow-guard-instructions.mjs';
+import { terminalOperation } from './flow-guard-terminal.mjs';
+const TERMINAL_READ_TOOLS = new Set(['list_files', 'read_file', 'get_process_status', 'list_processes']);
 // Shell commands. A segment is one command between ; && || | and newlines.
 const NETWORK_CMDS = new Set(['curl', 'wget', 'nc', 'ncat', 'netcat', 'socat', 'telnet', 'ssh', 'scp', 'sftp', 'ftp', 'rsync',
     'gh', 'hub', 'aws', 'gcloud', 'gsutil', 'az', 'kubectl', 'helm', 'heroku', 'vercel', 'netlify', 'fly', 'flyctl', 'wrangler',
@@ -262,7 +264,7 @@ export function classifyCall(toolName, input, cwd, policy, env = process.env) {
         result.labels.add('private');
         // The terminal runs on another host. Its commands can write files or reach the network,
         // and inspecting the gateway's own filesystem would say nothing about their effects.
-        if (!/^mcp__owui__terminal:[\da-f]{24}:list_files$/.test(toolName)) {
+        if (!TERMINAL_READ_TOOLS.has(terminalOperation(toolName) ?? '')) {
             result.labels.add('outbound');
             result.labels.add('destructive');
             result.hosts = hostsIn(texts);

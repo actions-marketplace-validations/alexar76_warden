@@ -1,0 +1,11 @@
+{
+  "name": "@aimarket/warden",
+  "version": "0.37.3",
+  "filename": "aimarket-warden-0.37.3.tgz",
+  "size": 3884669,
+  "shasum": "e221dd3582226cb2886b96ab08792517136c937b",
+  "integrity": "sha512-GzdfV/KOqB3/3YVzZqYmmsAodeqV1fh6RID3UMSMfbvDjyFNap7OoMSwwUD9sSsLFsNeCNi4KlQy1O33JpxAWw==",
+  "sha256": "6b0d1e8c3d79b4c00189f2208b8a6a55047e86e5f904b7a3d1c424fa145bdda6",
+  "momusBuildDigest": "8f685dd818a52e09b0b9a029bf25ec333edda8355499570905017d23e87bc6b2",
+  "files": 508
+}

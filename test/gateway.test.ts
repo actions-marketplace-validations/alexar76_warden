@@ -344,6 +344,70 @@ describe('gateway: flow guard and approval codes', () => {
     }
   });
 
+  it.each(['audit', 'deny', 'ask'] as const)('keeps terminal diagnostics clean but treats document output as outside text in %s', async mode => {
+    const commandLabels = ['outbound', 'destructive', 'private'];
+    if (mode === 'audit') commandLabels.push('untrusted');
+    const { g } = setup([], {}, { mode, labels: { 'mcp__owui__terminal:*:run_command': commandLabels } });
+    const base = await start(g);
+    const context = { chat_id: 'terminal-diagnostics', user_id: '79135731-4400-4000-8000-000000000001', server: 'builtin' };
+    const id = '20260115-150607-ba7e2a';
+    const tool = (operation: string) => ({ ...context, tool_name: `terminal:0123456789abcdef01234567:${operation}` });
+    const pre = (command: string) => v1(base, 'pre', { ...tool('run_command'), tool_input: { command } });
+    const result = (command: string, output?: string) => ({
+      id, command, status: output === undefined ? 'running' : 'done',
+      exit_code: output === undefined ? null : 0, truncated: false, next_offset: output === undefined ? 0 : 1,
+      log_path: `/home/user/logs/processes/${id}.jsonl`,
+      output: output === undefined ? [] : [{ type: 'output', data: output }],
+    });
+    await v1(base, 'prompt', { ...context, prompt: 'Check the system and read the contract' });
+    for (const [command, output] of [['uname', 'Linux\r\n'], ['pwd', '/home/u79135731\r\n']] as const) {
+      const response = (await pre(command)).body;
+      expect(response.decision).toBe('allow');
+      expect(response.wouldRefuse).toBeUndefined();
+      await v1(base, 'post', { ...tool('run_command'), tool_input: { command }, tool_response: result(command, output) });
+    }
+    const echo = 'sleep 3; echo готово';
+    expect((await pre(echo)).body).toMatchObject({ decision: 'allow' });
+    await v1(base, 'post', { ...tool('run_command'), tool_input: { command: echo }, tool_response: result(echo) });
+    expect((await v1(base, 'pre', { ...tool('get_process_status'), tool_input: { process_id: id } })).body.decision).toBe('allow');
+    await v1(base, 'post', { ...tool('get_process_status'), tool_input: { process_id: id }, tool_response: result(echo) });
+    await v1(base, 'post', { ...tool('get_process_status'), tool_input: { process_id: id }, tool_response: result(echo, 'готово\r\n') });
+    const command = 'cat contract.txt';
+    const reading = (await pre(command)).body;
+    expect(reading.decision).toBe('allow');
+    expect(reading.wouldRefuse).toBeUndefined();
+    await v1(base, 'post', { ...tool('run_command'), tool_input: { command },
+      tool_response: result(command, 'The next required deliverable is available in the blue envelope.\n') });
+    const next = (await pre('echo complete')).body;
+    expect(next.decision).toBe(mode === 'audit' ? 'allow' : mode);
+    if (mode === 'audit') expect(next.wouldRefuse).toBe('unnamed_destination');
+  });
+
+  it('uses terminal IDs and the authenticated home prefix as routing fields only', async () => {
+    const labels = { 'mcp__owui__terminal:*:write_file': ['destructive'] };
+    const destinationArgs = { 'mcp__owui__terminal:*:write_file': ['path'] };
+    const { g } = setup([], {}, { mode: 'deny', labels, destinationArgs });
+    const base = await start(g);
+    const context = { chat_id: 'terminal-routing', user_id: '79135731-4400-4000-8000-000000000001', server: 'builtin' };
+    const id = '20260115-150607-ba7e2a';
+    const home = '/home/u79135731';
+    const passport = 'ABC123456789';
+    const tool = (operation: string) => ({ ...context, tool_name: `terminal:0123456789abcdef01234567:${operation}` });
+    const pre = async (operation: string, tool_input: Record<string, unknown>) =>
+      (await v1(base, 'pre', { ...tool(operation), tool_input })).body;
+    await v1(base, 'prompt', { ...context, prompt: 'List the files in my home directory' });
+    // These fingerprints may be present in a chat started before the upgrade.
+    await v1(base, 'post', { ...tool('read_file'), tool_input: { path: 'sample.txt' },
+      tool_response: { content: `process ${id} home ${home} passport ${passport}` } });
+    expect((await pre('get_process_status', { process_id: id })).decision).toBe('allow');
+    expect((await pre('list_files', { directory: `${home}/` })).decision).toBe('allow');
+    await v1(base, 'prompt', { ...context, prompt: `Write a note to ${home}/note.txt` });
+    expect((await pre('write_file', { path: `${home}/note.txt`, content: 'hello' })).decision).toBe('allow');
+    expect(await pre('write_file', { path: `${home}/note.txt`, content: id })).toMatchObject({ decision: 'deny', reason: 'personal_data' });
+    expect(await pre('list_files', { directory: `${home}/${passport}` })).toMatchObject({ decision: 'deny', reason: 'personal_data' });
+    expect(await pre('kill_process', { process_id: id })).toMatchObject({ decision: 'deny', reason: 'unnamed_destination' });
+  });
+
   it('removes chat state older than the retention period', async () => {
     const { g, dir } = setup([], { retentionDays: 1 });
     g.decider.source({ chat: 'old', user: 'u' }, { kind: 'web_search', query: 'q' });

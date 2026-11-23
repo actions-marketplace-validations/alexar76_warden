@@ -5,11 +5,13 @@ import { join } from 'node:path';
 import { absPath, flowPaths, isSecretPath, sessionKey, stateDir } from './flow-guard-paths.mjs';
 import { globMatch, loadPolicy, publicRequestDigest, taskDelegation } from './flow-guard-policy.mjs';
 import { classifyCall } from './flow-guard-classify.mjs';
+import { terminalDataArguments, terminalOperation } from './flow-guard-terminal.mjs';
 import { guiOperation, screenCall } from './flow-guard-screen.mjs';
 import { DEST_ARG_NAMES, allowedDestination, destinations, hasDestinationArgument, keepsDestination, namedByUser } from './flow-guard-destinations.mjs';
 import { piiTokens, secretPattern } from './flow-guard-fingerprints.mjs';
 import { candidates } from './flow-guard-decode.mjs';
 import { checkFragments } from './flow-guard-fragments.mjs';
+import { issuerBinding, withoutBoundToken } from './flow-guard-issuer.mjs';
 import { checkLeak, checkStream, readFp, readStores } from './flow-guard-leak.mjs';
 import { log, readFlowState, safeToolName, updateFlowState } from './flow-guard-state.mjs';
 const MAX_TAIL_KEYS = 32;
@@ -160,9 +162,11 @@ export function flowPre(input, env = process.env, presentation = 'hook', detail)
         decision = { permissionDecision: tainted || policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: `WARDEN flow guard: this call would change WARDEN's policy or Claude Code's hook/MCP settings${tainted ? ` after the session read outside text (${sourcesText(state, defTaint)})` : ''}.` };
     }
     else if (c.labels.has('outbound') || toolName.startsWith('mcp__') || ['WebFetch', 'WebSearch'].includes(toolName)) {
+        const dataInput = typeof input.terminal_user_id === 'string'
+            ? terminalDataArguments(terminalOperation(toolName), toolInput, input.terminal_user_id) : toolInput;
         const stores = readStores(paths);
-        const leak = checkLeak(paths, toolInput, state.intent, stores);
-        const stream = checkStream(toolInput, state.tails ?? {}, stores);
+        const leak = checkLeak(paths, toolInput, state.intent, stores, dataInput);
+        const stream = checkStream(toolInput, state.tails ?? {}, stores, dataInput);
         let credential = credentialSession(state, stores);
         leak.secret ||= stream.leak.secret;
         leak.private ||= stream.leak.private;
@@ -180,8 +184,8 @@ export function flowPre(input, env = process.env, presentation = 'hook', detail)
                 credential ||= credentialSession(current, currentStores);
                 if (credential)
                     current.credentialRead = true;
-                const currentLeak = checkLeak(paths, toolInput, current.intent, currentStores);
-                const currentStream = checkStream(toolInput, current.tails ?? {}, currentStores);
+                const currentLeak = checkLeak(paths, toolInput, current.intent, currentStores, dataInput);
+                const currentStream = checkStream(toolInput, current.tails ?? {}, currentStores, dataInput);
                 leak.secret ||= currentLeak.secret || currentStream.leak.secret;
                 leak.private ||= currentLeak.private || currentStream.leak.private;
                 leak.pii ||= currentLeak.pii || currentStream.leak.pii;
@@ -199,11 +203,31 @@ export function flowPre(input, env = process.env, presentation = 'hook', detail)
         const userNamed = (targetKnown && namedByUser(dests, state.intent, state.intentRaw, contacts)) || (dests.length === 0 && keepsDestination(toolName, toolInput, policy));
         if (c.opaqueShell && c.secret)
             leak.secret = 'credential file referenced by shell code';
+        // A recognised token sent only back to its own issuer, in an authorisation header, and nothing else secret
+        // in the call: asked instead of denied (flow-guard-issuer.ts). Every other shape stays denied.
+        const issuer = leak.secret && !c.secret && !fragments.review && !fragments.unavailable && !leak.incomplete
+            ? issuerBinding(toolInput) : undefined;
+        let issuerOnly = false;
+        if (issuer) {
+            const rest = withoutBoundToken(toolInput, issuer);
+            const residual = checkLeak(paths, rest, state.intent, stores, rest);
+            const restFragments = checkFragments(rest, state, stores.tok.size > 0, false);
+            issuerOnly = !residual.secret && !residual.incomplete && !residual.private && !residual.pii && !restFragments.secret && !restFragments.review;
+        }
+        const issuerDecision = () => ({
+            permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask',
+            permissionDecisionReason: `WARDEN flow guard: this call sends a ${issuer.secret} to its own issuer (${issuer.hosts.join(', ')}) in an authorisation header, and nothing else secret. Allow it only if you asked for this request: what it does with the token there is up to you. The same token to any other host, in a body, URL or file, or through a pipe or expansion is denied.`,
+        });
         if (!tainted) {
             // Credential payloads and explicit shell references do not become safe merely because no external
             // source has been recorded yet. Keep this separate from the stricter post-taint credential boundary:
             // a credentialRead flag alone must not stop a clean session's benign build or public status request.
-            if (leak.secret) {
+            if (leak.secret && issuerOnly) {
+                reason = 'secret_issuer';
+                sensitivePayload = true;
+                decision = issuerDecision();
+            }
+            else if (leak.secret) {
                 reason = 'secret';
                 sensitivePayload = true;
                 decision = { permissionDecision: 'deny', permissionDecisionReason: `WARDEN flow guard: this call carries a secret (${leak.secret}). Secret egress is denied even before outside text has been observed.` };
@@ -227,6 +251,11 @@ export function flowPre(input, env = process.env, presentation = 'hook', detail)
             reason = 'paste_after_secret';
             sensitivePayload = true;
             decision = { permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: `WARDEN flow guard: this call pastes the clipboard after the session read a credential (${screen.paste.src.slice(0, 80)}) and outside text (${sourcesText(state, defTaint)}). What a paste carries is not in its arguments, so the guard cannot check it. Allow it only if you know what the clipboard holds.` };
+        }
+        else if (leak.secret && issuerOnly) {
+            reason = 'secret_issuer';
+            sensitivePayload = true;
+            decision = issuerDecision();
         }
         else if (leak.secret) {
             reason = 'secret';

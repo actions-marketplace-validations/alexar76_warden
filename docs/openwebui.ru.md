@@ -138,9 +138,12 @@ OpenWebUI не меняется. Если в этом выпуске функц�
 инструменты — `mcp__owui__<tool>` (метки — в примере политики ниже).
 
 Для Open Terminal из «Интеграций» Filter оборачивает `get_terminal_tools` в middleware чата. В политике и журнале
-инструменты видны как `mcp__owui__terminal:<хеш подключения>:<инструмент>`. Ответы терминала учитываются как внешний
-текст, а операции кроме `list_files` считаются потенциально изменяющими данные и отправляющими их наружу. Счётчик
-в `setup --dry-run` показывает подключения MCP и OpenAPI из External Tools. Для проверки терминала вызовите его
+инструменты видны как `mcp__owui__terminal:<хеш подключения>:<инструмент>`. WARDEN различает служебные подтверждения
+запуска процесса, проверенный вывод простых диагностических команд и произвольный вывод. По умолчанию содержимое
+файлов и произвольный вывод считаются внешним текстом. ID процесса в поле управления процессом и стандартный
+префикс домашней папки авторизованного пользователя в файловом пути считаются служебными данными. Содержимое файлов,
+остаток пути и секреты проходят проверку на утечки. Счётчик в `setup --dry-run` показывает подключения MCP и OpenAPI
+из External Tools. Для проверки терминала вызовите его
 инструмент из тестового чата и посмотрите журнал шлюза. Filter проверяет вызовы инструментов из чата. У интерактивной
 панели терминала своё подключение.
 
@@ -153,7 +156,7 @@ Settings → External Tools). **С WARDEN 0.31.0**; на более старой
 `--local` ниже).
 
 ```bash
-npx -y @aimarket/warden@0.37.2 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.38.0 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 Пароль команда спросит (или возьмёт из `OPENWEBUI_PASSWORD`); вместо него подойдёт API-ключ или JWT администратора в
@@ -214,13 +217,13 @@ OpenWebUI is behind WARDEN.
 
 Дальше:
 
-- `npx -y @aimarket/warden@0.37.2 openwebui check` — та же проверка в любой момент (код выхода 0, когда ничего не открыто);
-- метки: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.37.2 warden-mcp gateway
+- `npx -y @aimarket/warden@0.38.0 openwebui check` — та же проверка в любой момент (код выхода 0, когда ничего не открыто);
+- метки: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.38.0 warden-mcp gateway
   labels --config /etc/warden/gateway.json` печатает инструменты, которые чаты вызывали без метки; добавьте их в
   `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`) — файл читается при
   каждом вызове;
 - после пилота — `"mode": "deny"` в том же файле;
-- `npx -y @aimarket/warden@0.37.2 openwebui undo` возвращает исходные подключения, выключает Filter и останавливает шлюз;
+- `npx -y @aimarket/warden@0.38.0 openwebui undo` возвращает исходные подключения, выключает Filter и останавливает шлюз;
   файлы остаются.
 
 Что остаётся за вами:
@@ -266,7 +269,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.37.2", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.38.0", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}

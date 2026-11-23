@@ -1,0 +1,10 @@
+=== interceptor ===
+
+ RUN  v5.0.5 /private/tmp/warden-0380-build-42680/warden
+
+
+ Test Files  1 passed (1)
+      Tests  126 passed (126)
+   Start at  18:18:20
+   Duration  6.18s (tests 78%, transform 12%, import 9%, setup 1%)
+

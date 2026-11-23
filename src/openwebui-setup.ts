@@ -286,6 +286,13 @@ function docker(args: string[]): string {
   return execFileSync('docker', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
 
+export function dockerGatewayUser(securityOptions: unknown, uid: number, gid: number | undefined): string | undefined {
+  const rootless = Array.isArray(securityOptions) && securityOptions.some(option =>
+    typeof option === 'string' && /^name=rootless(?:,|$)/.test(option));
+  // Container UID 0 maps to the daemon owner in rootless mode, which owns the private bind mounts.
+  return !rootless && uid > 0 && gid !== undefined ? `${uid}:${gid}` : undefined;
+}
+
 export interface OwuiContainer { id: string; name: string; networks: string[] }
 
 function owuiContainers(): OwuiContainer[] {
@@ -515,11 +522,13 @@ export async function setup(o: SetupOptions, owui: Owui, log: (m: string) => voi
     pkg = resolve(pkg);
   }
   const state: SetupState = { owuiUrl: o.url, gatewayUrl, runtime, ...(network ? { network } : {}), ...(createNetwork || prev?.createdNetwork ? { createdNetwork: true } : {}), ...(container ? { container } : {}), port: o.port, project: o.project, package: pkg, version, ...(prev?.pid ? { pid: prev.pid } : {}) };
-  // The gateway runs as this user, so state/ (decision log, chat state) stays readable here.
-  const uid = typeof process.getuid === 'function' ? process.getuid() : 0;
-  const user = uid > 0 && typeof process.getgid === 'function' ? `${uid}:${process.getgid()}` : undefined;
-  if (runtime === 'docker') writeFileSync(join(dir, 'docker-compose.yml'), composeFile(state, pkgFile, user));
-  else writeFileSync(join(dir, 'run-gateway.sh'), `#!/bin/sh\n# WARDEN gateway for OpenWebUI (written by warden-mcp openwebui setup).\nset -a; . "${envPath}"; set +a\nexec npx -y --package=${pkgFile ? join(dir, 'pkg', pkgFile) : pkg} warden-mcp gateway "$@" --config "${cfgPath}"\n`, { mode: 0o700 });
+  if (runtime === 'docker') {
+    let securityOptions: unknown;
+    try { securityOptions = JSON.parse(docker(['info', '--format', '{{json .SecurityOptions}}'])); }
+    catch { /* Preserve the host UID if Docker security options cannot be read. */ }
+    const user = dockerGatewayUser(securityOptions, process.getuid?.() ?? 0, process.getgid?.());
+    writeFileSync(join(dir, 'docker-compose.yml'), composeFile(state, pkgFile, user));
+  } else writeFileSync(join(dir, 'run-gateway.sh'), `#!/bin/sh\n# WARDEN gateway for OpenWebUI (written by warden-mcp openwebui setup).\nset -a; . "${envPath}"; set +a\nexec npx -y --package=${pkgFile ? join(dir, 'pkg', pkgFile) : pkg} warden-mcp gateway "$@" --config "${cfgPath}"\n`, { mode: 0o700 });
   log(`Wrote ${dir}: .env and backup/ (mode 600), config/gateway.json, state/flow-policy.json (mode audit; the decision log goes to state/ too), ${runtime === 'docker' ? 'docker-compose.yml' : 'run-gateway.sh'}.`);
 
   // Start (or restart: the server list may have changed) and wait.

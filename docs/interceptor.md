@@ -107,6 +107,7 @@ Answers:
 | nothing expected | per `firstSight` | warn, info or error |
 | the tool set has no digest (an entry with no name, a number with no IEEE 754 double) | false | error |
 | the payload holds no `tools` array | false | error |
+| the payload holds both `tools` and `result` (at the top or inside `result`): which list the client reads is not clear (`TSD-TOOL`, mcp-tool-set-digest/1 section 3) | false | error |
 
 `info` always carries `specification`, `tools` (the count), `contract` and `extras`; with
 something to compare, `expected`; with `expected.tools` or a lock entry, `changed`:

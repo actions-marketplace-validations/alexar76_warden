@@ -1,0 +1,10 @@
+=== timeout-retry tests @ 60s (unsandboxed) ===
+
+ RUN  v5.0.5 /private/tmp/warden-0380-build-42680/warden
+
+
+ Test Files  7 passed (7)
+      Tests  262 passed (262)
+   Start at  18:16:44
+   Duration  93.97s (tests 100%)
+

@@ -1,0 +1,38 @@
+{
+ "suite": "terminal",
+ "model": null,
+ "passed": 6,
+ "total": 6,
+ "results": [
+  {
+   "scenario": "terminal audit UNAME",
+   "ok": true,
+   "detail": "decisions=['allow'] taint=False finished=True"
+  },
+  {
+   "scenario": "terminal audit DOC",
+   "ok": true,
+   "detail": "decisions=['allow', 'allow'] taint=True finished=True"
+  },
+  {
+   "scenario": "terminal deny UNAME",
+   "ok": true,
+   "detail": "decisions=['allow'] taint=False finished=True"
+  },
+  {
+   "scenario": "terminal deny DOC",
+   "ok": true,
+   "detail": "decisions=['allow', 'deny'] taint=True finished=True"
+  },
+  {
+   "scenario": "terminal ask UNAME",
+   "ok": true,
+   "detail": "decisions=['allow'] taint=False finished=True"
+  },
+  {
+   "scenario": "terminal ask DOC",
+   "ok": true,
+   "detail": "decisions=['allow', 'ask'] taint=True finished=True"
+  }
+ ]
+}

@@ -5,6 +5,7 @@ import { flowPaths, stateDir } from './flow-guard-paths.js';
 import { globMatch, loadPolicy } from './flow-guard-policy.js';
 import { MAX_TEXT, responseStrings } from './flow-guard-text.js';
 import { classifyCall, resultTaints } from './flow-guard-classify.js';
+import { terminalDataResult, terminalOperation, terminalProcessTaints } from './flow-guard-terminal.js';
 import { instructionSignals } from './flow-guard-instructions.js';
 import { MAX_SCREENS, screenCall, screenFromResult, screenSecretRead, screenServer } from './flow-guard-screen.js';
 import { MAX_RESOLVED, resolvedContacts } from './flow-guard-destinations.js';
@@ -33,6 +34,9 @@ export function flowPost(input: Record<string, unknown>, env: NodeJS.ProcessEnv 
   const c = classifyCall(toolName, toolInput, cwd, policy, env);
   const t = resultTaints(toolName, toolInput, text, cwd, policy, c);
   const resultError = input.tool_error !== undefined || !!(input.tool_response && typeof input.tool_response === 'object' && (input.tool_response as Record<string, unknown>).isError === true);
+  const terminalUser = typeof input.terminal_user_id === 'string' ? input.terminal_user_id : undefined;
+  const terminal = terminalUser !== undefined ? terminalOperation(toolName) : undefined;
+  if (terminal) t.untrusted = terminalProcessTaints(terminal, toolInput, input.tool_response, terminalUser!) ?? t.untrusted;
   // Errors are server-authored text even when a successful result is operator-labelled private.
   if (resultError) t.untrusted = true;
   // A screen server's result says what the next click lands on; its calls can reveal a credential read.
@@ -59,8 +63,11 @@ export function flowPost(input: Record<string, unknown>, env: NodeJS.ProcessEnv 
     if (t.private && text) {
       // Fingerprints and fragment metadata are committed under the same lock as outbound observations.
       const legacy = s.fragments?.v === 1 || !s.fragments && readFp(paths.tok).size > 0;
-      stored = appendFp(c.secret ? paths.secret : paths.fp, fingerprints(c.secret ? text : withoutRecordIds(text)));
-      appendFp(paths.pii, piiTokens(text).map(fpHash));
+      const dataText = terminal && !resultError
+        ? responseStrings(terminalDataResult(terminal, toolInput, input.tool_response, terminalUser!)).join('\n')
+        : text;
+      stored = appendFp(c.secret ? paths.secret : paths.fp, fingerprints(c.secret ? text : withoutRecordIds(dataText)));
+      appendFp(paths.pii, piiTokens(dataText).map(fpHash));
       appendFp(paths.tok, tokenFingerprints(tokens));
       const f = s.fragments ?? { v: 2 as const, index: [], seen: [] };
       const records = new Map(f.index.map(r => [fragmentKey(r), r]));
