@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.37.2 — 2026-11-22 (tool-set digests at depth)
+
+A patch release. The contract and extras digests now follow the depth rule `mcp-tool-set-digest/1` adopted on
+2026-11-22 (section 12; MTL/1 section 5.4). Scan verdicts, rulesets (23), the malware list, masking and the flow
+guard rules are 0.37.1's.
+
+- **Tool-set digests at depth (`mcp-tool-set-digest/1` section 12, MTL/1 section 5.4).** The contract and extras
+  digests are computed for every set nested up to 512 levels, counting the tools array as 1; past that the digest that
+  would cover the value is `TSD-DEPTH` (`MTL-SUBJ-005` for the MTL digest) and the other one is computed. Until now
+  anything deeper than 64 levels, the AWR canonicaliser's bound, had no digest, and the extras case was reported as
+  `TSD-TEXT`. AWR documents keep the bound of 64. No scan verdict changes; `wrap` still refuses a set without a contract
+  digest.
+
 ## 0.37.1 — 2026-11-22 (scan says what `--histor` could check)
 
 A patch release with one addition to `scan`'s output. No default changes: the HISTOR log is asked only with

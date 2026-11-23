@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { canonicalizeRfc8785, CanonicalizationError } from './jcs.js';
-import { mtlToolSet, mtlToolSetDigest, MtlError } from './mtl.js';
+import { deeperThan, MAX_LEVEL, mtlToolSet, mtlToolSetDigest, MtlError, TOOL_SET_SERIALIZE_DEPTH } from './mtl.js';
 
 /**
  * The digests of the specification `mcp-tool-set-digest/1`: one way to hash a `tools/list`
@@ -19,16 +19,16 @@ import { mtlToolSet, mtlToolSetDigest, MtlError } from './mtl.js';
  */
 export const TOOL_SET_DIGEST_SPEC = 'mcp-tool-set-digest/1';
 
-/** A digest the specification says cannot be computed: `TSD-TOOL`, `TSD-NUMBER`, `TSD-TEXT`, `TSD-NAME`. */
+/** A digest the specification says cannot be computed: `TSD-TOOL`, `TSD-NUMBER`, `TSD-TEXT`, `TSD-NAME`, `TSD-DEPTH`. */
 export class ToolSetDigestError extends Error {
-  constructor(readonly code: 'TSD-TOOL' | 'TSD-NUMBER' | 'TSD-TEXT' | 'TSD-NAME', detail: string) {
+  constructor(readonly code: 'TSD-TOOL' | 'TSD-NUMBER' | 'TSD-TEXT' | 'TSD-NAME' | 'TSD-DEPTH', detail: string) {
     super(`${code}: ${detail}`);
     this.name = 'ToolSetDigestError';
   }
 }
 
 function canonical(value: unknown): string {
-  try { return canonicalizeRfc8785(value); }
+  try { return canonicalizeRfc8785(value, TOOL_SET_SERIALIZE_DEPTH); }
   catch (err) {
     if (err instanceof CanonicalizationError && err.code === 'AWR-CANON-001') {
       throw new ToolSetDigestError('TSD-NUMBER', 'a number with no IEEE 754 double');
@@ -54,6 +54,7 @@ export function contractDigest(tools: readonly unknown[]): string {
     if (!(err instanceof MtlError)) throw err;
     // MTL-SUBJ-001 covers both "not a tool" and "a string RFC 8785 refuses"; the specification tells them apart.
     if (err.code === 'MTL-NUM-001') throw new ToolSetDigestError('TSD-NUMBER', 'a number with no IEEE 754 double');
+    if (err.code === 'MTL-SUBJ-005') throw new ToolSetDigestError('TSD-DEPTH', err.message.replace(/^MTL-SUBJ-005: /, ''));
     throw new ToolSetDigestError(/not canonicalizable/.test(err.message) ? 'TSD-TEXT' : 'TSD-TOOL', err.message.replace(/^MTL-SUBJ-001: /, ''));
   }
 }
@@ -85,12 +86,23 @@ export function extrasObject(tools: readonly unknown[]): { tools: Record<string,
 /** `sha256-<base64>` over the extras object (SPEC.md section 8); undefined when no tool has extras. */
 export function extrasDigest(tools: readonly unknown[]): string | undefined {
   const body = extrasObject(tools);
-  return body ? sri(canonical(body)) : undefined;
+  if (!body) return undefined;
+  // A tool's extras are read at the tool's own level (2), so the values of its members are at 3.
+  for (const [name, extra] of Object.entries(body.tools)) {
+    if (deeperThan(extra, 2)) throw new ToolSetDigestError('TSD-DEPTH', `an extra of tool ${JSON.stringify(name)} nests deeper than level ${MAX_LEVEL}`);
+  }
+  return sri(canonical(body));
 }
 
 /** Per tool, lowercase hex SHA-256 of its canonical contract entry (SPEC.md section 9), in digest order. */
 export function perToolContract(tools: readonly unknown[]): Array<{ name: string; contract: string }> {
-  return mtlToolSet(tools).map(entry => ({
+  let entries: Record<string, unknown>[];
+  try { entries = mtlToolSet(tools); }
+  catch (err) {
+    if (!(err instanceof MtlError)) throw err;
+    throw new ToolSetDigestError(err.code === 'MTL-SUBJ-005' ? 'TSD-DEPTH' : 'TSD-TOOL', err.message);
+  }
+  return entries.map(entry => ({
     name: entry.name as string,
     contract: createHash('sha256').update(canonical(entry), 'utf8').digest('hex'),
   }));
@@ -98,7 +110,11 @@ export function perToolContract(tools: readonly unknown[]): Array<{ name: string
 
 /** The canonical text of one whole tool definition, or the code of the reason it has none. */
 export function definitionText(tool: unknown): { text?: string; code?: string } {
-  try { return { text: canonical(toolObject(tool)) }; }
+  try {
+    const whole = toolObject(tool);
+    if (deeperThan(whole, 2)) throw new ToolSetDigestError('TSD-DEPTH', `tool ${JSON.stringify(whole.name)} nests deeper than level ${MAX_LEVEL}`);
+    return { text: canonical(whole) };
+  }
   catch (err) {
     if (!(err instanceof ToolSetDigestError)) throw err;
     return { code: err.code };

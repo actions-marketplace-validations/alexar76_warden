@@ -78,7 +78,7 @@ const MAX_DEPTH = 64;
  */
 export function canonicalize(value: unknown): string {
   const out: string[] = [];
-  serialize(value, out, "$", 0, new Set<object>(), serializeNumber);
+  serialize(value, out, "$", 0, new Set<object>(), serializeNumber, MAX_DEPTH);
   return out.join("");
 }
 
@@ -90,17 +90,17 @@ export function canonicalize(value: unknown): string {
  * its number writer matched `JSON.stringify` on 399,880 doubles. Not for an AWR/2
  * signed document, whose §4.3 still admits integers only.
  */
-export function canonicalizeRfc8785(value: unknown): string {
+export function canonicalizeRfc8785(value: unknown, maxDepth: number = MAX_DEPTH): string {
   const out: string[] = [];
-  serialize(value, out, "$", 0, new Set<object>(), serializeEs6Number);
+  serialize(value, out, "$", 0, new Set<object>(), serializeEs6Number, maxDepth);
   return out.join("");
 }
 
 type NumberSerializer = (n: number, path: string) => string;
 
-function serialize(value: unknown, out: string[], path: string, depth: number, seen: Set<object>, num: NumberSerializer): void {
-  if (depth > MAX_DEPTH) {
-    throw new CanonicalizationError("AWR-CANON-005", `nesting deeper than ${MAX_DEPTH} at ${path}`);
+function serialize(value: unknown, out: string[], path: string, depth: number, seen: Set<object>, num: NumberSerializer, maxDepth: number): void {
+  if (depth > maxDepth) {
+    throw new CanonicalizationError("AWR-CANON-005", `nesting deeper than ${maxDepth} at ${path}`);
   }
   if (value === null) {
     out.push("null");
@@ -133,7 +133,7 @@ function serialize(value: unknown, out: string[], path: string, depth: number, s
       out.push("[");
       for (let i = 0; i < obj.length; i++) {
         if (i > 0) out.push(",");
-        serialize(obj[i], out, `${path}[${i}]`, depth + 1, seen, num);
+        serialize(obj[i], out, `${path}[${i}]`, depth + 1, seen, num, maxDepth);
       }
       out.push("]");
       return;
@@ -166,7 +166,7 @@ function serialize(value: unknown, out: string[], path: string, depth: number, s
       if (!first) out.push(",");
       first = false;
       out.push(serializeString(key, `property name "${key}" at ${path}`), ":");
-      serialize(member, out, `${path}.${key}`, depth + 1, seen, num);
+      serialize(member, out, `${path}.${key}`, depth + 1, seen, num, maxDepth);
     }
     out.push("}");
   } finally {
