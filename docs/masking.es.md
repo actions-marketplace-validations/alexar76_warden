@@ -14,7 +14,7 @@ a una herramienta, solo si esa herramienta puede recibirlo. El modelo puede actu
   152-FZ, PCI DSS): direcciones de correo, teléfonos, tarjetas de pago, IBAN, direcciones IP públicas, números
   nacionales, y los nombres y patrones que la organización indique.
 
-El enmascaramiento llega con WARDEN 0.37.0 (npm `@aimarket/warden@0.37.1`).
+El enmascaramiento llega con WARDEN 0.37.0 (npm `@aimarket/warden@0.37.2`).
 
 ## Cómo funciona
 
@@ -216,7 +216,7 @@ desechable (lo que mostró cada prueba está en [Comprobado](#comprobado)).
 ### Hermes
 
 ```bash
-npm install -g @aimarket/warden@0.37.1
+npm install -g @aimarket/warden@0.37.2
 cp -r "$(npm root -g)/@aimarket/warden/integrations/hermes/warden" ~/.hermes/plugins/warden
 hermes plugins enable warden
 systemctl restart hermes-gateway     # o vuelva a iniciar hermes
@@ -250,7 +250,7 @@ Lo propio de Hermes:
 ### OpenClaw
 
 ```bash
-npm install -g @aimarket/warden@0.37.1
+npm install -g @aimarket/warden@0.37.2
 cp -r "$(npm root -g)/@aimarket/warden/integrations/openclaw/warden" ~/openclaw-warden
 cd ~/openclaw-warden && npm install --omit=dev
 sudo chown -R root:root .
