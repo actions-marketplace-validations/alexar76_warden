@@ -16,6 +16,41 @@ function terminalHome(user) {
     const name = cleaned.length >= 4 ? cleaned.slice(0, 8) : createHash('sha256').update(user).digest('hex').slice(0, 8);
     return `/home/${/^\d/.test(name) ? 'u' : ''}${name}`;
 }
+/** The default home is a shorthand for the same destination on a structured file write. */
+export function terminalFileDestination(operation, path, user) {
+    if (operation !== 'write_file' && operation !== 'replace_file_content')
+        return undefined;
+    const home = terminalHome(user);
+    if (!home || typeof path !== 'string' || !path.startsWith(home + '/') || !isLiteralPath(path))
+        return undefined;
+    const relative = path.slice(home.length + 1);
+    return { absolute: path, relative };
+}
+function isLiteralPath(path) {
+    return path.length <= 4096 && path.replace(/^(?:~?\/)/, '').split('/').every(part => part !== '.' && part !== '..' && /^[\p{L}\p{M}\p{N}._-]+$/u.test(part));
+}
+export function terminalPathDigest(path) {
+    return createHash('sha256').update(path).digest('hex');
+}
+/** Keep exact spelling for path tokens without saving a second copy of the user's prompt. */
+export function terminalPromptPaths(text) {
+    const paths = new Set();
+    const looksLikePath = (token) => token.includes('/') || (token.includes('.') && !token.endsWith('.'));
+    for (const match of text.matchAll(/[^\s"'«»()\x60]+/gu)) {
+        const [token] = match;
+        const next = text[match.index + token.length];
+        const previous = text[match.index - 1];
+        const quoted = previous === '«' ? next === '»' : !!previous && /["'\x60]/.test(previous) && previous === next;
+        if ((looksLikePath(token) || quoted) && isLiteralPath(token))
+            paths.add(terminalPathDigest(token));
+        if (/[.,]$/.test(token) && (!next || /\s/u.test(next))) {
+            const path = token.slice(0, -1);
+            if (looksLikePath(path) && isLiteralPath(path))
+                paths.add(terminalPathDigest(path));
+        }
+    }
+    return [...paths];
+}
 function withoutHome(value, home) {
     if (typeof value !== 'string' || !home)
         return value;

@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createServer, type Server } from 'node:http';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { createGateway } from '../src/gateway.js';
 import { loadGatewayConfig } from '../src/gateway-config.js';
+import { packageVersion } from '../src/mcp-rpc.js';
 import { CHAT_HEADERS, Owui, check, composeFile, dockerGatewayUser, parseEnv, planConnections, routedName, setup, undo, type OwuiConnection, type SetupOptions, type SetupState } from '../src/openwebui-setup.js';
 
 const cleanup: Array<() => Promise<void> | void> = [];
@@ -257,6 +258,51 @@ describe('warden-mcp openwebui setup', () => {
     const text = (await check(new Owui(owui.url, owui.token), dir)).filter(l => l.status === 'fail').map(l => l.text).join('\n');
     expect(text).toMatch(/Filter: not global/);
     expect(text).toMatch(/tool server later: direct/);
+  });
+
+  it.each(['0.33.0', packageVersion()])('updates a generated gateway pin saved by setup %s', async version => {
+    const owui = await fakeOwui([]);
+    const dir = tmp();
+    const path = join(dir, 'setup.json');
+    expect((await run(owui, dir, { start: false })).ok).toBe(true);
+    const state = JSON.parse(readFileSync(path, 'utf8')) as SetupState;
+    writeFileSync(path, JSON.stringify({ ...state, version, package: '@aimarket/warden@0.33.0' }));
+
+    expect((await run(owui, dir, { start: false })).ok).toBe(true);
+    const current = `@aimarket/warden@${packageVersion()}`;
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toMatchObject({ package: current, version: packageVersion() });
+    expect(readFileSync(join(dir, 'run-gateway.sh'), 'utf8')).toContain(`--package=${current}`);
+  });
+
+  it('retains an explicit gateway package on a later setup', async () => {
+    const owui = await fakeOwui([]);
+    const dir = tmp();
+    const pkg = '@aimarket/warden@0.33.0';
+    expect((await run(owui, dir, { start: false, package: pkg })).ok).toBe(true);
+    expect((await run(owui, dir, { start: false })).ok).toBe(true);
+    expect(JSON.parse(readFileSync(join(dir, 'setup.json'), 'utf8'))).toMatchObject({ package: pkg, packageOverride: true });
+  });
+
+  it('reports a gateway on a different release and stops setup before updating the Filter', async () => {
+    const owui = await fakeOwui([]);
+    const dir = tmp();
+    const port = await freePort();
+    const client = new Owui(owui.url, owui.token);
+    const lines: string[] = [];
+    const ok = await setup({ url: owui.url, dir, local: true, port, project: 'warden-test', start: true, dryRun: false },
+      client, line => lines.push(line), {
+        start: async () => {
+          await listen(createServer((_req, res) => {
+            res.setHeader('content-type', 'application/json');
+            res.end(JSON.stringify({ ok: true, mode: 'audit', version: '0.33.0' }));
+          }), port);
+        },
+      });
+    const mismatch = `gateway 0.33.0 differs from setup ${packageVersion()}.`;
+    expect(ok).toBe(false);
+    expect(owui.fn).toBeUndefined();
+    expect(lines.join('\n')).toContain(mismatch);
+    expect(await check(client, dir)).toContainEqual({ status: 'fail', text: mismatch });
   });
 
   it('a server OpenWebUI cannot reach through the gateway stays direct and setup reports it', async () => {

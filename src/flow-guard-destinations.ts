@@ -3,6 +3,7 @@ import type { FlowPolicy, FlowState } from './flow-guard-types.js';
 import { globMatch, hostMatches } from './flow-guard-policy.js';
 import { MAX_TEXT, hostsIn, strings } from './flow-guard-text.js';
 import { normalizeText } from './flow-guard-fingerprints.js';
+import { terminalPathDigest, type terminalFileDestination } from './flow-guard-terminal.js';
 
 export const MAX_RESOLVED = 200;
 
@@ -115,12 +116,20 @@ export function allowedDestination(destination: string, patterns: readonly strin
   } catch { return false; }
 }
 
-export function namedByUser(dests: readonly string[], intent: readonly string[] | undefined, intentRaw?: readonly string[], resolved?: FlowState['resolved']): boolean {
-  if (!dests.length || !intent?.length) return false;
-  const raw = (intentRaw ?? []).join('\n');
+export function namedByUser(dests: readonly string[], state: FlowState, file?: ReturnType<typeof terminalFileDestination>): boolean {
+  if (!dests.length || !state.intent?.length) return false;
+  const entries = state.intentRaw ?? [];
+  const raw = entries.join('\n');
+  const resolved = state.resolvedVersion === 2 ? state.resolved : undefined;
   // Contact authority applies to the exact mailbox, never to its provider's web host.
   const viaContacts = dests.filter(d => d.includes('@') && (exactNamed(d, raw) || !!resolved?.some(r => r.v === d && r.names.some(n => typedWord(n, raw) && new Set(resolved.filter(other => other.names.includes(n)).map(other => other.v)).size === 1))));
   return dests.every(d => {
+    if (file && d === file.absolute.toLowerCase()) {
+      const paths = state.intentTerminalPaths ?? [];
+      const hashes = [file.absolute, file.relative, '~/' + file.relative].map(terminalPathDigest);
+      return paths.some(row => row?.some(hash => hashes.includes(hash))) ||
+        exactNamed(d, entries.filter((_, i) => paths[i] == null).join('\n'));
+    }
     if (viaContacts.includes(d)) return true;
     // A bare number names an id only next to a word that says so ("file 13", "ID '13'", "#13"): in
     // "June 13" it is a date. Short names ("Bob") must match a whole word.

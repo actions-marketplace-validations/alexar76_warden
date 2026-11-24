@@ -2,6 +2,7 @@
 import { globMatch, hostMatches } from './flow-guard-policy.mjs';
 import { MAX_TEXT, hostsIn, strings } from './flow-guard-text.mjs';
 import { normalizeText } from './flow-guard-fingerprints.mjs';
+import { terminalPathDigest } from './flow-guard-terminal.mjs';
 export const MAX_RESOLVED = 200;
 // Who or what a call is aimed at. A destination the user named in their own words is the user's choice.
 export const DEST_ARG_NAMES = new Set(['to', 'recipient', 'recipients', 'cc', 'bcc', 'email', 'emails', 'participants', 'user', 'users',
@@ -133,13 +134,21 @@ export function allowedDestination(destination, patterns) {
         return false;
     }
 }
-export function namedByUser(dests, intent, intentRaw, resolved) {
-    if (!dests.length || !intent?.length)
+export function namedByUser(dests, state, file) {
+    if (!dests.length || !state.intent?.length)
         return false;
-    const raw = (intentRaw ?? []).join('\n');
+    const entries = state.intentRaw ?? [];
+    const raw = entries.join('\n');
+    const resolved = state.resolvedVersion === 2 ? state.resolved : undefined;
     // Contact authority applies to the exact mailbox, never to its provider's web host.
     const viaContacts = dests.filter(d => d.includes('@') && (exactNamed(d, raw) || !!resolved?.some(r => r.v === d && r.names.some(n => typedWord(n, raw) && new Set(resolved.filter(other => other.names.includes(n)).map(other => other.v)).size === 1))));
     return dests.every(d => {
+        if (file && d === file.absolute.toLowerCase()) {
+            const paths = state.intentTerminalPaths ?? [];
+            const hashes = [file.absolute, file.relative, '~/' + file.relative].map(terminalPathDigest);
+            return paths.some(row => row?.some(hash => hashes.includes(hash))) ||
+                exactNamed(d, entries.filter((_, i) => paths[i] == null).join('\n'));
+        }
         if (viaContacts.includes(d))
             return true;
         // A bare number names an id only next to a word that says so ("file 13", "ID '13'", "#13"): in

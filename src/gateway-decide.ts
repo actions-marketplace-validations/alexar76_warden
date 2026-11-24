@@ -328,7 +328,7 @@ export class Decider {
     let turn = 0;
     try { turn = readFlowState(flowPaths(stateDir(this.env), session).state).turn ?? 0; } catch { turn = 0; }
     this.expired(session, who);
-    flowPrompt({ session_id: session, prompt: prompt.slice(0, 100_000), cwd: this.cwd }, this.env);
+    flowPrompt({ session_id: session, prompt: prompt.slice(0, 100_000), cwd: this.cwd, track_terminal_paths: true }, this.env);
     return { first: turn === 0 };
   }
 

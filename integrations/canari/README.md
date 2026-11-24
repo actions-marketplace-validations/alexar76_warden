@@ -48,13 +48,17 @@ Every check refuses rather than degrades; nothing here throws.
 3. The signed body is an in-toto Statement v1 carrying Canari's predicate type.
 4. The verdict is an own property, a string, and one it knows — so `constructor`
    cannot resolve through `Object.prototype` into a decision.
-5. **Artifact binding, inside the signature**: the in-toto subject digest and
-   Canari's `subject.artifact_sha256` must both be 64 hex and must agree.
+5. **Artifact binding, inside the signature**: the statement has exactly one
+   subject, and its in-toto digest and Canari's `subject.artifact_sha256` must
+   both be 64 hex and must agree. With several subjects, comparing only the first
+   would leave the others unbound.
 6. **Artifact binding, outside the signature**: the caller's
    `expectedArtifactSha256` must be present, well-formed, and equal. This is the
    step that ties the verdict to the bytes actually being installed.
-7. `expires_at` must exist, parse, and be strictly in the future — an expiry
-   exactly now is not evidence about today.
+7. `expires_at` must be an RFC 3339 timestamp with a zone (`Date.parse` alone
+   also takes `"2099"`) and be strictly in the future — an expiry exactly now is
+   not evidence about today. The clock (`now`, `Date.now()` by default) must be a
+   finite number: a `NaN` would make every expiry look current.
 8. The unsigned top-level mirror equals the signed body. The inline `signature`
    block is excluded from that comparison: signing runs twice, so the two copies
    carry different pass numbers there by construction (the same rule Canari's
@@ -73,7 +77,7 @@ the envelope: the signature still verifies, and the adapter still refuses.
 ## Tests
 
 ```bash
-node --test integrations/canari/test/verify-attestation.test.mjs   # 31 tests
+node --test integrations/canari/test/verify-attestation.test.mjs   # 37 tests
 ```
 
 Fixtures are a real published bundle (current), an older one whose TTL has

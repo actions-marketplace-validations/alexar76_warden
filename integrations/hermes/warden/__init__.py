@@ -154,7 +154,7 @@ def default_command() -> list:
         return shlex.split(configured)
     if shutil.which("warden-mcp"):
         return ["warden-mcp", "agent-guard"]
-    return ["npx", "-y", "--package=@aimarket/warden@0.38.0", "warden-mcp", "agent-guard"]
+    return ["npx", "-y", "--package=@aimarket/warden@0.38.1", "warden-mcp", "agent-guard"]
 
 
 def origin_of(tool_name: str) -> str:

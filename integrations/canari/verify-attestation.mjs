@@ -6,7 +6,8 @@
 //
 // Fail-closed by construction. Every check below refuses rather than degrades:
 // a missing field, a malformed digest, a digest that does not agree with the
-// signed one, an expiry that has passed (or is exactly now), an unknown type, a
+// signed one, more than one subject, an expiry that has passed (or is exactly
+// now, or is not an RFC 3339 timestamp), a clock that is not a finite number, an unknown type, a
 // verdict inherited from Object.prototype - each is a block with a reason, never
 // a throw and never an allow.
 //
@@ -33,6 +34,9 @@ const STATEMENT_TYPE = 'https://in-toto.io/Statement/v1';
 const PREDICATE_TYPE = 'https://agentcheck.dev/attestation/v0.1';
 
 const SHA256_HEX = /^[0-9a-f]{64}$/;
+// RFC 3339 date-time: full date, time and an explicit zone. Date.parse alone also
+// takes "2099" or a local time without a zone.
+const RFC3339 = /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:\d{2})$/;
 
 const VERDICT_TO_DECISION = new Map([
   ['pass', 'allow'],
@@ -101,6 +105,9 @@ export function verifyCanariAttestation(bundle, canariKey, opts = {}) {
   const now = opts.now ?? Date.now();
   const reasons = [];
   const block = (why) => ({ ok: false, decision: 'block', reasons: [...reasons, why] });
+  // A NaN or infinite clock would make every expiry comparison false, so an
+  // expired attestation would pass the freshness check.
+  if (typeof now !== 'number' || !Number.isFinite(now)) return block('now is not a finite time');
 
   // 0. envelope shape
   const env = bundle?.envelope;
@@ -166,8 +173,13 @@ export function verifyCanariAttestation(bundle, canariKey, opts = {}) {
   if (!VERDICT_TO_DECISION.has(verdict)) return block(`unknown verdict ${JSON.stringify(verdict)}`);
 
   // 6. artifact binding, inside the signature: the in-toto subject digest and
-  //    Canari's own subject digest must both exist and agree.
-  const statementDigest = normaliseDigest(statement.subject?.[0]?.digest?.sha256);
+  //    Canari's own subject digest must both exist and agree. A Canari statement
+  //    is about one artifact; with several subjects, comparing only the first
+  //    would leave the others unbound.
+  if (!Array.isArray(statement.subject) || statement.subject.length !== 1) {
+    return block('signed statement must have exactly one subject');
+  }
+  const statementDigest = normaliseDigest(statement.subject[0]?.digest?.sha256);
   if (!statementDigest) return block('signed statement has no sha256 subject digest');
   const predicateDigest = normaliseDigest(predicate.subject?.artifact_sha256);
   if (!predicateDigest) return block('signed predicate has no artifact_sha256');
@@ -188,8 +200,8 @@ export function verifyCanariAttestation(bundle, canariKey, opts = {}) {
   //    evidence about today.
   const expiresAt = predicate.expires_at;
   if (typeof expiresAt !== 'string' || !expiresAt) return block('signed payload has no expires_at');
-  const expiry = Date.parse(expiresAt);
-  if (!Number.isFinite(expiry)) return block('expires_at is not a timestamp');
+  const expiry = RFC3339.test(expiresAt) ? Date.parse(expiresAt) : NaN;
+  if (!Number.isFinite(expiry)) return block('expires_at is not an RFC 3339 timestamp');
   if (expiry <= now) return block(`attestation expired at ${expiresAt}`);
 
   // 9. the unsigned mirror is what a naive reader would print. The inline

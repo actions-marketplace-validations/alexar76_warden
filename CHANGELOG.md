@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.38.1 — 2026-11-24 (Open WebUI upgrades and Open Terminal file destinations)
+
+- Re-running Open WebUI `setup` upgrades the default gateway package with the Filter, including installs that saved
+  an older default gateway in `setup.json`. `check` flags mismatched versions. Custom `--package` overrides are saved.
+- Native Open Terminal `write_file` and `replace_file_content` recognize the exact path relative to the authenticated
+  user's default home when `path` is configured in `destinationArgs`. The path must appear in the user's own message.
+  The gateway continues checking the file payload, and changed shell arguments still require authorization.
+
 ## 0.38.0 — 2026-11-23 (a token sent back to its issuer is asked about, and the interceptor refuses tools next to result)
 
 - **The interceptor refuses a payload with `tools` next to `result`.** Both validators read the top-level `tools`

@@ -5,7 +5,7 @@ import type { FlowDecision, FlowPolicy, FlowPresentation, FlowState } from './fl
 import { absPath, flowPaths, isSecretPath, sessionKey, stateDir } from './flow-guard-paths.js';
 import { globMatch, loadPolicy, publicRequestDigest, taskDelegation } from './flow-guard-policy.js';
 import { classifyCall } from './flow-guard-classify.js';
-import { terminalDataArguments, terminalOperation } from './flow-guard-terminal.js';
+import { terminalDataArguments, terminalFileDestination, terminalOperation } from './flow-guard-terminal.js';
 import { guiOperation, screenCall } from './flow-guard-screen.js';
 import { DEST_ARG_NAMES, allowedDestination, destinations, hasDestinationArgument, keepsDestination, namedByUser } from './flow-guard-destinations.js';
 import { piiTokens, secretPattern } from './flow-guard-fingerprints.js';
@@ -117,6 +117,11 @@ export function flowPre(input: Record<string, unknown>, env: NodeJS.ProcessEnv =
   }
   const c = classifyCall(toolName, toolInput, cwd, policy, env);
   const state = readFlowState(paths.state);
+  const terminalUser = typeof input.terminal_user_id === 'string' ? input.terminal_user_id : undefined;
+  const terminal = terminalUser === undefined ? undefined : terminalOperation(toolName);
+  const file = terminalUser !== undefined && terminal && hasDestinationArgument(toolName, { path: toolInput.path }, policy)
+    ? terminalFileDestination(terminal, toolInput.path, terminalUser) : undefined;
+  const namedDestination = (dests: readonly string[]) => namedByUser(dests, state, file);
   // A click is what it lands on. This only adds caution, so it applies to operator-labelled tools too: a glob that
   // labels a screen server's screenshots must not switch off the check on its clicks.
   const screen = screenCall(toolName, toolInput, state);
@@ -134,8 +139,7 @@ export function flowPre(input: Record<string, unknown>, env: NodeJS.ProcessEnv =
     sensitivePayload = true;
     decision = { permissionDecision: tainted || policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: `WARDEN flow guard: this call would change WARDEN's policy or Claude Code's hook/MCP settings${tainted ? ` after the session read outside text (${sourcesText(state, defTaint)})` : ''}.` };
   } else if (c.labels.has('outbound') || toolName.startsWith('mcp__') || ['WebFetch', 'WebSearch'].includes(toolName)) {
-    const dataInput = typeof input.terminal_user_id === 'string'
-      ? terminalDataArguments(terminalOperation(toolName), toolInput, input.terminal_user_id) : toolInput;
+    const dataInput = terminalUser === undefined ? toolInput : terminalDataArguments(terminal, toolInput, terminalUser);
     const stores = readStores(paths);
     const leak = checkLeak(paths, toolInput, state.intent, stores, dataInput);
     const stream = checkStream(toolInput, state.tails ?? {}, stores, dataInput);
@@ -169,8 +173,7 @@ export function flowPre(input: Record<string, unknown>, env: NodeJS.ProcessEnv =
     const dests = destinations(toolName, toolInput, policy, c.hosts);
     const targetKnown = hasDestinationArgument(toolName, toolInput, policy);
     const allowedHosts = targetKnown && dests.length > 0 && dests.every(d => allowedDestination(d, policy.allowedDestinations));
-    const contacts = state.resolvedVersion === 2 ? state.resolved : undefined;
-    const userNamed = (targetKnown && namedByUser(dests, state.intent, state.intentRaw, contacts)) || (dests.length === 0 && keepsDestination(toolName, toolInput, policy));
+    const userNamed = (targetKnown && namedDestination(dests)) || (dests.length === 0 && keepsDestination(toolName, toolInput, policy));
     if (c.opaqueShell && c.secret) leak.secret = 'credential file referenced by shell code';
     // A recognised token sent only back to its own issuer, in an authorisation header, and nothing else secret
     // in the call: asked instead of denied (flow-guard-issuer.ts). Every other shape stays denied.
@@ -287,9 +290,12 @@ export function flowPre(input: Record<string, unknown>, env: NodeJS.ProcessEnv =
       }
     }
   }
-  if (!decision && tainted && c.labels.has('destructive') && !namedByUser(destinations(toolName, toolInput, policy, c.hosts), state.intent, state.intentRaw, state.resolvedVersion === 2 ? state.resolved : undefined) && !(destinations(toolName, toolInput, policy, c.hosts).length === 0 && keepsDestination(toolName, toolInput, policy))) {
-    reason = 'destructive_action';
-    decision = { permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: `WARDEN flow guard: the session read outside text (${sourcesText(state, defTaint)}); this call changes or deletes things outside the project. Allow it only if you expected it.` };
+  if (!decision && tainted && c.labels.has('destructive')) {
+    const dests = destinations(toolName, toolInput, policy, c.hosts);
+    if (!namedDestination(dests) && !(dests.length === 0 && keepsDestination(toolName, toolInput, policy))) {
+      reason = 'destructive_action';
+      decision = { permissionDecision: policy.mode === 'deny' ? 'deny' : 'ask', permissionDecisionReason: `WARDEN flow guard: the session read outside text (${sourcesText(state, defTaint)}); this call changes or deletes things outside the project. Allow it only if you expected it.` };
+    }
   }
   if (decision) {
     let targets = targetSummary(toolName, toolInput, policy, sensitivePayload);

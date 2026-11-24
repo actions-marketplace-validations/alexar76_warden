@@ -147,6 +147,10 @@ for (const [label, edit] of [
   ['an unknown verdict', (s) => { s.predicate.verdict = 'unrecognized'; }],
   ['an inherited property name as the verdict', (s) => { s.predicate.verdict = 'constructor'; }],
   ['a non-string verdict', (s) => { s.predicate.verdict = ['pass']; }],
+  ['an expiry without a time or zone', (s) => { s.predicate.expires_at = '2099'; }],
+  ['an expiry without a zone', (s) => { s.predicate.expires_at = '2099-01-01T00:00:00'; }],
+  ['a second subject with a different digest', (s) => { s.subject.push({ name: 'other', digest: { sha256: otherSha256 } }); }],
+  ['no subject', (s) => { s.subject = []; }],
 ]) {
   test(`a signed attestation is blocked with ${label}`, () => {
     const r = verifyCanariAttestation(signedBundle(edit), testKey, options);
@@ -165,4 +169,21 @@ test('an unsupported DSSE payload type is blocked even with a valid signature', 
   const signed = signedBundle(() => {}, 'application/json');
   const r = verifyCanariAttestation(signed, testKey, options);
   assert.equal(r.decision, 'block');
+});
+
+test('a clock that is not a finite number is blocked, not treated as before every expiry', () => {
+  for (const now of [Number.NaN, Number.POSITIVE_INFINITY, '2026-11-24']) {
+    const r = verifyCanariAttestation(expired, key, {
+      now,
+      expectedArtifactSha256: '3a673f3b3c7d94dbb0a67d5ba52a309b94394d687f2a231f8a20a6dc4f9bf266',
+    });
+    assert.equal(r.decision, 'block', String(now));
+  }
+});
+
+test('an RFC 3339 expiry with an offset or fractional seconds is accepted', () => {
+  for (const expiresAt of ['2099-01-01T00:00:00+02:00', '2099-01-01T00:00:00.123Z']) {
+    const r = verifyCanariAttestation(signedBundle((s) => { s.predicate.expires_at = expiresAt; }), testKey, options);
+    assert.equal(r.decision, 'allow', `${expiresAt}: ${r.reasons.join('; ')}`);
+  }
 });

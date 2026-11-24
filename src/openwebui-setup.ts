@@ -170,8 +170,23 @@ export interface SetupState {
   port: number;
   project: string;
   package: string;
+  packageOverride?: true;
   version: string;
   pid?: number;
+}
+
+function hasPackageOverride(state: SetupState | undefined): boolean {
+  if (!state) return false;
+  // Legacy setup.json has no override flag. An exact release of the public package was the generated default.
+  return state.packageOverride === true || !/^@aimarket\/warden@\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(state.package);
+}
+
+function versionMismatch(state: SetupState, running: string | undefined): CheckLine | undefined {
+  if (running === state.version) return undefined;
+  return {
+    status: hasPackageOverride(state) ? 'warn' : 'fail',
+    text: `gateway ${running ?? '(unknown version)'} differs from setup ${state.version}.`,
+  };
 }
 
 export function composeFile(s: SetupState, pkgFile?: string, user?: string): string {
@@ -312,16 +327,16 @@ async function health(port: number, token: string): Promise<{ ok?: boolean; vers
   } catch { return undefined; }
 }
 
-async function waitHealthy(port: number, token: string, seconds: number, log: (m: string) => void): Promise<boolean> {
+async function waitHealthy(port: number, token: string, seconds: number, log: (m: string) => void): ReturnType<typeof health> {
   const until = Date.now() + seconds * 1000;
   let said = false;
   while (Date.now() < until) {
     const h = await health(port, token);
-    if (h?.ok && h.mode) return true;
+    if (h?.ok && h.mode) return h;
     if (!said) { log(`  waiting for the gateway on 127.0.0.1:${port} (the first start downloads the package)…`); said = true; }
     await new Promise(r => setTimeout(r, 2000));
   }
-  return false;
+  return undefined;
 }
 
 // ---------- check ----------
@@ -365,7 +380,7 @@ export async function check(owui: Owui, dir: string): Promise<CheckLine[]> {
   const h = await health(s.port, token);
   if (!h?.ok || !h.mode) out.push({ status: 'fail', text: `gateway: no answer on 127.0.0.1:${s.port} (or the token in .env is wrong)` });
   else {
-    out.push({ status: 'ok', text: `gateway ${h.version}: mode ${h.mode}, ${h.servers?.length ?? 0} tool servers` });
+    out.push(versionMismatch(s, h.version) ?? { status: 'ok', text: `gateway ${h.version}: mode ${h.mode}, ${h.servers?.length ?? 0} tool servers` });
     if (h.mode === 'audit') out.push({ status: 'info', text: 'mode audit: nothing is refused yet, every would-be refusal is logged; switch "mode" to "deny" in state/flow-policy.json after the pilot' });
     if (h.mode === 'off') out.push({ status: 'fail', text: 'mode off: the flow guard is switched off in state/flow-policy.json' });
   }
@@ -513,7 +528,9 @@ export async function setup(o: SetupOptions, owui: Owui, log: (m: string) => voi
   const backup = readJson<Record<string, OwuiConnection>>(backupPath, {});
   for (const s of plan.servers) backup[s.name] = s.original;
   writeSecret(backupPath, JSON.stringify(backup, null, 1) + '\n');
-  let pkg = o.package ?? prev?.package ?? `@aimarket/warden@${version}`;
+  const defaultPackage = `@aimarket/warden@${version}`;
+  const packageOverride = o.package === undefined ? hasPackageOverride(prev) : o.package !== defaultPackage;
+  let pkg = o.package ?? (packageOverride ? prev?.package : undefined) ?? defaultPackage;
   let pkgFile: string | undefined;
   if (/\.tgz$/.test(pkg) && existsSync(pkg)) {
     mkdirSync(join(dir, 'pkg'), { recursive: true });
@@ -521,7 +538,7 @@ export async function setup(o: SetupOptions, owui: Owui, log: (m: string) => voi
     copyFileSync(pkg, join(dir, 'pkg', pkgFile));
     pkg = resolve(pkg);
   }
-  const state: SetupState = { owuiUrl: o.url, gatewayUrl, runtime, ...(network ? { network } : {}), ...(createNetwork || prev?.createdNetwork ? { createdNetwork: true } : {}), ...(container ? { container } : {}), port: o.port, project: o.project, package: pkg, version, ...(prev?.pid ? { pid: prev.pid } : {}) };
+  const state: SetupState = { owuiUrl: o.url, gatewayUrl, runtime, ...(network ? { network } : {}), ...(createNetwork || prev?.createdNetwork ? { createdNetwork: true } : {}), ...(container ? { container } : {}), port: o.port, project: o.project, package: pkg, ...(packageOverride ? { packageOverride: true } : {}), version, ...(prev?.pid ? { pid: prev.pid } : {}) };
   if (runtime === 'docker') {
     let securityOptions: unknown;
     try { securityOptions = JSON.parse(docker(['info', '--format', '{{json .SecurityOptions}}'])); }
@@ -547,9 +564,16 @@ export async function setup(o: SetupOptions, owui: Owui, log: (m: string) => voi
       child.unref(); closeSync(fd);
       state.pid = child.pid;
     }
-    if (!await waitHealthy(o.port, env.WARDEN_GATEWAY_TOKEN, 240, log)) {
+    const gateway = await waitHealthy(o.port, env.WARDEN_GATEWAY_TOKEN, 240, log);
+    if (!gateway) {
       writeFileSync(join(dir, 'setup.json'), JSON.stringify(state, null, 1) + '\n');
       log(runtime === 'docker' ? `The gateway did not become healthy: docker compose -p ${o.project} logs warden-gateway. OpenWebUI was not changed.` : `The gateway did not start: ${dir}/gateway.log. OpenWebUI was not changed.`);
+      return false;
+    }
+    const mismatch = versionMismatch(state, gateway.version);
+    if (mismatch?.status === 'fail') {
+      writeFileSync(join(dir, 'setup.json'), JSON.stringify(state, null, 1) + '\n');
+      log(`${mismatch.text} Stopped before updating OpenWebUI.`);
       return false;
     }
     log('Gateway healthy.');
