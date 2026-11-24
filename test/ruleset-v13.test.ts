@@ -143,10 +143,10 @@ describe('ruleset v13: honest sentences it leaves alone (field corpus, verbatim)
 });
 
 describe('ruleset v13: the published table', () => {
-  it('is version 20 with 43 rules, 32 of them blocking', () => {
+  it('is version 24 with 44 rules, 32 of them blocking', () => {
     const r = staticScanRuleset();
-    expect(STATIC_SCAN_RULESET_VERSION).toBe('23');
-    expect(r.rules).toHaveLength(43);
+    expect(STATIC_SCAN_RULESET_VERSION).toBe('24');
+    expect(r.rules).toHaveLength(44);
     expect(r.rules.filter(x => x.tier === 'block')).toHaveLength(32);
     expect(r.rules.some(x => x.guards.includes('keyReference') && x.surfaces.join() === 'inputSchema')).toBe(true);
   });

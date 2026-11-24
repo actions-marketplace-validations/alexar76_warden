@@ -213,6 +213,7 @@ base64-блоб в первом поле, которое читает модел
 | `TOOL_DEF_HIDDEN_UNICODE` | high | block | ✅ | zero-width и bidi-управляющие символы — текст, которого рецензент не видит |
 | `TOOL_DEF_BASE64_BLOB` | high | block | ✅ | цепочка base64 от 120 символов в имени, описании или схеме |
 | `TOOL_DEF_DATA_URL` | high | block | ✅ | URL вида `data:…;base64,` и `javascript:` |
+| `TOOL_DEF_SHORT_LINK` | low | advise | — | ссылка через сокращатель (`bit.ly/…`, `tinyurl.com/…`, `t.co/…`; с набора правил 24): по ней не видно, куда она ведёт |
 | `TOOL_DEF_CREDENTIAL_PARAM` | medium / low | advise | — | схема или описание просит `api_key`, `password`, `secret`, bearer-токены |
 | `TOOL_DEF_ENV_REFERENCE` | medium | advise | — | `.env`, «environment variables» |
 | `TOOL_DEF_IMPERATIVE` | low / info | advise | ✅ | «you must», «instead of» — формулировки в форме промпта, сами по себе ничего не доказывающие |

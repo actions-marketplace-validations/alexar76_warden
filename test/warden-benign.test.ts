@@ -354,18 +354,18 @@ describe("exfil detection is anchored on an external destination", () => {
 describe("ruleset is versioned and digestible", () => {
   it("exposes a stable digest over the rule table", () => {
     const rs = staticScanRuleset();
-    expect(rs.version).toBe("23");
+    expect(rs.version).toBe("24");
     // If this fails you changed a rule: bump STATIC_SCAN_RULESET_VERSION and
     // update the value here. A scan result is only comparable within one digest.
-    expect(rs.digest).toBe("sha256-J12lNmUUNTNkzbkKeYxmAHSVgmUlrWt3+NvDp4+9i1g=");
+    expect(rs.digest).toBe("sha256-Zopy0S98Rea7ozLSCa82BNsFO1ttse9ck6b/B4LrD9A=");
     // The fold is part of the ruleset identity: the same regexes over folded and
     // unfolded text are different scans, so the digest covers it too.
     expect(rs.fold).toBe("escapes+entities+percent+base64/4x64k+nfkc+tags+invisible+confusables/2");
     expect(rs.rules.every((r) => typeof r.raw === "boolean")).toBe(true);
-    expect(rs.rules.length).toBe(43);
+    expect(rs.rules.length).toBe(44);
     // v5 added TOOL_DEF_SECRET_EXFIL as an advisory pair rule; v9 added six blocking rules, v10 three, v13 one, v15 one, v16 two, v17 one.
     expect(rs.rules.filter((r) => r.tier === "block").length).toBe(32);
-    expect(rs.rules.filter((r) => r.tier === "advise").length).toBe(11);
+    expect(rs.rules.filter((r) => r.tier === "advise").length).toBe(12);
     // A rule's guards are part of the table, so the digest changes when a guard
     // is added even if every regex stays byte-identical. v5 added the navigation
     // and autonomy guards and the secret-exfil pair guard.
@@ -383,13 +383,15 @@ describe("ruleset is versioned and digestible", () => {
     const nounCodes = new Set(
       rs.rules.filter((r) => !r.surfaces.includes("name")).map((r) => r.code),
     );
-    // v10's cross-tool rules read a sentence about another tool's call, which a name never is.
+    // v10's cross-tool rules read a sentence about another tool's call, which a name never is; v24's short-link rule
+    // reads a link, which a tool name cannot hold.
     expect([...nounCodes].sort()).toEqual([
       "TOOL_DEF_CREDENTIAL_PARAM",
       "TOOL_DEF_CROSS_TOOL",
       "TOOL_DEF_ENV_REFERENCE",
       "TOOL_DEF_SECRET_EXFIL",
       "TOOL_DEF_SECRET_REQUEST",
+      "TOOL_DEF_SHORT_LINK",
     ]);
   });
 

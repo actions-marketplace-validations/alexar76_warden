@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.39.0 — 2026-11-24 (a link through a URL shortener is reported)
+
+- **Static scan ruleset 24: `TOOL_DEF_SHORT_LINK` (advisory).** A tool definition that links through a URL shortener
+  (bit.ly, tinyurl.com, t.co, is.gd, cutt.ly and others; a whole host followed by a path) is reported at `low`. It
+  never blocks: shorteners are also used honestly, but the name hides where the link leads, so it is the address to
+  read first. HISTOR lists the same hosts apart in its change records (`newShortLinks`). No blocking rule changed, so
+  nothing v23 blocked or passed changes verdict; the ruleset digest is new.
+
 ## 0.38.1 — 2026-11-24 (Open WebUI upgrades and Open Terminal file destinations)
 
 - Re-running Open WebUI `setup` upgrades the default gateway package with the Filter, including installs that saved
