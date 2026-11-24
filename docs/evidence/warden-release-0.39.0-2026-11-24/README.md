@@ -33,3 +33,13 @@ HISTOR base for the MOMUS candidate must be `histor-histor:shortlinks-20261124` 
 | Live | `skopos-warden-quality live` OK; `/.well-known/aicom-histor-runtime.json` and `/security-quality/latest.json` name digest `18221b00…` / image `c5f3faf1…` |
 
 Not yet: npm publish (needs `@aimarket` auth), mirror, tag v0.39.0, Marketplace, MCP registry (§163 approve).
+
+## npm (2026-11-24)
+
+| | |
+|---|---|
+| Published | `@aimarket/warden@0.39.0` ~11:30Z (alexar76) |
+| `dist.shasum` | `28b8ff87d6ee30f27450591d94fd24810bfa3328` |
+| GitHub | https://github.com/alexar76/warden/releases/tag/v0.39.0 (`ff43133`) |
+| Marketplace | `v0.39.0 \| Latest` |
+| MCP registry | `io.github.alexar76/warden` 0.39.0 isLatest/active (run 45386853929) |
