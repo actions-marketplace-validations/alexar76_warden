@@ -137,10 +137,24 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+/**
+ * Whether the payload is an object that holds both `tools` and `result`, at the top or inside `result`
+ * (mcp-tool-set-digest/1 section 3: no input form, `TSD-TOOL`). Which list a client reads is then not clear:
+ * a strict client refuses the message, a lenient one drops the extra member and reads `result.tools`, so a
+ * check of the other list would vouch for tools the client never gets.
+ */
+export function ambiguousWrapper(payload: unknown): boolean {
+  if (!isObject(payload)) return false;
+  if (Object.hasOwn(payload, 'tools') && Object.hasOwn(payload, 'result')) return true;
+  return isObject(payload.result) && Object.hasOwn(payload.result, 'tools') && Object.hasOwn(payload.result, 'result');
+}
+
+const AMBIGUOUS = 'the payload holds both tools and result, so which list the client reads is not clear (TSD-TOOL, mcp-tool-set-digest/1 section 3)';
+
 /** The `tools` array of a `tools/list` response payload: the result, the JSON-RPC response, or the array. */
 export function toolsOf(payload: unknown): unknown[] | undefined {
   if (Array.isArray(payload)) return payload;
-  if (!isObject(payload)) return undefined;
+  if (!isObject(payload) || ambiguousWrapper(payload)) return undefined;
   if (Array.isArray(payload.tools)) return payload.tools;
   if (isObject(payload.result) && Array.isArray(payload.result.tools)) return payload.result.tools;
   return undefined;
@@ -281,6 +295,9 @@ function integrity(payload: unknown, config: Record<string, unknown>, deps: Inte
   if (full && extras === 'warn') fail('full coverage cannot be combined with config.extras: warn');
   if (full && config.expected !== undefined && config.server !== undefined) fail('full coverage requires one baseline source: config.expected or config.server');
 
+  if (ambiguousWrapper(payload)) {
+    return { valid: false, severity: 'error', messages: [{ message: `${AMBIGUOUS}: nothing was checked`, severity: 'error' }] };
+  }
   const tools = toolsOf(payload);
   if (!tools) {
     return { valid: false, severity: 'error', messages: [{ message: 'the payload holds no tools array: nothing was checked', severity: 'error' }] };
@@ -294,9 +311,6 @@ function integrity(payload: unknown, config: Record<string, unknown>, deps: Inte
       const result = isObject(payload.result) ? payload.result : undefined;
       if (Object.hasOwn(payload, 'nextCursor') || (result && Object.hasOwn(result, 'nextCursor'))) {
         return refuse('full coverage requires the entire tool list; the payload contains a pagination cursor');
-      }
-      if (result && Object.hasOwn(payload, 'tools')) {
-        return refuse('full coverage requires one unambiguous tools array');
       }
     }
     const problem = coverageProblem(tools);
@@ -396,6 +410,9 @@ async function scan(payload: unknown, config: Record<string, unknown>, fail: (re
   for (const key of Object.keys(config)) if (key !== 'blockAt') fail(`config.${displaySafe(key, 60)} is not a setting of this interceptor`);
   const blockAt = (config.blockAt ?? 'high') as Severity;
   if (!SEVERITY_ORDER.includes(blockAt)) fail(`config.blockAt must be one of ${SEVERITY_ORDER.join(', ')}`);
+  if (ambiguousWrapper(payload)) {
+    return { valid: false, severity: 'error', messages: [{ message: `${AMBIGUOUS}: nothing was scanned`, severity: 'error' }] };
+  }
   const listed = toolsOf(payload);
   if (!listed) {
     return { valid: false, severity: 'error', messages: [{ message: 'the payload holds no tools array: nothing was scanned', severity: 'error' }] };

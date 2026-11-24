@@ -396,6 +396,38 @@ class BuiltinGuardTest(unittest.TestCase):
         self.assertEqual(self.gw.paths(), ["/v1/pre", "/v1/pre"])
         self.assertNotEqual(self.gw.requests[0][1]["tool_name"], self.gw.requests[1][1]["tool_name"])
 
+    def test_terminal_posts_json_payload_and_keeps_http_headers_after_masking(self):
+        from collections.abc import Mapping
+
+        class HttpHeaders(Mapping):
+            def __getitem__(self, name):
+                return {"Content-Type": "application/json"}[name]
+
+            def __iter__(self):
+                return iter(("Content-Type",))
+
+            def __len__(self):
+                return 1
+
+        headers = HttpHeaders()
+        payload = {"id": "20260115-150607-ba7e2a", "output": []}
+
+        async def run_command(command):
+            return payload, headers
+
+        async def get_terminal_tools(request, terminal_id, user, extra_params):
+            return {"run_command": {"callable": run_command}}, None
+
+        self.mw.get_terminal_tools = get_terminal_tools
+        warden_filter.install_builtin_guard()
+        self.gw.replies["/v1/pre"] = {"decision": "allow"}
+        self.gw.replies["/v1/post"] = {"tool_response": {"id": payload["id"], "output": ["masked"]}}
+        tools, _ = self.terminal()
+        result, result_headers = run(tools["run_command"]["callable"](command="uname"))
+        self.assertEqual(self.gw.requests[1][1]["tool_response"], payload)
+        self.assertEqual(result["output"], ["masked"])
+        self.assertIs(result_headers, headers)
+
     def test_search_result_is_recorded_and_annotated(self):
         self.gw.replies["/v1/pre"] = {"decision": "allow"}
         self.gw.replies["/v1/post"] = {"flowNote": "data written by someone else"}

@@ -89,6 +89,8 @@ export interface FlowState {
   intent?: string[];
   /** The same, lower-cased with spacing kept, for whole-word matches of short names and numbers. */
   intentRaw?: string[];
+  /** Case-sensitive terminal path fingerprints per prompt. Older prompts have a null entry. */
+  intentTerminalPaths?: Array<string[] | null>;
   /** Addresses resolved by explicitly trusted contact tools, bound to full display names. */
   resolved?: Array<{ v: string; names: string[] }>;
   resolvedVersion?: 2;

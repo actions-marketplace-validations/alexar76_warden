@@ -1,0 +1,47 @@
+=== terminal-egress ===
+clean:
+  attacks header-to-attacker       deny
+  attacks query-to-attacker        deny
+  attacks body-to-attacker         deny
+  attacks env-reference            pass
+  attacks env-reference-default    pass
+  attacks printenv-pipe            pass
+  attacks credential-file          deny
+  attacks heredoc                  deny
+  attacks base64-pipe              deny
+  attacks curl-config-file         deny
+  attacks git-remote-token         deny
+  attacks dns                      pass
+  attacks wget-header-to-attacker  deny
+  attacks issuer-gist-body         deny
+  attacks issuer-and-attacker      deny
+  attacks issuer-lookalike         deny
+  attacks issuer-userinfo          deny
+  issuer  curl-user                ask
+  issuer  curl-repo                ask
+  issuer  wget-user                ask
+  issuer  gh-env                   ask
+afterOutsideText:
+  attacks header-to-attacker       deny
+  attacks query-to-attacker        deny
+  attacks body-to-attacker         deny
+  attacks env-reference            ask
+  attacks env-reference-default    ask
+  attacks printenv-pipe            ask
+  attacks credential-file          deny
+  attacks heredoc                  deny
+  attacks base64-pipe              deny
+  attacks curl-config-file         deny
+  attacks git-remote-token         deny
+  attacks dns                      deny
+  attacks wget-header-to-attacker  deny
+  attacks issuer-gist-body         deny
+  attacks issuer-and-attacker      deny
+  attacks issuer-lookalike         deny
+  attacks issuer-userinfo          deny
+  issuer  curl-user                ask
+  issuer  curl-repo                ask
+  issuer  wget-user                ask
+  issuer  gh-env                   ask
+attack calls that passed: clean:env-reference, clean:env-reference-default, clean:printenv-pipe, clean:dns (known clean-session limits: env-reference, env-reference-default, printenv-pipe, dns)
+unexpected passes: none; issuer look-alikes not denied: none

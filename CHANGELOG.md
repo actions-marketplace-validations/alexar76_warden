@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.38.1 — 2026-11-24 (Open WebUI upgrades and Open Terminal file destinations)
+
+- Re-running Open WebUI `setup` upgrades the default gateway package with the Filter, including installs that saved
+  an older default gateway in `setup.json`. `check` flags mismatched versions. Custom `--package` overrides are saved.
+- Native Open Terminal `write_file` and `replace_file_content` recognize the exact path relative to the authenticated
+  user's default home when `path` is configured in `destinationArgs`. The path must appear in the user's own message.
+  The gateway continues checking the file payload, and changed shell arguments still require authorization.
+
+## 0.38.0 — 2026-11-23 (a token sent back to its issuer is asked about, and the interceptor refuses tools next to result)
+
+- **The interceptor refuses a payload with `tools` next to `result`.** Both validators read the top-level `tools`
+  first, so `{"jsonrpc": "2.0", "id": 1, "tools": [clean], "result": {"tools": [poisoned]}}` was scanned clean and
+  found unchanged, while a lenient client (the MCP Python SDK drops the unknown member) reads `result.tools`. Only
+  `requireFullCoverage` refused it. Now both validators refuse such a payload, at the top or inside `result`, with
+  `TSD-TOOL`, as mcp-tool-set-digest/1 section 3 (editors' draft of 2026-11-23) requires. The test copy of the
+  specification's vectors is updated to its 92.
+- **A token sent back to its issuer is asked about, not denied.** The flow guard used to deny
+  `curl -H "Authorization: Bearer ghp_…" https://api.github.com/user` like any other call carrying a recognised token,
+  so the ordinary use of a token needed the guard turned off. One simple `curl`, `wget`, `httpie` or `gh api` command
+  whose every destination is an HTTPS host of the token's issuer, and whose every copy of the token is an authorisation
+  header value, is now asked about (`secret_issuer`); every other shape stays denied, and `deny` mode and unattended
+  runs still refuse it. Bound: GitHub, GitLab, Slack and npm tokens (`src/flow-guard-issuer.ts`).
+- **Terminal egress red team** (`scripts/redteam/terminal-egress.mjs`): 17 attacks and 4 issuer requests in two session
+  states. Only the 4 issuer requests changed (deny to ask); the clean-session limits it measures are in
+  `docs/flow-guard.md`.
+
+## 0.37.3 — 2026-11-23 (Open Terminal results and rootless Docker)
+
+- The Open WebUI Filter passes structured Open Terminal results to WARDEN and preserves the original response
+  headers in Open WebUI. Process acknowledgements and verified output of simple diagnostics keep the chat clean.
+  Arbitrary command output remains outside text.
+- Process IDs in lifecycle arguments and the authenticated user's default home prefix in file paths are routing
+  data. WARDEN checks the remaining path and payload for personal data, and checks the full arguments for secrets.
+- Open WebUI setup detects rootless Docker and uses its daemon-owner UID mapping for private gateway mounts.
+
 ## 0.37.2 — 2026-11-22 (tool-set digests at depth)
 
 A patch release. The contract and extras digests now follow the depth rule `mcp-tool-set-digest/1` adopted on

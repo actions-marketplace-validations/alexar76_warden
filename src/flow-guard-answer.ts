@@ -8,6 +8,7 @@ import { fpHash, normalizeText } from './flow-guard-fingerprints.js';
 import { readFp } from './flow-guard-leak.js';
 import { log, readFlowState, warningSourceId, updateFlowState } from './flow-guard-state.js';
 import { checkAnswerConstraints } from './flow-guard-constraints.js';
+import { terminalPromptPaths } from './flow-guard-terminal.js';
 
 // An answer that repeats 12 letters and digits in a row from an instruction aimed at the model ("Riverside View")
 // is checked once more before the user reads it.
@@ -46,12 +47,19 @@ export function flowPrompt(input: Record<string, unknown>, env: NodeJS.ProcessEn
   updateFlowState(paths.state, s => {
     const list = s.intent ?? [];
     const raw = s.intentRaw ?? [];
+    const terminalPaths = s.intentTerminalPaths ?? (input.track_terminal_paths === true ? raw.map(() => null) : undefined);
     const own = ownWords(prompt.slice(0, MAX_INTENT));
     list.push(normalizeText(own));
     raw.push(own.normalize('NFKC').toLowerCase());
-    while (list.join('').length > MAX_INTENT && list.length > 1) { list.shift(); raw.shift(); }
+    terminalPaths?.push(input.track_terminal_paths === true ? terminalPromptPaths(own) : null);
+    while (list.join('').length > MAX_INTENT && list.length > 1) {
+      list.shift();
+      raw.shift();
+      terminalPaths?.shift();
+    }
     s.intent = list;
     s.intentRaw = raw;
+    if (terminalPaths) s.intentTerminalPaths = terminalPaths;
     s.turn = (s.turn ?? 0) + 1;
     delete s.answerReview;
   });

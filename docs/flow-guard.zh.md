@@ -10,6 +10,12 @@
 
 > 🌐 [English](flow-guard.md) · [Русский](flow-guard.ru.md) · [Español](flow-guard.es.md) · [Français](flow-guard.fr.md) · **中文**
 
+## 把令牌发回其签发方，以及经由终端的外泄（2026-11-23）
+
+守卫会拒绝任何携带已识别密钥格式的调用，不论目的地是哪里。因此连令牌的正常用法 `curl -H "Authorization: Bearer ghp_…" https://api.github.com/user` 也会被拒绝，唯一的办法是关掉守卫。现在，当以下条件全部满足时，这类调用**改为询问而不是直接拒绝**：它是一条简单的 `curl`、`wget`、`httpie` 或 `gh api` 命令（没有管道、命令列表、重定向、展开、替换、通配符或转义）；每个目的地都是该令牌签发方的 HTTPS 主机，URL 中不含凭据且使用默认端口；令牌的每一份副本都是完整的 `Authorization: Bearer|token …`（或 `PRIVATE-TOKEN:`）请求头的值，或位于 `gh api` 之前的 `GH_TOKEN=`/`GITHUB_TOKEN=`；没有改变请求去向或读取文件的选项（`--resolve`、`--connect-to`、代理、`-K`、`@文件`、`--location-trusted`）；并且去掉令牌之后，调用中不再有任何密钥、凭据片段、私密文本或个人数据。已绑定的格式与主机：GitHub 令牌对应 `api.github.com` 和 `uploads.github.com`，GitLab 令牌对应 `gitlab.com`，Slack 令牌对应 `slack.com`，npm 令牌对应 `registry.npmjs.org`。`sk-…` 密钥和 Google API 密钥不对应唯一的签发方，不做绑定。在 `deny` 模式和无人值守的运行中，调用仍会被拒绝。请求在签发方那里用令牌做什么，守卫并不判断：这正是询问你的内容。
+
+`node scripts/redteam/terminal-egress.mjs` 通过随包发布的钩子重放 17 个终端攻击和 4 个发往签发方的请求，分别在干净会话中以及读取凭据和外部文本之后。此项改动后，4 个发往签发方的请求在两种状态下都从拒绝变为询问，而每个攻击的结果都没有变化（令牌放在请求头、URL 或请求体中发往其他主机、`curl -K`、here-document、经管道的 `base64`、git 远程 URL 中的令牌、凭据文件、签发方加第二个主机、仿冒主机、主机前的 userinfo、在发给签发方本身的 gist 正文里放令牌）。干净会话的已知局限保持不变：由 shell 从环境变量展开的凭据（`$GITHUB_TOKEN`、`${GH_TOKEN:-x}`、`printenv NAME | curl -d @-`）只在出现外部文本之后才检查，届时会询问；守卫从未见过的令牌无法按片段识别（DNS 标签），在读取凭据之后会被拒绝。
+
 关于账单、包版本固定、launcher 比较及批准计数的含义，请参见[测量边界与版本证据](scan-limits.zh.md)。
 
 ## 首次注解审核与回答复查（本地源码，2026-10-25）
@@ -314,7 +320,7 @@ Wrap 提问前读取基线，批准后重新验证工具定义并再次读取。
 - 只改变回答的注入不会发出可拒绝的调用。自 2026-10-22 起，插件的 Stop 钩子会在本轮读过外部文本的回答下方加一行，列出这些来源；若其中有文本以指令口吻对助手说话，也会注明。如果回答连续重复了外部文本中对助手下指令那几句话里的 12 个规范化字符，钩子还会把回答退回给模型一次（`decision: block`），在用户读到之前对照用户的请求检查；用户只损失这次检查的时间。`answerNote`：`always`（默认）、`instruction`（只在这种情况下）或 `off`；插件之外请注册 `warden-mcp hook stop`。
 - 代理也记录 JSON-RPC 和工具错误；记录失败时不转发响应，现有会话状态损坏时阻止检查中的调用。
 
-已在 npm `0.17.0` 发布：`npx -y @aimarket/warden@0.37.2 hook pre-tool-use`；或从源码在 WARDEN 目录运行 `npm ci && npm run build`，然后使用 `node dist/mcp-server.js hook pre-tool-use`，并注册 prompt/post hooks。策略为 `~/.local/state/warden/flow-policy.json` 或 `WARDEN_FLOW_POLICY`；模式为 `ask`、`deny`、`audit`、`off`。当前配置示例见[英文页](flow-guard.md)。
+已在 npm `0.17.0` 发布：`npx -y @aimarket/warden@0.38.1 hook pre-tool-use`；或从源码在 WARDEN 目录运行 `npm ci && npm run build`，然后使用 `node dist/mcp-server.js hook pre-tool-use`，并注册 prompt/post hooks。策略为 `~/.local/state/warden/flow-policy.json` 或 `WARDEN_FLOW_POLICY`；模式为 `ask`、`deny`、`audit`、`off`。当前配置示例见[英文页](flow-guard.md)。
 
 代理命令：`node dist/mcp-server.js wrap --flow mail -- node mail-server.js`。同一会话的代理应共享一个新的 `WARDEN_FLOW_SESSION`。默认父进程 PID 不能关联不同启动器。代理看不到用户提示或客户端内置工具。需要确认的调用会在客户端提供 MCP elicitation 表单时通过表单询问（回答记入日志的 `approvalOutcome`），否则或使用 `--ask refuse` 时被拒绝。`trustedSources` 仅用于 WebFetch URL，不用于 MCP 参数中的任意链接。
 

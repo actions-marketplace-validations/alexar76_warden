@@ -116,8 +116,13 @@ def _wrap_tool(name: str, fn, extra_params: dict, policy_name: str):
             result = await fn(*args, **kwargs)
         except Exception as e:  # recorded like any other result, then raised as OpenWebUI expects
             error, result = True, e
+        # OpenWebUI pairs the terminal's payload with non-JSON HTTP headers.
+        # Inspect and mask the payload, then return the original headers to OpenWebUI.
+        terminal_response = policy_name.startswith("terminal:") and isinstance(result, tuple) and len(result) == 2
+        payload = result[0] if terminal_response else result
+        tool_error = error or (terminal_response and isinstance(payload, dict) and "error" in payload)
         try:
-            out = await f._call("/v1/post", {**call, "tool_response": _jsonable(result) if not error else f"{type(result).__name__}: {result}", "tool_error": error})
+            out = await f._call("/v1/post", {**call, "tool_response": _jsonable(payload) if not error else f"{type(result).__name__}: {result}", "tool_error": tool_error})
         except (GatewayUnavailable, GatewayRefused) as e:
             await f._warn(emitter, f"WARDEN недоступен ({e}): результат {name} не записан")
             return f"Result withheld: the WARDEN gateway could not record it ({e})."
@@ -127,7 +132,7 @@ def _wrap_tool(name: str, fn, extra_params: dict, policy_name: str):
             return f"Tool result withheld by WARDEN: it reads as instructions to the model ({', '.join(out.get('codes') or [])})."
         if "tool_response" in out:
             # Masked by the gateway: the model reads placeholders, never the credentials or personal data in the result.
-            result = out["tool_response"]
+            result = (out["tool_response"], result[1]) if terminal_response else out["tool_response"]
         if isinstance(result, str):
             notice, note = out.get("notice"), out.get("flowNote")
             return "\n\n".join(x for x in (notice, result, f"[WARDEN] {note}" if note else None, out.get("mask_note")) if x)

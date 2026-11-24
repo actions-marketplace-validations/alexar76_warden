@@ -19,7 +19,7 @@ export type UnattendedBlockMode = 'data' | 'all';
 /** Reasons that are about data, never only about an action. */
 export const DATA_REASONS: ReadonlySet<FlowReason> = new Set<FlowReason>(['protected_settings', 'secret', 'secret_fragment',
   'paste_after_secret', 'payload_incomplete', 'secret_tracking', 'personal_data', 'private_text', 'credential_egress',
-  'secret_to_file']);
+  'secret_to_file', 'secret_issuer']);
 
 /** Whether an unattended run must refuse this decision. */
 export function refuses(decision: { permissionDecision: 'ask' | 'deny' }, detail: FlowPreDetail, block: UnattendedBlockMode): boolean {

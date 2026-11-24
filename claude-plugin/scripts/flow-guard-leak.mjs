@@ -47,9 +47,8 @@ export function readFp(path) {
 export function readStores(paths) {
     return { secret: readFp(paths.secret), fp: readFp(paths.fp), pii: readFp(paths.pii), tok: readFp(paths.tok) };
 }
-/** `typed`: what the user typed this session. A value the user typed is theirs to send; it is skipped
- * for ordinary private text, never for secrets. */
-export function checkLeak(paths, input, typed = [], stores = readStores(paths)) {
+/** `typed` and adapter-validated routing fields affect only private data and PII. Secrets still use the raw arguments. */
+export function checkLeak(paths, input, typed = [], stores = readStores(paths), dataInput = input) {
     const all = strings(input);
     const scan = scanCandidates(all);
     const cands = scan.values;
@@ -70,7 +69,7 @@ export function checkLeak(paths, input, typed = [], stores = readStores(paths)) 
         for (const c of cands)
             if (tokenHit(c, tokFp))
                 return { secret: 'part of a credential this session read' };
-    const privateCands = candidates(all.filter(s => !own(s)));
+    const privateCands = candidates((dataInput === input ? all : strings(dataInput)).filter(s => !own(s)));
     const result = {};
     if (piiFp.size)
         for (const c of privateCands)
@@ -92,7 +91,7 @@ export function checkLeak(paths, input, typed = [], stores = readStores(paths)) 
  * and the windows that cross from that tail into this call are checked like any other. Only pieces sent back to back
  * through the same argument join; words between them break the run. Returns the new tails.
  */
-export function checkStream(input, tails, stores) {
+export function checkStream(input, tails, stores, dataInput = input) {
     const leak = {};
     const next = {};
     for (const [key, value] of Object.entries(input)) {
@@ -100,14 +99,20 @@ export function checkStream(input, tails, stores) {
         if (!n)
             continue;
         const a = alnum(n);
+        const data = dataInput[key] === value ? n : normalizeText(strings(dataInput[key]).join(''));
         const prev = tails[key] ?? { t: '', a: '' };
         if (prev.t) {
             for (const h of windowsAll(prev.t + n.slice(0, WINDOW - 1))) {
                 if (stores.secret.has(h))
                     leak.secret = 'text from a credential file this session read, sent in pieces';
-                if (stores.fp.has(h))
+                if (data === n && stores.fp.has(h))
                     leak.private = true;
             }
+            if (data && data !== n)
+                for (const h of windowsAll(prev.t + data.slice(0, WINDOW - 1))) {
+                    if (stores.fp.has(h))
+                        leak.private = true;
+                }
         }
         if (prev.a) {
             for (const size of TOKEN_WINDOWS) {
@@ -116,9 +121,9 @@ export function checkStream(input, tails, stores) {
                     if (stores.tok.has(fpHash(tok.slice(i, i + size))))
                         leak.secret = 'part of a credential this session read, sent in pieces';
             }
-            if (stores.pii.size) {
+            if (stores.pii.size && data) {
                 // Personal-data tokens are 8-34 letters and digits: try every one that starts before this call and ends in it.
-                const joined = prev.a + a.slice(0, ALNUM_TAIL);
+                const joined = prev.a + (data === n ? a : alnum(data)).slice(0, ALNUM_TAIL);
                 for (let i = 0; i < prev.a.length && !leak.pii; i++) {
                     for (let len = 8; len <= 34 && i + len <= joined.length; len++) {
                         if (i + len > prev.a.length && stores.pii.has(fpHash(joined.slice(i, i + len)))) {

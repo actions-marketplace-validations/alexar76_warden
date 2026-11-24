@@ -328,7 +328,7 @@ export class Decider {
     let turn = 0;
     try { turn = readFlowState(flowPaths(stateDir(this.env), session).state).turn ?? 0; } catch { turn = 0; }
     this.expired(session, who);
-    flowPrompt({ session_id: session, prompt: prompt.slice(0, 100_000), cwd: this.cwd }, this.env);
+    flowPrompt({ session_id: session, prompt: prompt.slice(0, 100_000), cwd: this.cwd, track_terminal_paths: true }, this.env);
     return { first: turn === 0 };
   }
 
@@ -361,7 +361,8 @@ export class Decider {
     this.unreported(session, who);
     const detail: FlowPreDetail = {};
     let d;
-    try { d = flowPre({ session_id: session, tool_name: name, tool_input: input, cwd: this.cwd }, this.env, 'hook', detail); }
+    const terminal = server === 'builtin' && tool.startsWith('terminal:') ? { terminal_user_id: who.user || '' } : {};
+    try { d = flowPre({ session_id: session, tool_name: name, tool_input: input, cwd: this.cwd, ...terminal }, this.env, 'hook', detail); }
     catch (e) {
       // A corrupt or unreadable state must not let the call through.
       this.note(session, who, { tool: safeToolName(name), decision: 'deny', resolution: 'guard_error' });
@@ -429,7 +430,8 @@ export class Decider {
   async post(who: Who, server: string, tool: string, args: Record<string, unknown>, result: unknown, isError = false): Promise<PostAnswer> {
     const { name, input } = guardCall(server, tool, args);
     const session = this.session(who);
-    const out = flowPost({ session_id: session, tool_name: name, tool_input: input, tool_response: result, cwd: this.cwd, ...(isError ? { tool_error: true } : {}) }, this.env);
+    const terminal = server === 'builtin' && tool.startsWith('terminal:') ? { terminal_user_id: who.user || '' } : {};
+    const out = flowPost({ session_id: session, tool_name: name, tool_input: input, tool_response: result, cwd: this.cwd, ...terminal, ...(isError ? { tool_error: true } : {}) }, this.env);
     const answer: PostAnswer = {};
     if (this.config.results !== 'off') {
       const ref: McpServerRef = { id: `gateway:${server}`, name: server, transport: 'http' };

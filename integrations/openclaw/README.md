@@ -11,7 +11,7 @@ servers behind `warden-mcp wrap`; the flow guard still refuses a call that would
 ## Install
 
 ```bash
-npm install -g @aimarket/warden@0.37.2
+npm install -g @aimarket/warden@0.38.1
 cp -r "$(npm root -g)/@aimarket/warden/integrations/openclaw/warden" ~/openclaw-warden
 cd ~/openclaw-warden && npm install --omit=dev          # pulls @aimarket/warden 0.37.0 or later
 sudo chown -R root:root .                                # OpenClaw refuses plugin files not owned by root

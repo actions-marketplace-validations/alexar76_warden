@@ -1,0 +1,5 @@
+files prod 11108 candidate 11114
+outside WARDEN: only prod [] only candidate [] differ []
+candidate warden 0.38.0 dist js 86 buildDigest cbb3a54fa345fca64aff9c2d54349c3fe9dee2b4e1b429fd6df161efd29c110b
+source files 86
+CANDIDATE_ID=sha256:d1bcacad96239aca1d48ee720e49f893459b1c7fb94e48f60ec4b6584f2b5075
