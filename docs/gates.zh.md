@@ -102,6 +102,7 @@ v13 把单词边缘的句点或连字符当作标点。这暴露了此前被同�
 | `TOOL_DEF_HIDDEN_UNICODE` | high | block | ✅ | 零宽字符与双向控制字符——审阅者看不见的文本 |
 | `TOOL_DEF_BASE64_BLOB` | high | block | ✅ | 名称、描述或 schema 里长达 120+ 字符的 base64 串 |
 | `TOOL_DEF_DATA_URL` | high | block | ✅ | `data:…;base64,` 与 `javascript:` 形式的 URL |
+| `TOOL_DEF_SHORT_LINK` | low | advise | — | 经由短链接服务的链接（`bit.ly/…`、`tinyurl.com/…`、`t.co/…`；自规则集 24 起），看不出它指向哪里 |
 | `TOOL_DEF_CREDENTIAL_PARAM` | medium / low | advise | — | schema 或描述索要 `api_key`、`password`、`secret`、bearer 令牌 |
 | `TOOL_DEF_ENV_REFERENCE` | medium | advise | — | `.env`、「environment variables」 |
 | `TOOL_DEF_IMPERATIVE` | low / info | advise | ✅ | 「you must」「instead of」——提示词形态的措辞，单独并不能证明任何事 |

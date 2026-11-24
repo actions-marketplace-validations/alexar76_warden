@@ -216,6 +216,7 @@ afectan.
 | `TOOL_DEF_HIDDEN_UNICODE` | high | block | ✅ | caracteres de ancho cero y de control bidi — texto que el revisor no ve |
 | `TOOL_DEF_BASE64_BLOB` | high | block | ✅ | una tirada base64 de 120+ caracteres en un nombre, una descripción o un esquema |
 | `TOOL_DEF_DATA_URL` | high | block | ✅ | URLs `data:…;base64,` y `javascript:` |
+| `TOOL_DEF_SHORT_LINK` | low | advise | — | un enlace a través de un acortador (`bit.ly/…`, `tinyurl.com/…`, `t.co/…`; desde el conjunto de reglas 24): no se ve adónde lleva |
 | `TOOL_DEF_CREDENTIAL_PARAM` | medium / low | advise | — | esquema o descripción que pide `api_key`, `password`, `secret`, tokens bearer |
 | `TOOL_DEF_ENV_REFERENCE` | medium | advise | — | `.env`, «environment variables» |
 | `TOOL_DEF_IMPERATIVE` | low / info | advise | ✅ | «you must», «instead of» — fraseo con forma de prompt, que por sí solo no prueba nada |

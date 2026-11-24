@@ -223,6 +223,7 @@ l'affectent jamais.
 | `TOOL_DEF_HIDDEN_UNICODE` | high | block | ✅ | caractères de largeur nulle et de contrôle bidi — du texte que le relecteur ne voit pas |
 | `TOOL_DEF_BASE64_BLOB` | high | block | ✅ | une suite base64 de 120+ caractères dans un nom, une description ou un schéma |
 | `TOOL_DEF_DATA_URL` | high | block | ✅ | URLs `data:…;base64,` et `javascript:` |
+| `TOOL_DEF_SHORT_LINK` | low | advise | — | un lien via un raccourcisseur (`bit.ly/…`, `tinyurl.com/…`, `t.co/…` ; depuis le jeu de règles 24) : on ne voit pas où il mène |
 | `TOOL_DEF_CREDENTIAL_PARAM` | medium / low | advise | — | schéma ou description réclamant `api_key`, `password`, `secret`, jetons bearer |
 | `TOOL_DEF_ENV_REFERENCE` | medium | advise | — | `.env`, « environment variables » |
 | `TOOL_DEF_IMPERATIVE` | low / info | advise | ✅ | « you must », « instead of » — formulation en forme de prompt, qui à elle seule ne prouve rien |

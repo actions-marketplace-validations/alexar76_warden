@@ -1,0 +1,378 @@
+
+ RUN  v5.0.5 /private/tmp/warden-0390-build/warden
+
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+ ❯ test/wrap.test.ts (124 tests | 9 failed) 160711ms
+   ❯ wrap proxy (124)
+     × strict admission withholds unreviewed tools in any language and never creates a TOFU pin 871ms
+     × persists drift across sessions; TTY reapproval allows the new snapshot 4221ms
+     × captures initialize versions through real wrap and TTY approval, without treating metadata as identity or tools 2297ms
+     × keeps a TOFU-reported version while flagging actual tool drift at the same version 1750ms
+     × does not overwrite an approval when only the observed version changes during TTY review 667ms
+     × revoke persists denial, without silently starting a fresh TOFU 575ms
+     × identity drift blocks before spawning and returns initialize error with exit 3 3107ms
+     × revoking a pin that has no wrap observation still blocks the next wrap 971ms
+     × refuses a silent annotation-only change before execution under a reviewed pin 1787ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > strict admission withholds unreviewed tools in any language and never creates a TOFU pin
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'approve fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins approve --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-bDn9Bn
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:77:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > persists drift across sessions; TTY reapproval allows the new snapshot
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'approve fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins approve --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-7NWDkk
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:123:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > captures initialize versions through real wrap and TTY approval, without treating metadata as identity or tools
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'approve fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins approve --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-eVwg9z
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:132:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > keeps a TOFU-reported version while flagging actual tool drift at the same version
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'status fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins status --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-TCeCXd
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:166:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > does not overwrite an approval when only the observed version changes during TTY review
+AssertionError: expected '' to contain 'Observed definitions changed since re…'
+
+- Expected
++ Received
+
+- Observed definitions changed since review; inspect status again
+
+ ❯ test/wrap.test.ts:178:52
+    176|     try { ttyPins(dir, 'approve', mutate); } catch (err) { failure = e…
+    177|     expect(failure).toBeDefined();
+    178|     expect((failure as { stdout: string }).stdout).toContain('Observed…
+       |                                                    ^
+    179|     expect(pinRevision(await store.getPin('fixture'))).toBe(before);
+    180|   }, 20_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > revoke persists denial, without silently starting a fresh TOFU
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'revoke fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins revoke --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-AcQ3AD
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:195:58
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > identity drift blocks before spawning and returns initialize error with exit 3
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'approve fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins approve --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-jhaCtM
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:205:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > revoking a pin that has no wrap observation still blocks the next wrap
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'revoke fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins revoke --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-W7iNYR
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:303:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  test/wrap.test.ts > wrap proxy > refuses a silent annotation-only change before execution under a reviewed pin
+Error: Command failed: python3 -c import os,pty,subprocess,select,sys,time
+m,s=pty.openpty()
+p=subprocess.Popen(sys.argv[1:],stdin=s,stdout=s,stderr=s)
+os.close(s)
+data=b''
+end=time.time()+12
+while time.time()<end:
+ if select.select([m],[],[],.1)[0]:
+  try: data+=os.read(m,65536)
+  except OSError: break
+  if b'to confirm:' in data:
+   pass
+   os.write(m,b'approve fixture\n'); data=data.replace(b'to confirm:',b'confirmed:')
+ if p.poll() is not None: break
+p.wait(timeout=2)
+sys.stdout.buffer.write(data)
+sys.exit(p.returncode)
+ /Users/alex/.nvm/versions/node/v22.22.1/bin/node /private/tmp/warden-0390-build/warden/dist/mcp-server.js pins approve --id fixture --state-dir /var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/warden-wrap-KPpVaJ
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 30, in openpty
+    master_fd, slave_name = _open_terminal()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pty.py", line 60, in _open_terminal
+    raise OSError('out of pty devices')
+OSError: out of pty devices
+
+ ❯ ttyPins test/wrap.test.ts:55:10
+
+ ❯ test/wrap.test.ts:319:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed | 91 passed (92)
+      Tests  9 failed | 2234 passed (2243)
+   Start at  12:04:28
+   Duration  169.91s (tests 90%, transform 5%, import 4%, setup 1%)
+
+    Isolate  92 workers spawned · ~420ms startup each (spawn + environment, per file)
+             at least ~12.46s faster with isolate: false — reuses workers across files instead of one per file
+

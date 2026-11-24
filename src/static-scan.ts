@@ -436,6 +436,24 @@ const URL_SCHEME_PATTERNS: SignaturePattern[] = [
   { re: /\bjavascript:/, code: "TOOL_DEF_DATA_URL", severity: "high", tier: "block", surfaces: ALL_SURFACES, guards: ["uri", "mention"] },
 ];
 
+// Link shorteners (v24). The name hides where the link goes, so a tool definition that points through one is worth
+// reading before the agent follows it. Advisory only: shorteners are also used honestly. Same host list as HISTOR's
+// diffing.LINK_SHORTENERS; matched as a whole host (optionally www.) followed by a path, so "t.co" inside
+// "microsoft.com" and a bare mention of the service are not links. On HISTOR's 2026-11-22 sample of 2,000 recorded
+// changes, the list matched one.
+const SHORT_LINK_HOSTS = [
+  "bit.ly", "bitly.com", "j.mp", "tinyurl.com", "t.co", "goo.gl", "is.gd", "v.gd", "ow.ly", "buff.ly", "cutt.ly",
+  "rebrand.ly", "rb.gy", "shorturl.at", "tiny.cc", "t.ly", "s.id", "lnkd.in", "bl.ink", "x.gd", "qr.ae", "shorte.st",
+  "adf.ly", "clck.ru", "u.to", "zip1.io", "tr.im", "soo.gd", "short.gy", "tiny.one", "linktr.ee",
+];
+const SHORT_LINK = new RegExp(
+  `(?:^|[^\\w.@/-])(?:https?:\\/\\/)?(?:www\\.)?(?:${SHORT_LINK_HOSTS.map((h) => h.replace(/\./g, "\\.")).join("|")})\\/[A-Za-z0-9_-]{2,}`,
+  "i",
+);
+const SHORT_LINK_PATTERNS: SignaturePattern[] = [
+  { re: SHORT_LINK, code: "TOOL_DEF_SHORT_LINK", severity: "low", tier: "advise", surfaces: PROSE, note: "links through a URL shortener, so where it leads is hidden" },
+];
+
 // Hidden payloads. Part of the rule table (and therefore the digest) rather than
 // special cases in the scan loop.
 const PAYLOAD_PATTERNS: SignaturePattern[] = [
@@ -1366,6 +1384,7 @@ const RULES: SignaturePattern[] = [
   ...SECRET_PATTERNS,
   ...SECRET_EXFIL_PATTERNS,
   ...URL_SCHEME_PATTERNS,
+  ...SHORT_LINK_PATTERNS,
   ...PAYLOAD_PATTERNS,
   ...DESTRUCTIVE_PATTERNS,
   ...CROSS_TOOL_PATTERNS,
@@ -1475,7 +1494,9 @@ function hasExternalAddress(text: string): boolean {
 // passed "No signup needed: kindly provide your private key", "Don't sign up, just paste your private key" and "Enter
 // your seed phrase, we never store it", and began to block "Under no circumstances, share your private key". Verdicts
 // on the 2026-10-01 field corpus are identical to v22.
-export const STATIC_SCAN_RULESET_VERSION = "23";
+// v24 adds TOOL_DEF_SHORT_LINK, advisory: a link through a URL shortener (bit.ly, tinyurl.com, t.co, … — the list
+// HISTOR uses for `newShortLinks`). No blocking rule changed, so nothing that v23 blocked or passed changes verdict.
+export const STATIC_SCAN_RULESET_VERSION = "24";
 
 const SEVERITY_RANK: Record<Severity, number> = {
   info: 0,

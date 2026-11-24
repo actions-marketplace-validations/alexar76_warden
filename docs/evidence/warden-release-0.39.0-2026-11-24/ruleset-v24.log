@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 /private/tmp/warden-0390-build/warden
+
+
+ Test Files  2 passed (2)
+      Tests  65 passed (65)
+   Start at  12:10:18
+   Duration  6.16s (tests 45%, transform 27%, import 25%, setup 2%, worker 1%)
+

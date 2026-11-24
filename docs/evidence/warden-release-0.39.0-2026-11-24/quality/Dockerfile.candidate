@@ -1,0 +1,15 @@
+# WARDEN 0.39.0 for HISTOR: shortlinks-20261124 (= sha256:2c44c3dfb004fe3b58adcb82dea58dae6a9c29f04065114ad4fa9f25a3c33ed3)
+# with vendored WARDEN replaced by the release archive of 0.39.0 (sha256 e87e2adb…)
+# and matching source under /opt/warden-source/src. Nothing of HISTOR's own code changes.
+FROM histor-histor:shortlinks-20261124
+USER 0:0
+RUN rm -rf /app/scanner/node_modules/@aimarket/warden /opt/warden-source/src
+COPY package/ /app/scanner/node_modules/@aimarket/warden/
+COPY src/ /opt/warden-source/src/
+LABEL skopos.source.commit="23fcfe28d85e8fedd4125a400f3ba6e3c1d45961" \
+      aicom.histor.overlay="warden-0390-prod-20261124" \
+      org.aimarket.release.candidate="warden-0.39.0" \
+      org.aimarket.release.tarball-sha256="e87e2adbdbcf9e08654353b3ba8a4301f6d73157dc1806022597b2d294b32d2b" \
+      org.aimarket.release.warden-build="18221b0084f1f800d0ef916b9613d0ebfd61853d35b1726cc05106ab03c88c0c"
+USER 65532:65532
+RUN node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('/app/scanner/node_modules/@aimarket/warden/package.json','utf8')); if(p.name!=='@aimarket/warden'||p.version!=='0.39.0') process.exit(1)"

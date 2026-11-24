@@ -1,0 +1,84 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/tmp/warden-0390-build/warden[39m
+
+ [32m✓[39m test/wrap.test.ts [2m([22m[2m124 tests[22m[2m)[22m[33m 52446[2mms[22m[39m
+   [32m✓[39m wrap proxy [2m(124)[22m
+     [33m[2m✓[22m[39m clean server, raw results, framing lsp=false and 5 MiB response[33m 741[2mms[22m[39m
+     [33m[2m✓[22m[39m clean server, raw results, framing lsp=true and 5 MiB response[33m 707[2mms[22m[39m
+     [33m[2m✓[22m[39m strict admission withholds unreviewed tools in any language and never creates a TOFU pin[33m 873[2mms[22m[39m
+     [33m[2m✓[22m[39m strict admission does not mistake an old automatic pin for operator approval[33m 450[2mms[22m[39m
+     [33m[2m✓[22m[39m persists drift across sessions; TTY reapproval allows the new snapshot[33m 853[2mms[22m[39m
+     [33m[2m✓[22m[39m captures initialize versions through real wrap and TTY approval, without treating metadata as identity or tools[33m 1672[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps a TOFU-reported version while flagging actual tool drift at the same version[33m 648[2mms[22m[39m
+     [33m[2m✓[22m[39m does not overwrite an approval when only the observed version changes during TTY review[33m 370[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses pins status without TTY, without changing the pin[33m 335[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses pins approve without TTY, without changing the pin[33m 367[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses pins revoke without TTY, without changing the pin[33m 338[2mms[22m[39m
+     [33m[2m✓[22m[39m human approval refuses a candidate that changes during review[33m 379[2mms[22m[39m
+     [33m[2m✓[22m[39m revoke persists denial, without silently starting a fresh TOFU[33m 898[2mms[22m[39m
+     [33m[2m✓[22m[39m identity drift blocks before spawning and returns initialize error with exit 3[33m 769[2mms[22m[39m
+     [33m[2m✓[22m[39m notifies clean changes only after vetting when pinning is explicitly disabled; old visible definitions still block[33m 305[2mms[22m[39m
+     [32m✓[39m tool results [2m(5)[22m
+       [33m[2m✓[22m[39m off: the result passes untouched; a clean result always passes byte for byte[33m 504[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses a silent annotation-only change before execution under a reviewed pin[33m 669[2mms[22m[39m
+     [33m[2m✓[22m[39m server requests and out-of-order client replies pass in both directions[33m 309[2mms[22m[39m
+     [33m[2m✓[22m[39m EOF terminates a stubborn child within 10 seconds and reaps it[33m 10111[2mms[22m[39m
+     [33m[2m✓[22m[39m five proxies sharing one state directory establish one intact pin[33m 372[2mms[22m[39m
+     [32m✓[39m sensitive tools (policy.sensitiveToolPatterns) [2m(6)[22m
+       [33m[2m✓[22m[39m asks through the client form; only a ticked, accepted answer lets that one call through[33m 388[2mms[22m[39m
+       [33m[2m✓[22m[39m a client that offers only URL elicitation, or --ask refuse, is never asked[33m 516[2mms[22m[39m
+     [32m✓[39m flow guard (--flow) [2m(63)[22m
+       [32m✓[39m atomic screen server CAS after approval [2m(16)[22m
+         [33m[2m✓[22m[39m commits exactly once through the server CAS and returns only the tool result, not the ticket/receipt[33m 357[2mms[22m[39m
+         [33m[2m✓[22m[39m refuses the exact race after the final proxy read but before server comparison, with no raw-click fallback[33m 366[2mms[22m[39m
+         [33m[2m✓[22m[39m rejects invisible handler/ABA revision changes even if both snapshots have identical role/ID/bounds[33m 318[2mms[22m[39m
+         [33m[2m✓[22m[39m decline and cancel never commit; internal server methods are inaccessible to client requests[33m 309[2mms[22m[39m
+         [33m[2m✓[22m[39m cancellation while approving discards the preparation; a late yes never commits[33m 390[2mms[22m[39m
+         [33m[2m✓[22m[39m a malformed committed receipt stamp never triggers a retry and leaves an uncertain lease[33m 362[2mms[22m[39m
+         [33m[2m✓[22m[39m a malformed committed receipt protocol never triggers a retry and leaves an uncertain lease[33m 364[2mms[22m[39m
+         [33m[2m✓[22m[39m a malformed committed receipt extra never triggers a retry and leaves an uncertain lease[33m 380[2mms[22m[39m
+         [33m[2m✓[22m[39m an error after the server effect remains uncertain and cannot be replayed automatically[33m 360[2mms[22m[39m
+         [33m[2m✓[22m[39m runs the documented server-owned virtual surface through a real stdio proxy[33m 375[2mms[22m[39m
+       [32m✓[39m Auten: fresh target after approval [2m(18)[22m
+         [33m[2m✓[22m[39m reads before the question and after approval, then forwards exactly one unchanged action[33m 344[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh role changes or cannot be read[33m 307[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh identity changes or cannot be read[33m 306[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh box changes or cannot be read[33m 306[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh reference changes or cannot be read[33m 318[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh label changes or cannot be read[33m 306[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh origin changes or cannot be read[33m 305[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh missing changes or cannot be read[33m 315[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh pixels changes or cannot be read[33m 313[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh error changes or cannot be read[33m 313[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels approved execution when the fresh duplicate changes or cannot be read[33m 305[2mms[22m[39m
+         [33m[2m✓[22m[39m rechecks definitions even if the server forgot its change notification[33m 321[2mms[22m[39m
+         [33m[2m✓[22m[39m cancels a clipboard action when a credential read changes its approval basis, despite identical geometry[33m 326[2mms[22m[39m
+         [33m[2m✓[22m[39m blocks a second proxy GUI action while the first approval is pending, even without revalidation configured on the second[33m 381[2mms[22m[39m
+         [33m[2m✓[22m[39m honors cancellation during the final observation and releases the unused screen lease[33m 1581[2mms[22m[39m
+         [33m[2m✓[22m[39m retains an uncertain screen lease across proxy restart when the action has no result[33m 557[2mms[22m[39m
+       [33m[2m✓[22m[39m mode strict requires actual approval even for listed navigation[33m 378[2mms[22m[39m
+       [33m[2m✓[22m[39m mode policy requires actual approval even for listed navigation[33m 382[2mms[22m[39m
+       [33m[2m✓[22m[39m refuses coordinate, listed and unknown clicks without an actual approval channel[33m 334[2mms[22m[39m
+       [33m[2m✓[22m[39m refuses unapproved GUI requests across separate proxy processes sharing the session[33m 325[2mms[22m[39m
+       [33m[2m✓[22m[39m lets policy mode use the normal approval form for an unlisted target[33m 364[2mms[22m[39m
+       [33m[2m✓[22m[39m keeps paste and post-input clicks gated even with a refreshed matching navigation snapshot[33m 328[2mms[22m[39m
+       [33m[2m✓[22m[39m withholds clipboard paste and Send even when a large image precedes screen text[33m 486[2mms[22m[39m
+       [33m[2m✓[22m[39m withholds opaque GUI actions after pixels, unknown layouts and non-English labels before forwarding[33m 441[2mms[22m[39m
+       [33m[2m✓[22m[39m requires a separate human approval for each opaque GUI action[33m 351[2mms[22m[39m
+       [33m[2m✓[22m[39m refuses opaque GUI actions in deny mode without offering approval or contacting the server[33m 303[2mms[22m[39m
+       [33m[2m✓[22m[39m explains coordinates and focused form submission from a snapshot without forwarding either call[33m 322[2mms[22m[39m
+       [33m[2m✓[22m[39m stops every first short-secret fragment across concurrent proxies before server delivery[33m 357[2mms[22m[39m
+       [33m[2m✓[22m[39m first-fragment form accept never becomes permission for a later call[33m 301[2mms[22m[39m
+       [33m[2m✓[22m[39m reserves an exact public request once across real concurrent proxies[33m 325[2mms[22m[39m
+       [33m[2m✓[22m[39m does not let extra RPC metadata or malformed arguments reuse an exact public grant[33m 324[2mms[22m[39m
+       [33m[2m✓[22m[39m never forwards tiny or custom-encoded data through send or read-only MCP arguments[33m 424[2mms[22m[39m
+       [33m[2m✓[22m[39m records JSON-RPC error text before delivery and refuses the following send[33m 301[2mms[22m[39m
+       [33m[2m✓[22m[39m refuses a send after outside text came through, and the refused call never reaches the server[33m 563[2mms[22m[39m
+       [33m[2m✓[22m[39m asks through the client form when the client offers one, and records the answer[33m 312[2mms[22m[39m
+       [33m[2m✓[22m[39m audit-only logs what the guard would do and forwards the call; without --flow nothing changes[33m 561[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m124 passed[39m[22m[90m (124)[39m
+[2m   Start at [22m 10:22:19
+[2m   Duration [22m 54.89s[2m (tests 99%, transform 1%)[22m
+

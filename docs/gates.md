@@ -225,6 +225,7 @@ Gate score is `1 − penalty(worst blocking severity)`; advisory hits never affe
 | `TOOL_DEF_HIDDEN_UNICODE` | high | block | ✅ | zero-width, bidi control and isolate characters, and the Unicode-tag block — text the reviewer cannot see |
 | `TOOL_DEF_BASE64_BLOB` | high | block | ✅ | a 120+ character base64 run in a name, description or schema |
 | `TOOL_DEF_DATA_URL` | high | block | ✅ | `data:…;base64,` and `javascript:` URLs |
+| `TOOL_DEF_SHORT_LINK` | low | advise | — | a link through a URL shortener (`bit.ly/…`, `tinyurl.com/…`, `t.co/…`; since ruleset 24), so where it leads is hidden |
 | `TOOL_DEF_CREDENTIAL_PARAM` | medium / low | advise | — | schema or description asking for `api_key`, `password`, `secret`, bearer tokens |
 | `TOOL_DEF_ENV_REFERENCE` | medium | advise | — | `.env`, "environment variables" |
 | `TOOL_DEF_SECRET_EXFIL` | medium | advise | — | a secret store (`.env`, `~/.ssh/…`, `~/.aws/credentials`) and a URL, e-mail or host within 100 characters — the language-independent shape of "read this, send it there" |
