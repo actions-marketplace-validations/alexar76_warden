@@ -156,7 +156,7 @@ Il faut un compte administrateur OpenWebUI et Node.js 22 sur la machine où tour
 voir `--local` plus bas).
 
 ```bash
-npx -y @aimarket/warden@0.39.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.39.1 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 La commande demande le mot de passe (ou le lit dans `OPENWEBUI_PASSWORD`) ; une clé API ou un JWT d’administrateur
@@ -220,14 +220,14 @@ la personne demande elle-même une page.
 
 Ensuite :
 
-- `npx -y @aimarket/warden@0.39.0 openwebui check` refait la vérification à tout moment (code de sortie 0 quand rien ne reste
+- `npx -y @aimarket/warden@0.39.1 openwebui check` refait la vérification à tout moment (code de sortie 0 quand rien ne reste
   ouvert) ;
-- étiquettes : `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.39.0 warden-mcp
+- étiquettes : `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.39.1 warden-mcp
   gateway labels --config /etc/warden/gateway.json` liste les outils que les conversations ont utilisés sans étiquette ;
   ajoutez-les à `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`), relu à
   chaque appel ;
 - après le pilote, `"mode": "deny"` dans le même fichier ;
-- `npx -y @aimarket/warden@0.39.0 openwebui undo` remet les connexions d’origine, éteint le Filter et arrête la passerelle ;
+- `npx -y @aimarket/warden@0.39.1 openwebui undo` remet les connexions d’origine, éteint le Filter et arrête la passerelle ;
   les fichiers restent.
 
 Ce qui reste à votre charge :
@@ -273,7 +273,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.39.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.39.1", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.39.1 — 2026-11-25 (Open Terminal reads after a filename search)
+
+- Native Open Terminal `read_file` and `display_file` recognize a file named by the user relative to their
+  authenticated home when `path` is configured in `destinationArgs`. This avoids the false `private_text`
+  refusal after `search_files` when the terminal uses an absolute path for the same file. Names from search
+  results alone confer no file authorization.
+
 ## 0.39.0 — 2026-11-24 (a link through a URL shortener is reported)
 
 - **Static scan ruleset 24: `TOOL_DEF_SHORT_LINK` (advisory).** A tool definition that links through a URL shortener

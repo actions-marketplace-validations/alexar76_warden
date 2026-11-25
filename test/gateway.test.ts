@@ -461,6 +461,32 @@ describe('gateway: flow guard and approval codes', () => {
     expect(await shell('run_command', { command: 'cat -n contract.txt' })).toMatchObject({ decision: 'deny', reason: 'unnamed_destination' });
   });
 
+  it.each(['read_file', 'display_file'])('recognizes a named terminal file for %s after a filename search', async operation => {
+    const terminal = 'mcp__owui__terminal:*';
+    const labels = {
+      [`${terminal}:search_files`]: ['private', 'untrusted'],
+      [`${terminal}:${operation}`]: ['private', 'untrusted'],
+    };
+    const destinationArgs = { [`${terminal}:${operation}`]: ['path'] };
+    const { g } = setup([], {}, { mode: 'deny', labels, destinationArgs });
+    const base = await start(g);
+    const home = '/home/abcdefab';
+    const file = 'регламент.txt';
+    const path = `${home}/${file}`;
+    const tool = (name: string) => ({ server: 'builtin', tool_name: `terminal:0123456789abcdef01234567:${name}` });
+    const searchThenOpen = async (chat_id: string, prompt: string) => {
+      const who = { user_id: 'abcdefab-4400-4000-8000-000000000001', chat_id };
+      await v1(base, 'prompt', { ...who, prompt });
+      const search = { ...who, ...tool('search_files'), tool_input: { path: home, query: 'регламент' } };
+      expect((await v1(base, 'pre', search)).body.decision).toBe('allow');
+      await v1(base, 'post', { ...search, tool_response: { results: [{ path, name: file, type: 'file' }] } });
+      return (await v1(base, 'pre', { ...who, ...tool(operation), tool_input: { path } })).body;
+    };
+
+    expect(await searchThenOpen('found-only', 'Найди регламент')).toMatchObject({ decision: 'deny', reason: 'private_text' });
+    expect(await searchThenOpen('named', `Открой ${file}`)).toMatchObject({ decision: 'allow' });
+  });
+
   it('removes chat state older than the retention period', async () => {
     const { g, dir } = setup([], { retentionDays: 1 });
     g.decider.source({ chat: 'old', user: 'u' }, { kind: 'web_search', query: 'q' });

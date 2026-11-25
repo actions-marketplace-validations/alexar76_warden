@@ -147,7 +147,8 @@ OpenWebUI не меняется. Если в этом выпуске функц�
 инструмент из тестового чата и посмотрите журнал шлюза. Filter проверяет вызовы инструментов из чата. У интерактивной
 панели терминала своё подключение.
 
-Для `write_file` и `replace_file_content` укажите `["path"]` в `destinationArgs` для маски инструмента терминала.
+Для `read_file`, `display_file`, `write_file` и `replace_file_content` укажите `["path"]` в `destinationArgs`
+для маски каждого инструмента терминала.
 Если абсолютный путь ведёт в стандартную домашнюю папку авторизованного пользователя, в сообщении достаточно
 назвать путь относительно неё с учётом регистра, например `черновики/письмо.txt`. Укажите весь относительный путь
 для файла во вложенной папке. Если имя состоит из одного слова без расширения, возьмите его в кавычки.
@@ -162,7 +163,7 @@ Settings → External Tools). **С WARDEN 0.31.0**; на более старой
 `--local` ниже).
 
 ```bash
-npx -y @aimarket/warden@0.39.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.39.1 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 Пароль команда спросит (или возьмёт из `OPENWEBUI_PASSWORD`); вместо него подойдёт API-ключ или JWT администратора в
@@ -227,13 +228,13 @@ OpenWebUI is behind WARDEN.
 
 Дальше:
 
-- `npx -y @aimarket/warden@0.39.0 openwebui check` — та же проверка в любой момент (код выхода 0, когда ничего не открыто);
-- метки: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.39.0 warden-mcp gateway
+- `npx -y @aimarket/warden@0.39.1 openwebui check` — та же проверка в любой момент (код выхода 0, когда ничего не открыто);
+- метки: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.39.1 warden-mcp gateway
   labels --config /etc/warden/gateway.json` печатает инструменты, которые чаты вызывали без метки; добавьте их в
   `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`) — файл читается при
   каждом вызове;
 - после пилота — `"mode": "deny"` в том же файле;
-- `npx -y @aimarket/warden@0.39.0 openwebui undo` возвращает исходные подключения, выключает Filter и останавливает шлюз;
+- `npx -y @aimarket/warden@0.39.1 openwebui undo` возвращает исходные подключения, выключает Filter и останавливает шлюз;
   файлы остаются.
 
 Что остаётся за вами:
@@ -279,7 +280,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.39.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.39.1", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}
