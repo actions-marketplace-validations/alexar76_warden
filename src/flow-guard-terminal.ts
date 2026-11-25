@@ -18,9 +18,9 @@ function terminalHome(user: string): string | undefined {
   return `/home/${/^\d/.test(name) ? 'u' : ''}${name}`;
 }
 
-/** The default home is a shorthand for the same destination on a structured file write. */
+/** The default home is a shorthand for the same destination on a structured file operation. */
 export function terminalFileDestination(operation: string | undefined, path: unknown, user: string) {
-  if (operation !== 'write_file' && operation !== 'replace_file_content') return undefined;
+  if (!operation || !PATH_TOOLS.has(operation)) return undefined;
   const home = terminalHome(user);
   if (!home || typeof path !== 'string' || !path.startsWith(home + '/') || !isLiteralPath(path)) return undefined;
   const relative = path.slice(home.length + 1);

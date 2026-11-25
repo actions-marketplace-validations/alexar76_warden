@@ -142,7 +142,8 @@ credentials still go through leak checks. The External Tools count in `setup --d
 path, call a terminal tool from a test chat and check the gateway log. This guard covers model tool calls resolved
 by the chat middleware. The interactive terminal panel uses its own connection.
 
-For `write_file` and `replace_file_content`, configure `destinationArgs` with `["path"]` on the tool's terminal mask.
+For `read_file`, `display_file`, `write_file` and `replace_file_content`, configure `destinationArgs` with
+`["path"]` on each tool's terminal mask.
 When an absolute path points into the authenticated user's default home, the user can name that file using the
 case-sensitive path relative to home, such as `drafts/reply.txt`. Use the full relative path for a file in a
 subdirectory and quote a bare filename without an extension. The file and its content still go through the policy checks.
@@ -158,7 +159,7 @@ You need an OpenWebUI admin account and Node.js 22 on the machine that runs Open
 With rootless Docker, setup uses the daemon owner's UID mapping for the gateway's private bind mounts.
 
 ```bash
-npx -y @aimarket/warden@0.39.0 openwebui setup --url http://localhost:3000 --email admin@example.com
+npx -y @aimarket/warden@0.39.1 openwebui setup --url http://localhost:3000 --email admin@example.com
 ```
 
 It asks for the password (or reads `OPENWEBUI_PASSWORD`); an admin API key or JWT in `OPENWEBUI_TOKEN` works instead.
@@ -222,12 +223,12 @@ brought in a page that asks to send the chat out, one where the person asks for 
 
 Afterwards:
 
-- `npx -y @aimarket/warden@0.39.0 openwebui check` runs the same check at any time (exit 0 when nothing is open);
-- labels: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.39.0 warden-mcp gateway labels --config
+- `npx -y @aimarket/warden@0.39.1 openwebui check` runs the same check at any time (exit 0 when nothing is open);
+- labels: `docker compose -p warden-gateway exec warden-gateway npx -y --package=@aimarket/warden@0.39.1 warden-mcp gateway labels --config
   /etc/warden/gateway.json` lists the tools chats used without a label; add them to
   `warden-openwebui/state/flow-policy.json` (`outbound`, `destructive`, `private`, `untrusted`), read on every call;
 - after the pilot, `"mode": "deny"` in the same file;
-- `npx -y @aimarket/warden@0.39.0 openwebui undo` puts the original connections back, switches the Filter off and stops the
+- `npx -y @aimarket/warden@0.39.1 openwebui undo` puts the original connections back, switches the Filter off and stops the
   gateway; the files stay.
 
 What it leaves to you:
@@ -272,7 +273,7 @@ networks: { tools: {}, front: {} }
 services:
   warden-gateway:
     image: node:22-bookworm-slim
-    command: ["npx", "-y", "@aimarket/warden@0.39.0", "gateway", "--config", "/etc/warden/gateway.json"]
+    command: ["npx", "-y", "@aimarket/warden@0.39.1", "gateway", "--config", "/etc/warden/gateway.json"]
     environment:
       WARDEN_GATEWAY_TOKEN: ${WARDEN_GATEWAY_TOKEN}
       WARDEN_APPROVE_TOKEN: ${WARDEN_APPROVE_TOKEN}

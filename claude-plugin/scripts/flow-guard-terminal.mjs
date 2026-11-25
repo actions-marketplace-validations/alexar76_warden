@@ -16,9 +16,9 @@ function terminalHome(user) {
     const name = cleaned.length >= 4 ? cleaned.slice(0, 8) : createHash('sha256').update(user).digest('hex').slice(0, 8);
     return `/home/${/^\d/.test(name) ? 'u' : ''}${name}`;
 }
-/** The default home is a shorthand for the same destination on a structured file write. */
+/** The default home is a shorthand for the same destination on a structured file operation. */
 export function terminalFileDestination(operation, path, user) {
-    if (operation !== 'write_file' && operation !== 'replace_file_content')
+    if (!operation || !PATH_TOOLS.has(operation))
         return undefined;
     const home = terminalHome(user);
     if (!home || typeof path !== 'string' || !path.startsWith(home + '/') || !isLiteralPath(path))

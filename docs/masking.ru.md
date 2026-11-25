@@ -14,7 +14,7 @@
   152-ФЗ, PCI DSS): адреса e-mail, телефоны, банковские карты, IBAN, публичные IP-адреса, национальные номера, а также
   имена и шаблоны из списка организации.
 
-Маскирование входит в WARDEN 0.37.0 (npm `@aimarket/warden@0.39.0`).
+Маскирование входит в WARDEN 0.37.0 (npm `@aimarket/warden@0.39.1`).
 
 ## Как это работает
 
@@ -213,7 +213,7 @@ warden-mcp wrap --id notes --mask-credentials off -- node notes.js
 ### Hermes
 
 ```bash
-npm install -g @aimarket/warden@0.39.0
+npm install -g @aimarket/warden@0.39.1
 cp -r "$(npm root -g)/@aimarket/warden/integrations/hermes/warden" ~/.hermes/plugins/warden
 hermes plugins enable warden
 systemctl restart hermes-gateway     # или запустите hermes заново
@@ -246,7 +246,7 @@ systemctl restart hermes-gateway     # или запустите hermes зано
 ### OpenClaw
 
 ```bash
-npm install -g @aimarket/warden@0.39.0
+npm install -g @aimarket/warden@0.39.1
 cp -r "$(npm root -g)/@aimarket/warden/integrations/openclaw/warden" ~/openclaw-warden
 cd ~/openclaw-warden && npm install --omit=dev
 sudo chown -R root:root .
