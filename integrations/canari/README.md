@@ -5,16 +5,14 @@ attestations."* That is the right call for a local firewall — it should not
 pretend to issue a credential — but it leaves one question open: when a host has
 a signed record about the artefact it is about to pin, how does it check it?
 
-This adapter answers that, and nothing else. It is deliberately not a scanner and
-not a policy engine: give it a DSSE envelope and a public key, get a decision in
-WARDEN's vocabulary.
+The adapter verifies a DSSE envelope against a public key and returns a decision
+in WARDEN's vocabulary. Install `@aimarket/warden` and import its Canari subpath:
 
 ```js
-import { verifyCanariAttestation } from './integrations/canari/verify-attestation.mjs';
+import { verifyCanariAttestation } from '@aimarket/warden/canari';
 
 const r = verifyCanariAttestation(bundleJson, publicKeyJson, {
-  expectedArtifactSha256: 'e3b0c442...',  // REQUIRED: the bytes you are about to install
-  now: Date.now(),                        // optional, for tests
+  expectedArtifactSha256: artifactSha256, // SHA-256 of the bytes you are about to install
 });
 // { ok, decision: 'allow' | 'review' | 'block', reasons, verdict,
 //   subject, scannedAt, expiresAt, artifactSha256, evidenceDigest }
@@ -74,10 +72,10 @@ Because the unsigned copy is the one a careless reader would print. Test
 `editing the unsigned mirror is caught` flips `payload.verdict` without touching
 the envelope: the signature still verifies, and the adapter still refuses.
 
-## Tests
+## Tests from a source checkout
 
 ```bash
-node --test integrations/canari/test/verify-attestation.test.mjs   # 37 tests
+node --test integrations/canari/test/verify-attestation.test.mjs
 ```
 
 Fixtures are a real published bundle (current), an older one whose TTL has

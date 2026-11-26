@@ -55,6 +55,7 @@ jobs:
       - name: pack and import from a clean directory
         run: |
           set -euo pipefail
+          export CANARI_FIXTURES="$PWD/integrations/canari/fixtures"
           TARBALL="$(npm pack --silent | tail -1)"
           mkdir -p /tmp/consumer && mv "$TARBALL" /tmp/consumer/
           cd /tmp/consumer
@@ -82,3 +83,22 @@ jobs:
             if (canonicalize({ b: 1, a: 2 }) !== '{\"a\":2,\"b\":1}') throw new Error('canonicalizer is wrong');
             console.log('published tarball OK — verdict', v.score);
           "
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { verifyCanariAttestation } from '@aimarket/warden/canari';
+
+          const readFixture = (name) => JSON.parse(readFileSync(join(process.env.CANARI_FIXTURES, name), 'utf8'));
+          const bundle = readFixture('bundle-current.json');
+          const key = readFixture('canari-public-key.json');
+          const options = {
+            expectedArtifactSha256: '1172cacf35752f7485cb06b020efce4ad8c300d32d5ded08c3f454b5247882d6',
+            now: Date.parse('2026-11-24T12:00:00Z'),
+          };
+          assert.equal(verifyCanariAttestation(bundle, key, options).decision, 'allow');
+          assert.equal(verifyCanariAttestation(bundle, key, {
+            ...options,
+            expectedArtifactSha256: 'ab'.repeat(32),
+          }).decision, 'block');
+          JS

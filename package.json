@@ -1,6 +1,6 @@
 {
   "name": "@aimarket/warden",
-  "version": "0.39.1",
+  "version": "0.39.2",
   "description": "WARDEN — MCP security firewall. Stdio wrap proxy, inspection tools and library. Vets definitions before model exposure. Zero runtime dependencies.",
   "type": "module",
   "license": "MIT",
@@ -54,6 +54,11 @@
       "types": "./dist/flow-guard-codex.d.ts",
       "import": "./dist/flow-guard-codex.js",
       "default": "./dist/flow-guard-codex.js"
+    },
+    "./canari": {
+      "types": "./dist/canari.d.ts",
+      "import": "./dist/canari.js",
+      "default": "./dist/canari.js"
     }
   },
   "files": [
@@ -101,7 +106,8 @@
     "integrations/openclaw/warden/index.js",
     "integrations/openclaw/warden/package.json",
     "integrations/openclaw/warden/openclaw.plugin.json",
-    "integrations/openclaw/README.md"
+    "integrations/openclaw/README.md",
+    "integrations/canari/README.md"
   ],
   "engines": {
     "node": ">=20"
@@ -109,7 +115,7 @@
   "sideEffects": false,
   "scripts": {
     "mcp": "node dist/mcp-server.js",
-    "build": "tsc -p tsconfig.json && node scripts/sync-flow-guard.mjs && node scripts/pack-malware-list.mjs",
+    "build": "tsc -p tsconfig.json && node scripts/sync-flow-guard.mjs && node scripts/pack-malware-list.mjs && node scripts/build-canari.mjs",
     "prepare": "npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",

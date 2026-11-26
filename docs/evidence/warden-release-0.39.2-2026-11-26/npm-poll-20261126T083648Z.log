@@ -1,0 +1,11 @@
+start=2026-11-26T08:36:48Z local_shasum=6d69e44cf1601c53d5e6c34c35a17104b24c009f
+08:36:49Z attempt=1 no
+0.39.1
+08:37:19Z attempt=2 no
+0.39.1
+08:37:50Z attempt=3 yes
+0.39.2
+LIVE remote_shasum=6d69e44cf1601c53d5e6c34c35a17104b24c009f latest=0.39.2
+dl_sha1=6d69e44cf1601c53d5e6c34c35a17104b24c009f
+BYTE_MATCH=yes
+POLL_OK

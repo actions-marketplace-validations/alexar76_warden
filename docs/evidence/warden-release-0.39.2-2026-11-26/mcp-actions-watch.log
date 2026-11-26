@@ -1,0 +1,38 @@
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* v0.39.2 Publish to MCP Registry · 45784966612
+Triggered via release about 11 minutes ago
+
+JOBS
+* publish (ID 139789317166)
+  ✓ Set up job
+  * Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+  * Install mcp-publisher
+  * Authenticate to MCP Registry
+  * Publish server.json
+  * Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* v0.39.2 Publish to MCP Registry · 45784966612
+Triggered via release about 11 minutes ago
+
+JOBS
+* publish (ID 139789317166)
+  ✓ Set up job
+  ✓ Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+  ✓ Install mcp-publisher
+  ✓ Authenticate to MCP Registry
+  ✓ Publish server.json
+  * Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+✓ v0.39.2 Publish to MCP Registry · 45784966612
+Triggered via release about 11 minutes ago
+
+JOBS
+✓ publish in 18s (ID 139789317166)
+  ✓ Set up job
+  ✓ Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+  ✓ Install mcp-publisher
+  ✓ Authenticate to MCP Registry
+  ✓ Publish server.json
+  ✓ Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+  ✓ Complete job

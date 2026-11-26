@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.39.2 — 2026-11-26 (Canari adapter in the npm package)
+
+- Ship the Canari attestation verifier from PR #15, contributed by lanbass869-cell.
+  JavaScript and TypeScript consumers can import it from `@aimarket/warden/canari`.
+  The adapter verifies the signed attestation against the caller's artifact digest and public key.
+
 ## 0.39.1 — 2026-11-25 (Open Terminal reads after a filename search)
 
 - Native Open Terminal `read_file` and `display_file` recognize a file named by the user relative to their

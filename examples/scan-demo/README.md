@@ -12,7 +12,7 @@ Run it from this directory, with nothing installed (Node ≥ 20). `--project` re
 directory's config files, so the output is the same on every machine:
 
 ```bash
-npx -y @aimarket/warden@0.39.1 scan --project
+npx -y @aimarket/warden@0.39.2 scan --project
 ```
 
 ```text

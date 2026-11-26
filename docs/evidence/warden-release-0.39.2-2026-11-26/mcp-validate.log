@@ -1,0 +1,23 @@
+=== mcp-publisher validate ===
+  → aimarket-hub (aimarket-hub/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  → aimarket-mcp (aimarket-mcp/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  → aimarket-oracle-gateway (plugins/aimarket-oracle-gateway/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  → aimarket-plugins (plugins/aimarket-mcp-packager/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  → argus (argus/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  → histor (histor/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  → warden (warden/server.json)
+Validating against https://registry.modelcontextprotocol.io...
+✅ server.json is valid
+  ✓ all server.json valid

@@ -1,0 +1,124 @@
+╔══════════════════════════════════════════════════════════════╗
+║  publish_all_repos — satellite + factory publish             ║
+╚══════════════════════════════════════════════════════════════╝
+
+Mirroring satellite: warden …
+╔══════════════════════════════════════════════════════════════╗
+║  AI-Factory Satellite Mirror                                 ║
+║  Org: alexar76 / Host: github.com                         ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+━━━ warden ━━━
+  Source:  warden
+  Remote:  github.com/alexar76/warden
+  ✓ alexar76/warden (exists)
+OK structured secret check
+OK mirror secrets check: warden
+  · SECURITY.md kept from satellite source
+  ✓ Governance (LICENSE, SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, CONTRIBUTORS.md, README.md)
+  ✓ GitHub templates (ISSUE_TEMPLATE, pull_request_template)
+  ✓ LIVE banner injected into README.md (below line 57)
+  ✓ badges → /private/var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/tmp.djEMTYO8lu/warden/README.md
+Done (1 updated).
+  ✓ README badges (CI + coverage)
+  ✓ preserved .github/workflows/publish-mcp-registry.yml from the live satellite tip
+/var/folders/42/89nwyc990vb88p11gks6gvt80000gn/T/tmp.djEMTYO8lu/warden
+OK structured secret check
+OK mirror secrets check: warden
+OK structured secret check
+OK mirror secrets check: warden
+[main 108b984] chore(satellite): sync warden from aicom monorepo
+ 74 files changed, 5143 insertions(+), 129 deletions(-)
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/README.md
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/aimarket-warden-0.39.1.tgz
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/npm-publish.log
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/tarball.sha256
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/tarball.shasum
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/wd0391-build.log
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/wd0391-npm-ci.log
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/wd0391-pack.log
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/wd0391-typecheck.log
+ create mode 100644 docs/evidence/warden-release-0.39.1-2026-11-25/wd0391-vitest-focus.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/README.md
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/aimarket-warden-0.39.2.tgz
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/mirror-satellite.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-poll-20261126T083648Z.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-publish-a1.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-publish-mac-20261126T083304Z.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-publish-mac-retry-20261126T083540Z.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-publish-retry.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-publish-retry2.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/npm-publish.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/tarball.sha256
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/tarball.shasum
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/wd0392-build.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/wd0392-npm-ci.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/wd0392-pack.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/wd0392-typecheck.log
+ create mode 100644 docs/evidence/warden-release-0.39.2-2026-11-26/wd0392-vitest-focus.log
+ create mode 100644 integrations/canari/verify-attestation.d.mts
+ create mode 100644 scripts/build-canari.mjs
+  🚀 Pushing (append-only, no --force) to github.com/alexar76/warden ...
+To https://github.com/alexar76/warden.git
+   9900faf..108b984  HEAD -> main
+  ✅ Pushed warden (live history)
+ensure_github_pages: alexar76/warden — already enabled
+ensure_github_pages: alexar76/warden — workflow dispatched
+
+Satellite URLs:
+  https://github.com/alexar76/aimarket-desktop
+  https://github.com/alexar76/aimarket-sdks
+  https://github.com/alexar76/pulse-terminal
+  https://github.com/alexar76/acex
+  https://github.com/alexar76/ai-service-mesh
+  https://github.com/alexar76/aimarket-hub
+  https://github.com/alexar76/aimarket-widget
+  https://github.com/alexar76/aimarket-protocol
+  https://github.com/alexar76/aimarket-agent
+  https://github.com/alexar76/aimarket-bridges
+  https://github.com/alexar76/aimarket-plugins
+  https://github.com/alexar76/aimarket-oracle-gateway
+  https://github.com/alexar76/aicom.wiki
+  https://github.com/alexar76/argus.wiki
+  https://github.com/alexar76/linked-in-profile-coach
+  https://github.com/alexar76/aicom-landing
+  https://github.com/alexar76/alien-monitor
+  https://github.com/alexar76/gaia
+  https://github.com/alexar76/atlas
+  https://alexar76.github.io/atlas/
+  https://forge.modelmarket.dev/
+  https://modelmarket.dev/studio/
+  https://github.com/alexar76/hephaestus
+  https://alexar76.github.io/hephaestus/
+  https://github.com/alexar76/basanos
+  https://alexar76.github.io/basanos/
+  https://basanos.modelmarket.dev/
+  https://github.com/alexar76/dolos
+  https://alexar76.github.io/dolos/
+  https://github.com/alexar76/logos
+  https://alexar76.github.io/logos/
+  https://github.com/alexar76/signal-hunt
+  https://alexar76.github.io/signal-hunt/
+  https://github.com/alexar76/aimarket-playground
+  https://github.com/alexar76/create-aimarket-agent
+  https://github.com/alexar76/themis
+  https://github.com/alexar76/hestia
+  https://alexar76.github.io/hestia/
+  https://hestia.modelmarket.dev/
+  https://github.com/alexar76/histor
+  https://alexar76.github.io/histor/
+  https://histor.modelmarket.dev/
+  https://github.com/alexar76/use-cases-portal
+  https://alexar76.github.io/use-cases-portal/
+  https://github.com/alexar76/oracles
+  https://github.com/alexar76/aicom-products
+  https://github.com/alexar76/platon
+  https://github.com/alexar76/lottery
+  https://github.com/alexar76/aimarket-courses
+  https://alexar76.github.io/aimarket-courses/
+
+All repos: ./scripts/publish_all_repos.sh
+Workflow:  .github/workflows/mirror-satellites.yml
+
+✅ publish_all_repos finished successfully (idempotent — no-op if already in sync).

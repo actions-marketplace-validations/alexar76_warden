@@ -1,0 +1,9 @@
+=== mcp-publisher publish ===
+    (a push to GitHub does not do this — the registry only knows what is sent to it)
+  → warden (warden/server.json) (@aimarket/warden 0.39.2 matches npm)
+Publishing io.github.alexar76/warden@0.39.2 to https://registry.modelcontextprotocol.io...
+Error: publish failed: server returned status 401: {"title":"Unauthorized","status":401,"detail":"Invalid or expired Registry JWT token","errors":[{"message":"failed to parse token: token has invalid claims: token is expired"}]}
+
+  ✗ warden failed. If that was an auth error: mcp-publisher login github,
+    signing in as alexar76 — every name here is io.github.alexar76/*.
+  ✗ some manifests were not published
