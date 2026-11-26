@@ -47,6 +47,16 @@ describe("packaging — the standalone claim", () => {
     expect(pkg.bin["warden-mcp"]).toBe("dist/mcp-server.js");
   });
 
+  it("ships the Canari export, declarations and usage guide without its fixtures", () => {
+    const canari = pkg.exports["./canari"];
+    expect(canari.import).toBe("./dist/canari.js");
+    expect(canari.types).toBe("./dist/canari.d.ts");
+    expect(canari.default).toBe(canari.import);
+    expect(pkg.files.filter((path: string) => path.startsWith("integrations/canari"))).toEqual([
+      "integrations/canari/README.md",
+    ]);
+  });
+
   it("exports the full enforcement surface from the entry point", () => {
     for (const name of [
       "Warden",

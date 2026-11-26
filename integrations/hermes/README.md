@@ -6,7 +6,7 @@ call. Hermes 0.19 or later. How it works and its limits: [docs/masking.md](../..
 ## Install
 
 ```bash
-npm install -g @aimarket/warden@0.39.1                       # provides warden-mcp (agent-guard)
+npm install -g @aimarket/warden@0.39.2                       # provides warden-mcp (agent-guard)
 cp -r "$(npm root -g)/@aimarket/warden/integrations/hermes/warden" ~/.hermes/plugins/warden
 hermes plugins enable warden
 ```

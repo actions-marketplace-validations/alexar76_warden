@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 /Users/alex/Desktop/ai_tests/aicompany/aicom-warden-0391/warden
+
+
+ Test Files  1 passed (1)
+      Tests  47 passed (47)
+   Start at  20:18:09
+   Duration  39.62s (tests 62%, transform 31%, import 4%, setup 2%)
+

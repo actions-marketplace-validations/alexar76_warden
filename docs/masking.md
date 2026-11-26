@@ -14,7 +14,7 @@ The model can still act on a value; it never sees it.
   addresses, phone numbers, payment cards, IBANs, public IP addresses, national ids, and the names and patterns the
   organisation lists.
 
-Masking ships in WARDEN 0.37.0 (npm `@aimarket/warden@0.39.1`).
+Masking ships in WARDEN 0.37.0 (npm `@aimarket/warden@0.39.2`).
 
 ## How it works
 
@@ -213,7 +213,7 @@ on a production host and OpenClaw 2026.11.6 in a throwaway container (what each 
 ### Hermes
 
 ```bash
-npm install -g @aimarket/warden@0.39.1
+npm install -g @aimarket/warden@0.39.2
 cp -r "$(npm root -g)/@aimarket/warden/integrations/hermes/warden" ~/.hermes/plugins/warden
 hermes plugins enable warden
 systemctl restart hermes-gateway     # or start hermes again
@@ -246,7 +246,7 @@ What is specific to Hermes:
 ### OpenClaw
 
 ```bash
-npm install -g @aimarket/warden@0.39.1
+npm install -g @aimarket/warden@0.39.2
 cp -r "$(npm root -g)/@aimarket/warden/integrations/openclaw/warden" ~/openclaw-warden
 cd ~/openclaw-warden && npm install --omit=dev
 sudo chown -R root:root .
