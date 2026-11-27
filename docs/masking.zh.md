@@ -11,7 +11,7 @@ WARDEN 在模型读取之前把这些值替换为占位符；当模型在工具�
 - **个人数据：默认关闭，需要的组织只需打开一个开关**（GDPR、CCPA、152-FZ、PCI DSS）：电子邮件地址、电话号码、
   支付卡号、IBAN、公网 IP 地址、国家证件号码，以及组织列出的名称和模式。
 
-脱敏功能随 WARDEN 0.37.0 发布（npm `@aimarket/warden@0.39.2`）。
+脱敏功能随 WARDEN 0.37.0 发布（npm `@aimarket/warden@0.40.0`）。
 
 ## 工作原理
 
@@ -199,7 +199,7 @@ warden-mcp wrap --id notes --mask-credentials off -- node notes.js
 ### Hermes
 
 ```bash
-npm install -g @aimarket/warden@0.39.2
+npm install -g @aimarket/warden@0.40.0
 cp -r "$(npm root -g)/@aimarket/warden/integrations/hermes/warden" ~/.hermes/plugins/warden
 hermes plugins enable warden
 systemctl restart hermes-gateway     # 或重新启动 hermes
@@ -230,7 +230,7 @@ Hermes 的特点：
 ### OpenClaw
 
 ```bash
-npm install -g @aimarket/warden@0.39.2
+npm install -g @aimarket/warden@0.40.0
 cp -r "$(npm root -g)/@aimarket/warden/integrations/openclaw/warden" ~/openclaw-warden
 cd ~/openclaw-warden && npm install --omit=dev
 sudo chown -R root:root .

@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { callMcpTool, MCP_TOOLS } from "../src/mcp-tools.js";
-import { consumeLsp, handleRpc, listedTools, packageVersion, PROTOCOL } from "../src/mcp-rpc.js";
+import { consumeLsp, handleRpc, listedTools, MODERN_PROTOCOL, packageVersion, PROTOCOL } from "../src/mcp-rpc.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -183,6 +183,85 @@ describe("MCP JSON-RPC (Glama health: initialize + tools/list)", () => {
   it("unknown method is JSON-RPC -32601", async () => {
     const res = await handleRpc({ jsonrpc: "2.0", id: 9, method: "nope/nope" });
     expect(res?.error?.code).toBe(-32601);
+  });
+});
+
+describe("MCP 2026-07-28 (no handshake: per-request metadata and server/discover)", () => {
+  const META = {
+    "io.modelcontextprotocol/protocolVersion": MODERN_PROTOCOL,
+    "io.modelcontextprotocol/clientInfo": { name: "vitest", version: "1" },
+    "io.modelcontextprotocol/clientCapabilities": {},
+  };
+  const modern = (method: string, params: Record<string, unknown> = {}, meta: unknown = META) =>
+    handleRpc({ jsonrpc: "2.0", id: 1, method, params: { ...params, ...(meta === null ? {} : { _meta: meta }) } });
+
+  it("server/discover says what the server speaks, without initialize", async () => {
+    const res = await modern("server/discover");
+    expect(res?.error).toBeUndefined();
+    expect(res?.result).toMatchObject({
+      supportedVersions: [MODERN_PROTOCOL, PROTOCOL],
+      capabilities: { tools: {} },
+      resultType: "complete",
+      cacheScope: "public",
+      _meta: { "io.modelcontextprotocol/serverInfo": { name: "warden", version: packageVersion() } },
+    });
+    const result = res?.result as { ttlMs: number; instructions: string };
+    expect(result.ttlMs).toBeGreaterThan(0);
+    expect(result.instructions).toContain("vet_mcp_server");
+  });
+
+  it("tools/list is the same list with the cache fields; the handshake answer is unchanged", async () => {
+    const old = (await handleRpc({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }))?.result as Record<string, unknown>;
+    const now = (await modern("tools/list"))?.result as Record<string, unknown>;
+    expect(now.tools).toEqual(old.tools);
+    expect(now).toMatchObject({ resultType: "complete", cacheScope: "public" });
+    expect(typeof now.ttlMs).toBe("number");
+    expect(old.resultType).toBeUndefined();
+    expect(old.ttlMs).toBeUndefined();
+    for (const [method, key] of [["resources/list", "resources"], ["resources/templates/list", "resourceTemplates"], ["prompts/list", "prompts"]] as const) {
+      const empty = (await modern(method))?.result as Record<string, unknown>;
+      expect(empty[key]).toEqual([]);
+      expect(empty.resultType).toBe("complete");
+      expect(empty).toHaveProperty("ttlMs");
+    }
+  });
+
+  it("tools/call runs, says complete, and is not cacheable", async () => {
+    const res = await modern("tools/call", { name: "canonicalize_json", arguments: { value: { z: 0, a: 1 } } });
+    const result = res?.result as { structuredContent: { canonical: string }; resultType: string; ttlMs?: number };
+    expect(result.structuredContent.canonical).toBe('{"a":1,"z":0}');
+    expect(result.resultType).toBe("complete");
+    expect(result.ttlMs).toBeUndefined();
+  });
+
+  it("answers an unsupported version with the versions it speaks", async () => {
+    for (const version of ["2027-01-01", "2025-06-18"]) {
+      const res = await modern("tools/list", {}, { ...META, "io.modelcontextprotocol/protocolVersion": version });
+      expect(res?.error).toEqual({ code: -32022, message: "Unsupported protocol version",
+        data: { supported: [MODERN_PROTOCOL, PROTOCOL], requested: version } });
+    }
+  });
+
+  it("requires the version and the capabilities object", async () => {
+    expect((await modern("server/discover", {}, null))?.error?.code).toBe(-32602);
+    expect((await modern("tools/list", {}, { "io.modelcontextprotocol/protocolVersion": MODERN_PROTOCOL }))?.error?.code).toBe(-32602);
+    expect((await modern("tools/list", {}, { ...META, "io.modelcontextprotocol/clientCapabilities": [] }))?.error?.code).toBe(-32602);
+    expect((await modern("tools/list", {}, "nope"))?.error?.code).toBe(-32602);
+  });
+
+  it("does not offer initialize or ping in this revision, and keeps both for handshake clients", async () => {
+    expect((await modern("initialize"))?.error?.code).toBe(-32601);
+    expect((await modern("ping"))?.error?.code).toBe(-32601);
+    expect((await handleRpc({ jsonrpc: "2.0", id: 5, method: "ping" }))?.result).toEqual({});
+    const init = await handleRpc({ jsonrpc: "2.0", id: 6, method: "initialize",
+      params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "old", version: "0" } } });
+    expect(init?.result).toMatchObject({ protocolVersion: PROTOCOL });
+    expect((init?.result as Record<string, unknown>).resultType).toBeUndefined();
+  });
+
+  it("a progress token in _meta alone does not make a request modern", async () => {
+    const res = await handleRpc({ jsonrpc: "2.0", id: 7, method: "tools/list", params: { _meta: { progressToken: 1 } } });
+    expect((res?.result as Record<string, unknown>).resultType).toBeUndefined();
   });
 });
 

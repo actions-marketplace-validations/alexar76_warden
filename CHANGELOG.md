@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.40.0 — 2026-11-26 (the stdio MCP server answers MCP 2026-07-28)
+
+- **The stdio MCP server also speaks MCP 2026-07-28.** That revision has no `initialize`: a request states its
+  protocol version and the client's capabilities in `params._meta`, and `server/discover` says what a server speaks.
+  `warden-mcp` now answers such requests on their own (`server/discover`, `tools/list`, `tools/call` and the empty
+  lists), with `resultType`, `serverInfo` in `_meta`, and `ttlMs` / `cacheScope` on the lists; an unsupported version
+  gets `-32022` with the versions spoken. Handshake clients are answered exactly as before (`initialize` still says
+  2025-03-26). Until this change a 2026-07-28 client got `method not found` for `server/discover` and fell back.
+
 ## 0.39.2 — 2026-11-26 (Canari adapter in the npm package)
 
 - Ship the Canari attestation verifier from PR #15, contributed by lanbass869-cell.
