@@ -8,6 +8,21 @@ import { fileURLToPath } from "node:url";
 import { callMcpTool, MCP_INSTRUCTIONS, MCP_TOOLS, McpToolError, payloadTooLarge } from "./mcp-tools.js";
 
 export const PROTOCOL = "2025-03-26";
+/**
+ * MCP 2026-07-28 has no `initialize`: a request states its protocol version and the client's
+ * capabilities in `params._meta`, and `server/discover` says what a server speaks. This server
+ * answers both ways. A request carrying that metadata (or `server/discover`) is handled on its
+ * own, per the 2026-07-28 rules; anything else goes through the handshake as before.
+ */
+export const MODERN_PROTOCOL = "2026-07-28";
+/** Every revision this server speaks, newest first: what `server/discover` and the unsupported-version error list. */
+export const SUPPORTED_PROTOCOLS = [MODERN_PROTOCOL, PROTOCOL] as const;
+const META_PROTOCOL = "io.modelcontextprotocol/protocolVersion";
+const META_CAPABILITIES = "io.modelcontextprotocol/clientCapabilities";
+const META_SERVER_INFO = "io.modelcontextprotocol/serverInfo";
+/** Results a 2026-07-28 client may cache; the tool list here changes only with the package. */
+const CACHEABLE = new Set(["server/discover", "tools/list", "resources/list", "resources/templates/list", "prompts/list"]);
+const MODERN_TTL_MS = 300_000;
 const FALLBACK_VERSION = "0.9.0";
 
 export function packageVersion(): string {
@@ -31,8 +46,10 @@ export interface JsonRpcRes {
   jsonrpc: "2.0";
   id: string | number | null;
   result?: unknown;
-  error?: { code: number; message: string };
+  error?: { code: number; message: string; data?: unknown };
 }
+
+const isRecord = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 
 export function listedTools() {
   return MCP_TOOLS.map((t) => ({
@@ -86,17 +103,48 @@ export async function handleRpc(raw: unknown): Promise<JsonRpcRes | null> {
   const id = msg.id;
   if (msg.id === undefined) return null;
 
-  const ok = (result: unknown): JsonRpcRes => ({ jsonrpc: "2.0", id: id ?? null, result });
-  const fail = (code: number, message: string): JsonRpcRes => ({
+  const fail = (code: number, message: string, data?: unknown): JsonRpcRes => ({
     jsonrpc: "2.0",
     id: id ?? null,
-    error: { code, message },
+    error: data === undefined ? { code, message } : { code, message, data },
   });
 
   if (msg.params !== undefined && (!msg.params || typeof msg.params !== "object" || Array.isArray(msg.params))) {
     return fail(-32602, "params must be an object");
   }
+  const meta = isRecord(msg.params) ? (msg.params as Record<string, unknown>)._meta : undefined;
+  if (meta !== undefined && !isRecord(meta)) return fail(-32602, "_meta must be an object");
+  const modern = method === "server/discover" || (isRecord(meta) && (META_PROTOCOL in meta || META_CAPABILITIES in meta));
+  if (modern) {
+    if (!isRecord(meta) || typeof meta[META_PROTOCOL] !== "string" || !isRecord(meta[META_CAPABILITIES])) {
+      return fail(-32602, `a ${MODERN_PROTOCOL} request needs ${META_PROTOCOL} and ${META_CAPABILITIES} in params._meta`);
+    }
+    if (meta[META_PROTOCOL] !== MODERN_PROTOCOL) {
+      return fail(-32022, "Unsupported protocol version", {
+        supported: [...SUPPORTED_PROTOCOLS],
+        requested: String(meta[META_PROTOCOL]).slice(0, 40).replace(/[^ -~]/g, "?"),
+      });
+    }
+    // initialize, ping and logging/setLevel are not part of this revision.
+    if (method === "initialize" || method === "ping") return fail(-32601, `method not found: ${method}`);
+  }
+  /** A 2026-07-28 result also says it is complete, who answered, and how long a list may be kept. */
+  const ok = (result: unknown): JsonRpcRes => {
+    if (modern && isRecord(result)) {
+      result.resultType = "complete";
+      result._meta = { ...(isRecord(result._meta) ? result._meta : {}),
+        [META_SERVER_INFO]: { name: "warden", title: "WARDEN MCP security firewall", version: packageVersion() } };
+      if (CACHEABLE.has(method)) { result.ttlMs = MODERN_TTL_MS; result.cacheScope = "public"; }
+    }
+    return { jsonrpc: "2.0", id: id ?? null, result };
+  };
   switch (method) {
+    case "server/discover":
+      return ok({
+        supportedVersions: [...SUPPORTED_PROTOCOLS],
+        capabilities: { tools: {} },
+        instructions: MCP_INSTRUCTIONS,
+      });
     case "initialize":
       return ok({
         protocolVersion: PROTOCOL,

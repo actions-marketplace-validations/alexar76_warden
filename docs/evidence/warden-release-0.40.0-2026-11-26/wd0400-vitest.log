@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 wd0400-wOQSX1/warden
+
+
+ Test Files  92 passed (92)
+      Tests  2253 passed (2253)
+   Start at  21:12:46
+   Duration  69.99s (tests 91%, import 5%, transform 3%, setup 1%)
+
